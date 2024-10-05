@@ -1,6 +1,9 @@
 module.exports = {
   extends: ['next/core-web-vitals', 'plugin:import/recommended', 'prettier'],
   rules: {
+    "import/no-unresolved": "off",
+    "import/extensions": "off",
+    "import/no-useless-path-segments": "off",
     'react/no-unescaped-entities': 'off',
     '@next/next/no-page-custom-font': 'off',
     'jsx-a11y/alt-text': 'off',

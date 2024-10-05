@@ -64,7 +64,6 @@ const OptionMenu = props => {
     if (anchorRef.current && anchorRef.current.contains(event.target)) {
       return
     }
-
     setOpen(false)
   }
 
@@ -110,10 +109,14 @@ const OptionMenu = props => {
                           {...option.menuItemProps}
                           {...(option.href && { className: 'p-0' })}
                           onClick={e => {
+                            console.log(`MenuItem ${option.text} clicked`);
                             handleClose(e)
-                            option.menuItemProps && option.menuItemProps.onClick
-                              ? option.menuItemProps.onClick(e)
-                              : null
+                            if (option.onClick) {
+                              option.onClick(e);
+                            }
+                            if (option.menuItemProps && option.menuItemProps.onClick) {
+                              option.menuItemProps.onClick(e)
+                            }
                           }}
                         >
                           <MenuItemWrapper option={option}>
