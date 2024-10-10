@@ -39,6 +39,199 @@ html {
   inline-size: 100%;
   min-block-size: 100%;
 }
+//quill classes
+.ql-container {
+  box-sizing: border-box;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  height: 100%;
+  margin: 0;
+  position: relative;
+}
+
+.ql-editor {
+  box-sizing: border-box;
+  line-height: 1.42;
+  height: auto;
+  min-height: 100px;
+  outline: none;
+  overflow-y: auto;
+  padding: 12px 15px;
+  tab-size: 4;
+  -moz-tab-size: 4;
+  text-align: left;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+.ql-toolbar {
+  box-sizing: border-box;
+  font-family: Helvetica, Arial, sans-serif;
+  padding: 5px;
+  position: relative;
+  white-space: nowrap;
+}
+
+.ql-toolbar.ql-snow {
+  border: 1px solid #ccc;
+}
+
+.ql-toolbar button,
+.ql-toolbar select {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: inline-block;
+  padding: 5px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.ql-snow {
+  box-sizing: border-box;
+}
+
+.ql-snow .ql-editor h1 {
+  font-size: 2em;
+}
+
+.ql-snow .ql-editor h2 {
+  font-size: 1.5em;
+}
+
+.ql-snow .ql-editor h3 {
+  font-size: 1.17em;
+}
+
+.ql-snow .ql-editor blockquote {
+  border-left: 4px solid #ccc;
+  margin-bottom: 5px;
+  margin-top: 5px;
+  padding-left: 16px;
+}
+.ql-bold {
+  font-weight: bold;
+}
+
+.ql-italic {
+  font-style: italic;
+}
+
+.ql-underline {
+  text-decoration: underline;
+}
+
+.ql-strike {
+  text-decoration: line-through;
+}
+.ql-blockquote {
+  border-left: 4px solid #ccc;
+  margin-bottom: 5px;
+  margin-top: 5px;
+  padding-left: 16px;
+}
+.ql-snow .ql-editor pre {
+  background-color: #f0f0f0;
+  margin: 5px 0;
+  padding: 5px 10px;
+  white-space: pre-wrap;
+}
+
+.ql-snow .ql-editor code {
+  background-color: #f0f0f0;
+  font-family:
+    Monaco,
+    Courier New,
+    monospace;
+  padding: 2px 4px;
+}
+.ql-editor ol,
+.ql-editor ul {
+  padding-left: 1.5em;
+}
+
+.ql-editor ol li {
+  list-style-type: decimal;
+}
+
+.ql-editor ul li {
+  list-style-type: disc;
+}
+.ql-header-1 {
+  font-size: 2em;
+}
+
+.ql-header-2 {
+  font-size: 1.5em;
+}
+
+.ql-header-3 {
+  font-size: 1.17em;
+}
+.ql-align-center {
+  text-align: center;
+}
+
+.ql-align-right {
+  text-align: right;
+}
+
+.ql-align-justify {
+  text-align: justify;
+}
+.ql-size-small {
+  font-size: 0.75em;
+}
+
+.ql-size-large {
+  font-size: 1.5em;
+}
+
+.ql-size-huge {
+  font-size: 2.5em;
+}
+.ql-editor a {
+  color: #06c;
+  text-decoration: underline;
+}
+.ql-editor img {
+  max-width: 100%;
+}
+.ql-editor table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.ql-editor td,
+.ql-editor th {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.ql-editor th {
+  background-color: #f2f2f2;
+  text-align: left;
+}
+.ql-color-red {
+  color: red;
+}
+
+.ql-background-yellow {
+  background-color: yellow;
+}
+.ql-link {
+  color: #007bff;
+  text-decoration: underline;
+}
+.ql-indent-1 {
+  padding-left: 3em;
+}
+
+.ql-indent-2 {
+  padding-left: 6em;
+}
+
+.ql-indent-3 {
+  padding-left: 9em;
+}
 
 a {
   color: inherit;

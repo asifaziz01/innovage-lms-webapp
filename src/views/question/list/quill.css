@@ -1,0 +1,9 @@
+.ql-toolbar {
+  overflow: auto; /* Allow scrolling when content overflows */
+  white-space: nowrap; /* Prevent wrapping of toolbar items */
+}
+.ql-editor.ql-blank::before {
+  color: #999;
+  font-weight: normal; /* Normal font weight */
+  font-style: bold; /* Italic style for the placeholder */
+}
