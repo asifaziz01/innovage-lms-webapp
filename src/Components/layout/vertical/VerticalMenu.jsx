@@ -17,6 +17,8 @@ import StyledVerticalNavExpandIcon from '@menu/styles/vertical/StyledVerticalNav
 import menuItemStyles from '@core/styles/vertical/menuItemStyles'
 import menuSectionStyles from '@core/styles/vertical/menuSectionStyles'
 
+import TestRouting from '@/routing/test/TestRouting'
+
 const RenderExpandIcon = ({ open, transitionDuration }) => (
   <StyledVerticalNavExpandIcon open={open} transitionDuration={transitionDuration}>
     <i className='ri-arrow-right-s-line' />
@@ -57,9 +59,6 @@ const VerticalMenu = ({ scrollMenu }) => {
       >
         <MenuItem href='/test/list' icon={<i className='ri-information-line' />}>
           Test
-        </MenuItem>
-        <MenuItem href='/test/questions' icon={<i className='ri-information-line' />}>
-          Questions
         </MenuItem>
         <MenuItem href='/user/list' icon={<i className='ri-information-line' />}>
           Users

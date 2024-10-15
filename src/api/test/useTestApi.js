@@ -5,14 +5,16 @@ import axios from 'axios'
 import { useTheme } from '@mui/material/styles'
 
 import { toast } from 'react-toastify'
+import 'react-toastify/ReactToastify.min.css'
 import { IconButton, Typography } from '@mui/material'
 
-import { USER_MODULE_ENDPOINTS } from '@/Const/ApiEndpoints'
+import { USER_MODULE_ENDPOINTS } from '@/Const/test/ApiEndpoints'
 
 import { alertMessages } from '@/components/globals/AlertMessages'
 
 export default function useTestApi() {
   const [data, setData] = useState([])
+  const [categories, setCategories] = useState([])
   const [testData, setTestData] = useState({})
   const theme = useTheme()
 
@@ -32,6 +34,26 @@ export default function useTestApi() {
         )
         ?.then(res => {
           setData(res?.data?.payload?.data)
+        })
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    }
+  }
+
+  const getCategories = () => {
+    try {
+      axios
+        .post(
+          `${USER_MODULE_ENDPOINTS}/categories`,
+          {},
+          {
+            Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
+            Network: 'dev369',
+            accept: 'application/json'
+          }
+        )
+        ?.then(res => {
+          setCategories(res?.data?.payload)
         })
     } catch (error) {
       console.error('Error fetching data:', error)
@@ -97,7 +119,9 @@ export default function useTestApi() {
           }
         )
         .then(res => {
-          alertMessages(theme, 'success', res?.data?.message)
+          toast.error('Failed to load test')
+
+          // alertMessages(theme, 'success', res?.data?.message)
           fetchData()
         })
 
@@ -129,9 +153,11 @@ export default function useTestApi() {
 
   const deleteTestData = userId => {
     try {
-      axios.delete(`${USER_MODULE_ENDPOINTS}/delete/${userId}`).then(() => fetchData())
+      return axios.delete(`${USER_MODULE_ENDPOINTS}/delete/${userId}`).then(() => fetchData())
     } catch (error) {
-      console.error('Error fetching data:', error)
+      toast.error('Failed to load the test')
+
+      // alertMessages(theme, 'error', 'failed to delete test')
     }
   }
 
@@ -142,6 +168,8 @@ export default function useTestApi() {
     data,
     setData,
     testData,
-    viewTest
+    viewTest,
+    getCategories,
+    categories
   }
 }

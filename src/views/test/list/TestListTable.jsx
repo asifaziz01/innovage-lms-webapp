@@ -39,16 +39,19 @@ import {
 // Component Imports
 import { Box, Tooltip } from '@mui/material'
 
+import CustomAvatar from '@core/components/mui/Avatar'
+
+import tableStyles from '@core/styles/table.module.css'
+
 import TableFilters from './TableFilters'
 import AddTestDrawer from './AddTestDrawer'
-import CustomAvatar from '@core/components/mui/Avatar'
 
 // Util Imports
 // import { getInitials } from '../../../../../../Utils/getInitials'
 // import { getLocalizedUrl } from '../../../../../../Utils/i18n'
 
 // Style Imports
-import tableStyles from '@core/styles/table.module.css'
+
 import AlertDialogBox from '@/components/Common/AlertDialogBox'
 import DialogBoxComponent from '@/components/Common/DialogBoxComponent'
 import FilterHeader from '@/components/globals/FilterHeader'
@@ -111,7 +114,7 @@ const userStatusObj = {
 // Column Definitions
 const columnHelper = createColumnHelper()
 
-const TestListTable = ({ tableData, addUserData, deleteUserData }) => {
+const TestListTable = ({ tableData, addUserData, deleteUserData, categories, getCategories }) => {
   // States
   const [addUserOpen, setAddUserOpen] = useState(false)
 
@@ -448,11 +451,11 @@ const TestListTable = ({ tableData, addUserData, deleteUserData }) => {
                         <i className='ri-edit-box-line text-textSecondary' />
                       </Link>
                     </IconButton>
-                    {/* <IconButton size='small'>
+                    <IconButton size='small'>
                       <Link href={`/test/manage?guid=${row?.original?.guid}`} className='flex'>
                         <i class='ri-tools-line'></i>
                       </Link>
-                    </IconButton> */}
+                    </IconButton>
                     {/* <OptionMenu
                       iconClassName='text-textSecondary'
                       data={row}
@@ -554,45 +557,6 @@ const TestListTable = ({ tableData, addUserData, deleteUserData }) => {
       </FilterHeader>
       <Card>
         <Grid container item xs={12} display='flex' alignItems='center'>
-          {/* <Grid container item xs={12} display='flex' justifyContent='space-between' alignItems='center' pt={4} px={3}> */}
-          {/* <Grid item xs={4} display='flex' alignItems='center'> */}
-
-          {/* <IconButton onClick={() => router.push('/en/test/list')}>
-                <i class='ri-arrow-left-line'></i>
-              </IconButton>
-              <Typography
-                sx={{
-                  fontWeight: 500,
-                  fontSize: 24
-                }}
-                pl={1}
-              >
-                All Tests
-              </Typography> */}
-          {/* </Grid> */}
-          {/* <Grid item xs={2}>
-              <Button
-                fullWidth
-                variant='contained'
-                onClick={() => setAddUserOpen(!addUserOpen)}
-                className='max-sm:is-full'
-                startIcon={
-                  <i
-                    class='ri-add-fill'
-                    style={{
-                      width: 21.6,
-                      height: 21.6
-                    }}
-                  />
-                }
-              >
-                Add New Test
-              </Button>
-            </Grid> */}
-          {/* </Grid> */}
-          {/* <Grid item xs={12}>
-            <CardHeader title='Filters' className='pbe-4' />
-          </Grid> */}
           <Grid item xs={12}>
             <TableFilters
               setData={setFilteredData}
@@ -681,89 +645,17 @@ const TestListTable = ({ tableData, addUserData, deleteUserData }) => {
               /> */}
             </Box>
           </Grid>
-          <Grid container pr={8} item xs={11} spacing={3} display='flex' alignItems='center' justifyContent='flex-end'>
-            {/* <Grid item xs={2}>
-              <Button
-                size='large'
-                color='secondary'
-                fullWidth
-                variant='outlined'
-                startIcon={<i className='ri-upload-2-line' />}
-                className='max-sm:is-full'
-              >
-                Export
-              </Button>
-            </Grid>
-            <Grid item xs={2}>
-              <Button
-                size='large'
-                fullWidth
-                color='secondary'
-                variant='outlined'
-                startIcon={<i className='ri-upload-2-line' />}
-                className='max-sm:is-full'
-              >
-                Export
-              </Button>
-            </Grid> */}
-            <Grid item xs={3.5}>
-              {/* <Button
-                // size='large'
-                color='secondary'
-                fullWidth
-                variant='outlined'
-                onClick={() => {}}
-                startIcon={
-                  <i
-                    class='ri-settings-2-line'
-                    style={{
-                      width: 21.8,
-                      height: 21.8
-                    }}
-                  />
-                }
-
-                // className='max-sm:is-full'
-              >
-                Manage Question Templates
-              </Button> */}
-            </Grid>
-            {/* <Grid item xs={2.5}>
-              <Button
-                // size='large'
-                fullWidth
-                variant='contained'
-                onClick={() => setAddUserOpen(!addUserOpen)}
-                className='max-sm:is-full'
-                startIcon={
-                  <i
-                    class='ri-add-fill'
-                    style={{
-                      width: 21.6,
-                      height: 21.6
-                    }}
-                  />
-                }
-              >
-                Add New Test
-              </Button>
-            </Grid> */}
-          </Grid>
+          <Grid
+            container
+            pr={8}
+            item
+            xs={11}
+            spacing={3}
+            display='flex'
+            alignItems='center'
+            justifyContent='flex-end'
+          ></Grid>
         </Grid>
-
-        {/* <div className='flex justify-between gap-4 p-5 flex-col items-start sm:flex-row sm:items-center'>
-          <div className='flex items-center gap-x-4 max-sm:gap-y-4 flex-col max-sm:is-full sm:flex-row'>
-            <DebouncedInput
-              value={globalFilter ?? ''}
-              onChange={value => setGlobalFilter(String(value))}
-              placeholder='Search User'
-              className='max-sm:is-full'
-            />
-            <Button variant='contained' onClick={() => setAddUserOpen(!addUserOpen)} className='max-sm:is-full'>
-              Add New User
-            </Button>
-          </div>
-        </div> */}
         <div className='overflow-x-auto pt-5'>
           <table className={tableStyles.table}>
             <thead>
@@ -848,14 +740,16 @@ const TestListTable = ({ tableData, addUserData, deleteUserData }) => {
         userData={data}
         setData={setData}
         addUserData={addUserData}
+        categories={categories}
+        getCategories={getCategories}
       />
       {open && (
         <AlertDialogBox
           open={open}
           handleCancel={handleCancelDelete}
           handleConfirm={handleConfirmDelete}
-          title='Delete Users'
-          textContent='Are you sure you want to delete this user?'
+          title='Delete Test'
+          textContent='Are you sure you want to delete this test?'
           acceptedButton='Delete'
           rejectedButton='Cancel'
         />

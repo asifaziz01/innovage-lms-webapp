@@ -7,6 +7,8 @@ import Typography from '@mui/material/Typography'
 // Third-party Imports
 import classnames from 'classnames'
 
+import { useTheme } from '@mui/material/styles'
+
 import QuestionsSection from './QuestionsSection'
 
 // Component Imports
@@ -14,7 +16,10 @@ import QuestionsSection from './QuestionsSection'
 
 const TestCardItems = props => {
   // Props
-  const { stats, avatarColor, subtitle: subtitle, linkheading1, linkheading2 } = props
+  const { stats, avatarColor, subtitle: subtitle, linkheading1, linkheading2, report } = props
+  const theme = useTheme()
+
+  console.info(report)
 
   return (
     <Card
@@ -24,45 +29,52 @@ const TestCardItems = props => {
         paddingBottom: 3,
         paddingLeft: 2,
         paddingRight: 2,
-
-        minHeight: '23vh'
+        ...(!report && {
+          minHeight: '23vh'
+        })
       }}
     >
       <CardContent className='flex flex-col justify-between gap-1'>
-        <div className='flex items-center gap-3 flex-grow '>
+        <div className={`flex gap-3 flex-grow ${report ? 'flex-col' : 'items-center'}`}>
           <div className='flex items-center gap-2 flex-wrap'>
-            <Typography fontSize={24} fontWeight={500} color={avatarColor}>
+            <Typography fontSize={report ? 28 : 24} fontWeight={500} color={avatarColor}>
               {stats}
             </Typography>
           </div>
-          <Typography variant='body2' color={avatarColor}>
+          <Typography
+            variant={report ? 'h5' : 'body2'}
+            fontWeight={400}
+            color={!report ? avatarColor : theme?.palette?.common?.black}
+          >
             {subtitle}
           </Typography>
         </div>
-        <div className='flex items-center gap-3 flex-grow '>
-          {linkheading1 && (
-            <Typography
-              component='a'
-              href='https://example.com'
-              target='_blank'
-              rel='noopener noreferrer'
-              style={{ textDecoration: 'underline', textUnderlineOffset: 3 }} // Optional: to style the link
-            >
-              {linkheading1}
-            </Typography>
-          )}
-          {linkheading2 && (
-            <Typography
-              component='a'
-              href='https://example.com'
-              target='_blank'
-              rel='noopener noreferrer'
-              style={{ textDecoration: 'underline', textUnderlineOffset: 3 }} // Optional: to style the link
-            >
-              {linkheading2}
-            </Typography>
-          )}
-        </div>
+        {(linkheading1 || linkheading2) && (
+          <div className='flex items-center gap-3 flex-grow '>
+            {linkheading1 && (
+              <Typography
+                component='a'
+                href='https://example.com'
+                target='_blank'
+                rel='noopener noreferrer'
+                style={{ textDecoration: 'underline', textUnderlineOffset: 3 }} // Optional: to style the link
+              >
+                {linkheading1}
+              </Typography>
+            )}
+            {linkheading2 && (
+              <Typography
+                component='a'
+                href='https://example.com'
+                target='_blank'
+                rel='noopener noreferrer'
+                style={{ textDecoration: 'underline', textUnderlineOffset: 3 }} // Optional: to style the link
+              >
+                {linkheading2}
+              </Typography>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   )

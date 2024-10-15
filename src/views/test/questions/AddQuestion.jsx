@@ -51,22 +51,24 @@ import EssaysQuestion from './EssaysQuestion'
 import QuestionSettings from './QuestionSettings'
 import FilterHeader from '@/components/globals/FilterHeader'
 import { alertMessages } from '@/components/globals/AlertMessages'
-import useQuestionApi from '@/api/useQuestionApi'
+import useQuestionApi from '@/api/test/useQuestionApi'
 
 const AddQuestion = () => {
   const searchParams = useSearchParams()
   const guid = searchParams.get('guid')
   const { createQuestion, editQuestion, QId, questionTypeFixed } = useQuestionApi()
+  const [openQuestionFeedback, setOpenQuestionFeedback] = useState(false)
   const [questionType, setQuestionType] = useState('mcmc')
   const [saveQuestion, setSaveQuestion] = useState(false)
   const [editQuestions, setEditQuestions] = useState(false)
   const [template, setTemplate] = useState('template_1')
   const [unit, setUnit] = useState('second') // Default unit
+  const [files, setFiles] = useState([])
   const theme = useTheme()
 
   const [mcqFields, setMcqFields] = useState([
-    { id: 1, choice: '', correct_answer: false },
-    { id: 2, choice: '', correct_answer: false }
+    { id: 1, choice: '', correct_answer: false, feedback: '' },
+    { id: 2, choice: '', correct_answer: false, feedback: '' }
   ])
 
   const [choiceFields, setChoiceFields] = useState([
@@ -98,12 +100,14 @@ const AddQuestion = () => {
     }
   })
 
+  const fieldValues = watch()
   const selectedValue = watch('question_type')
   const [nquestion, setNQuestion] = useState('')
 
   console.info(nquestion)
   const [feedback, setFeedback] = useState('')
   const [answerFeedback, setAnswerFeedback] = useState('')
+  const [saveAsNew, setSaveAsNew] = useState(false)
 
   console.info(nquestion)
 
@@ -116,6 +120,8 @@ const AddQuestion = () => {
   console.info(mcqFields)
 
   const handleFormSubmit = async data => {
+    console.info(data)
+
     if (selectedValue === 'mcmc') {
       const hasCorrectAnswer = mcqFields.some(choice => choice.correct_answer)
 
@@ -143,24 +149,42 @@ const AddQuestion = () => {
 
       // if (editQuestions) {
       if (QId && editQuestions) {
-        response = await editQuestion({
-          guid,
-          qId: QId,
-          ...data,
-          choices: selectedValue === 'mcmc' ? mcqFields : choiceFields,
-          question: nquestion,
-          feedback: feedback,
-          answer_feedback: answerFeedback
-        })
+        response = await editQuestion(
+          {
+            guid,
+            qId: QId,
+            ...data,
+            ...(selectedValue === 'essays' && {
+              answer: fieldValues?.answer
+            }),
+            ...((selectedValue === 'mcmc' || selectedValue === 'tf') && {
+              choices: selectedValue === 'mcmc' ? mcqFields : choiceFields
+            }),
+            question: fieldValues?.question,
+            feedback: fieldValues?.general_feedback,
+            answer_feedback: fieldValues?.answer_feedback,
+            userfile: files
+          },
+          saveAsNew ? true : false
+        )
       } else {
-        response = await createQuestion({
-          guid,
-          ...data,
-          choices: selectedValue === 'mcmc' ? mcqFields : choiceFields,
-          question: nquestion,
-          feedback: feedback,
-          answer_feedback: answerFeedback
-        })
+        response = await createQuestion(
+          {
+            guid,
+            ...data,
+            ...(selectedValue === 'essays' && {
+              answer: fieldValues?.answer
+            }),
+            ...((selectedValue === 'mcmc' || selectedValue === 'tf') && {
+              choices: selectedValue === 'mcmc' ? mcqFields : choiceFields
+            }),
+            question: fieldValues?.question,
+            feedback: fieldValues?.general_feedback,
+            answer_feedback: fieldValues?.answer_feedback,
+            userfile: files
+          },
+          saveAsNew ? true : false
+        )
       }
 
       // if (response.success) {
@@ -177,22 +201,18 @@ const AddQuestion = () => {
 
   return (
     <>
-      <FilterHeader title='Add Question' subtitle='Orders placed across your store' link='/test/list'></FilterHeader>
+      <style>
+        {`
+          .ql-container {
+          in-height: 30%;
+          }
+          .ql-editor {
+            min-height: 30vh; /* Adjust the height */
+          }
+        `}
+      </style>
+      <FilterHeader title='Add Question' subtitle='Orders placed across your store' />{' '}
       <Grid container item xs={12}>
-        {/* <Grid item xs={12} py={5} display='flex' alignItems='center'>
-          <IconButton onClick={() => router.push('/en/test/list')}>
-            <i class='ri-arrow-left-line'></i>
-          </IconButton>
-          <Typography
-            sx={{
-              fontWeight: 'bold',
-              fontSize: 18
-            }}
-            pl={1}
-          >
-            Add Question
-          </Typography>
-        </Grid> */}
         <Grid item container xs={12}>
           <form
             // eslint-disable-next-line lines-around-comment
@@ -217,12 +237,59 @@ const AddQuestion = () => {
                 <CardContent>
                   <Grid container xs={12}>
                     <Grid item xs={12}>
-                      <Box>
-                        <TextEditor setTextValue={setNQuestion} />
-                      </Box>
+                      {/* <TextEditor setTextValue={setNQuestion} /> */}
+                      <Controller
+                        name='question'
+                        control={control}
+                        rules={{ required: true }}
+                        render={({ field }) => (
+                          <TextEditor
+                            {...field}
+                            onChange={content => field.onChange(content)} // update the form state
+                            value={field.value || ''}
+                            setTextValue={setNQuestion}
+                            autoFocus
+                            fullWidth
+                            quilleditor
+                          />
+                        )}
+                      />
+                      {errors.question && <FormHelperText error>This field is required.</FormHelperText>}
                     </Grid>
                     <Grid item xs={12} py={3}>
-                      <QuestionUpload />
+                      <Typography
+                        component='a'
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        style={{ textDecoration: 'underline', textUnderlineOffset: 3, cursor: 'pointer' }} // Optional: to style the link
+                        onClick={() => {
+                          setOpenQuestionFeedback(!openQuestionFeedback)
+                        }}
+                      >
+                        Hint
+                      </Typography>
+                      {openQuestionFeedback && (
+                        <Grid item xs={12} py={3}>
+                          <Controller
+                            name='question_feedback'
+                            control={control}
+                            rules={{ required: true }}
+                            render={({ field }) => (
+                              <TextEditor
+                                {...field}
+                                onChange={content => field.onChange(content)} // update the form state
+                                value={field.value || ''}
+                                autoFocus
+                                fullWidth
+                                quilleditor
+                              />
+                            )}
+                          />
+                        </Grid>
+                      )}
+                    </Grid>
+                    <Grid item xs={12} py={3}>
+                      <QuestionUpload files={files} setFiles={setFiles} />
                     </Grid>
                   </Grid>
                 </CardContent>
@@ -246,7 +313,7 @@ const AddQuestion = () => {
               {selectedValue === 'tf' && (
                 <TrueFalseQuestion choiceFields={choiceFields} setChoiceFields={setChoiceFields} />
               )}
-              {selectedValue === 'essays' && <EssaysQuestion />}
+              {selectedValue === 'essays' && <EssaysQuestion control={control} errors={errors} />}
             </Grid>
             <Grid container item xs={12}>
               <QuestionFeedback
@@ -267,6 +334,7 @@ const AddQuestion = () => {
                 setNQuestion={setNQuestion}
                 setFeedback={setFeedback}
                 setAnswerFeedback={setAnswerFeedback}
+                setSaveAsNew={setSaveAsNew}
               />
             </Grid>
           </form>

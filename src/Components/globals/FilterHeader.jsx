@@ -36,8 +36,14 @@ const FilterHeader = ({ link, title, subtitle, children }) => {
       // position='fixed'
       // zIndex='9999'
     >
-      <Grid item xs={children?.length === 3 ? 6 : 8} display='flex' alignItems='flex-start' pb={3}>
-        <IconButton onClick={() => router.push(link)}>
+      <Grid
+        item
+        xs={children?.length === 3 ? 6 : 8}
+        display='flex'
+        alignItems={subtitle ? 'flex-start' : 'center'}
+        pb={3}
+      >
+        <IconButton onClick={() => (link ? router.push(link) : router.back())}>
           <i class='ri-arrow-left-line'></i>
         </IconButton>
         <Box display='flex' flexDirection='column' alignItems='flex-start'>
@@ -49,14 +55,16 @@ const FilterHeader = ({ link, title, subtitle, children }) => {
           >
             {title}
           </Typography>
-          <Typography
-            sx={{
-              fontWeight: 400,
-              fontSize: 15
-            }}
-          >
-            {subtitle}
-          </Typography>
+          {subtitle && (
+            <Typography
+              sx={{
+                fontWeight: 400,
+                fontSize: 15
+              }}
+            >
+              {subtitle}
+            </Typography>
+          )}
         </Box>
       </Grid>
       {children}

@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react'
 
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
-import './quill.css'
 
-const Reactquill = ({ value, onChange, onKeyPress, placeholder, height }) => {
+const Reactquill = ({ value, onChange, onKeyPress }) => {
   const [values, setValues] = useState(value)
 
   // Sync the initial value passed into the component
@@ -54,7 +53,7 @@ const Reactquill = ({ value, onChange, onKeyPress, placeholder, height }) => {
   }
 
   return (
-    <div style={{ overflow: 'auto' }}>
+    <div>
       <ReactQuill
         theme='snow'
         value={values}
@@ -62,7 +61,6 @@ const Reactquill = ({ value, onChange, onKeyPress, placeholder, height }) => {
         modules={modules}
         formats={formats}
         onKeyPress={onKeyPress}
-        placeholder={placeholder}
       />
     </div>
   )

@@ -18,7 +18,7 @@ import { styled } from '@mui/material/styles'
 import { useDropzone } from 'react-dropzone'
 
 // Component Imports
-import { Box, Dialog, DialogContent, DialogTitle } from '@mui/material'
+import { Box, CircularProgress, Dialog, DialogContent, DialogTitle, Backdrop } from '@mui/material'
 
 import CustomAvatar from '@core/components/mui/Avatar'
 
@@ -40,9 +40,9 @@ const Dropzone = styled(AppReactDropzone)(({ theme }) => ({
   }
 }))
 
-const QuestionUpload = () => {
+const QuestionUpload = ({ files, setFiles }) => {
   // States
-  const [files, setFiles] = useState([])
+
   const [uploadFile, setUploadFile] = useState(false)
 
   console.info(files)
@@ -237,6 +237,9 @@ const QuestionUpload = () => {
                   variant='contained'
                   style={{
                     margin: 5
+                  }}
+                  onClick={() => {
+                    setUploadFile(false)
                   }}
                 >
                   Upload Files

@@ -5,10 +5,11 @@ import Grid from '@mui/material/Grid'
 
 // Component Imports
 import TestListTable from './TestListTable'
-import useTestApi from '@/api/useTestApi'
+import useTestApi from '@/api/test/useTestApi'
 
 const UserList = () => {
-  const { addTestData, updateTestData, deleteTestData, data, testData, viewTest } = useTestApi()
+  const { addTestData, updateTestData, deleteTestData, data, testData, viewTest, getCategories, categories } =
+    useTestApi()
 
   return (
     <Grid container spacing={6}>
@@ -16,7 +17,13 @@ const UserList = () => {
         <UserListCards />
       </Grid> */}
       <Grid item xs={12}>
-        <TestListTable tableData={data} addUserData={addTestData} deleteUserData={deleteTestData} />
+        <TestListTable
+          tableData={data}
+          addUserData={addTestData}
+          deleteUserData={deleteTestData}
+          categories={categories}
+          getCategories={getCategories}
+        />
       </Grid>
     </Grid>
   )

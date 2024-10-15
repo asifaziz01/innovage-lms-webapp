@@ -1,8 +1,11 @@
 import { Box, Card, CardContent, CardHeader, Grid, Typography } from '@mui/material'
 
-import TextEditor from '@/components/Common/TextEditor'
+import { Controller } from 'react-hook-form'
 
-const QuestionFeedback = ({ setFeedback, setAnswerFeedback }) => {
+import TextEditor from '@/components/Common/TextEditor'
+import Reactquill from '@/libs/styles/Reactquill'
+
+const QuestionFeedback = ({ control }) => {
   return (
     <Grid item xs={12} py={4}>
       <Card>
@@ -14,7 +17,20 @@ const QuestionFeedback = ({ setFeedback, setAnswerFeedback }) => {
               </Typography>
             </Grid>
             <Grid item xs={12}>
-              <TextEditor setTextValue={setFeedback} />
+              <Controller
+                name='general_feedback'
+                control={control}
+                render={({ field }) => (
+                  <TextEditor
+                    {...field}
+                    onChange={content => field.onChange(content)} // update the form state
+                    value={field.value || ''}
+                    autoFocus
+                    fullWidth
+                    quilleditor
+                  />
+                )}
+              />
             </Grid>
           </Grid>
           <Grid container item xs={12} pt={6}>
@@ -24,7 +40,20 @@ const QuestionFeedback = ({ setFeedback, setAnswerFeedback }) => {
               </Typography>
             </Grid>
             <Grid item xs={12}>
-              <TextEditor setTextValue={setAnswerFeedback} />
+              <Controller
+                name='answer_feedback'
+                control={control}
+                render={({ field }) => (
+                  <TextEditor
+                    {...field}
+                    onChange={content => field.onChange(content)} // update the form state
+                    value={field.value || ''}
+                    autoFocus
+                    fullWidth
+                    quilleditor
+                  />
+                )}
+              />
             </Grid>
           </Grid>
         </CardContent>

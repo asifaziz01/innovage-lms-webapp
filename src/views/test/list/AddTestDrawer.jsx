@@ -1,5 +1,8 @@
 // React Imports
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+
+// eslint-disable-next-line import/no-unresolved
+// import * as yup from 'yup'
 
 // MUI Imports
 import Button from '@mui/material/Button'
@@ -23,6 +26,8 @@ import ReactQuill from 'react-quill'
 
 import 'react-quill/dist/quill.snow.css'
 
+// import { yupResolver } from '@hookform/resolvers/yup'
+
 import TextEditor from '@/components/Common/TextEditor'
 
 // Vars
@@ -34,26 +39,38 @@ const initialData = {
 
 const AddTestDrawer = props => {
   // Props
-  const { open, handleClose, userData, addUserData } = props
+  const { open, handleClose, userData, addUserData, categories, getCategories } = props
+
+  console.info(categories)
 
   // States
   const [formData, setFormData] = useState(initialData)
   const [description, setDescription] = useState('')
   const [value, setValue] = useState('')
 
+  // const schema = yup.object().shape({
+  //   title: yup.string().required().min(3),
+  //   type: yup.string().required(),
+  //   details: yup.string(),
+  //   category: yup.string()
+  // })
+
   // Hooks
   const {
     control,
     reset: resetForm,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
+    watch
   } = useForm({
     defaultValues: {
       title: '',
-      description: '',
+      details: '',
       type: '',
       category: ''
     }
+
+    // resolver: yupResolver(schema)
   })
 
   const CustomQuill = styled(ReactQuill)`
@@ -68,13 +85,17 @@ const AddTestDrawer = props => {
     }
   `
 
+  const fieldValues = watch()
+
   const onSubmit = data => {
+    console.info(data)
+
     const newUser = {
       id: (userData?.length && userData?.length + 1) || 1,
 
       // avatar: `/images/avatars/${Math.floor(Math.random() * 8) + 1}.png`,
       title: data.title,
-      description: description,
+      description: data.details,
       type: data.type,
       category: data?.category,
       created_on: moment().format('YYYY-MM-DD HH:mm:ss'),
@@ -93,13 +114,17 @@ const AddTestDrawer = props => {
     // setData([...(userData ?? []), newUser])
     handleClose()
     setFormData(initialData)
-    resetForm({ title: '', description: '', type: '', category: '' })
+    resetForm({ title: '', details: '', type: '', category: '' })
   }
 
   const handleReset = () => {
     handleClose()
     setFormData(initialData)
   }
+
+  useEffect(() => {
+    getCategories()
+  }, [])
 
   return (
     <Drawer
@@ -143,7 +168,22 @@ const AddTestDrawer = props => {
                 )}
               />
               <Box pt={5} pb={7}>
-                <TextEditor setTextValue={setDescription} />
+                {/* <TextEditor setTextValue={setDescription} /> */}
+                <Controller
+                  name='details'
+                  control={control}
+                  render={({ field }) => (
+                    <TextEditor
+                      {...field}
+                      onChange={content => field.onChange(content)} // update the form state
+                      value={field.value || ''}
+                      autoFocus
+                      fullWidth
+                      width='22vw'
+                      quilleditor
+                    />
+                  )}
+                />
               </Box>
               <FormControl
                 fullWidth
@@ -178,9 +218,11 @@ const AddTestDrawer = props => {
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Select label='Select Category' {...field} error={Boolean(errors.category)}>
-                      <MenuItem value='category1'>Category 1</MenuItem>
-                      <MenuItem value='category2'>Category 2</MenuItem>
-                      <MenuItem value='category3'>Category 3</MenuItem>
+                      {categories?.map(item => (
+                        <MenuItem value={item?.title} key={item?.guid}>
+                          {item?.title}
+                        </MenuItem>
+                      ))}
                     </Select>
                   )}
                 />

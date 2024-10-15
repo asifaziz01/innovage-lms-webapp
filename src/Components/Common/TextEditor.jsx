@@ -1,9 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import classnames from 'classnames'
 
 import ReactQuill from 'react-quill'
-import 'react-quill/dist/quill.snow.css'
 import { styled } from '@mui/material/styles'
 import { Box, Divider, IconButton } from '@mui/material'
 
@@ -13,6 +12,7 @@ import { StarterKit } from '@tiptap/starter-kit'
 import { Underline } from '@tiptap/extension-underline'
 import { Placeholder } from '@tiptap/extension-placeholder'
 import { TextAlign } from '@tiptap/extension-text-align'
+import 'react-quill/dist/quill.snow.css'
 
 import '@/libs/styles/tiptapEditor.css'
 import CustomIconButton from '@/@core/components/mui/IconButton'
@@ -104,7 +104,21 @@ const EditorToolbar = ({ editor }) => {
   )
 }
 
-const TextEditor = ({ index, text, handleInputChange = () => {}, setTextValue = () => {} }) => {
+const TextEditor = ({
+  index,
+  text,
+  handleInputChange = () => {},
+  setTextValue = () => {},
+  value,
+  onChange,
+  onKeyPress,
+  placeholder,
+  quilleditor,
+  simpleeditor,
+  width
+}) => {
+  const [values, setValues] = useState(value)
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -125,22 +139,79 @@ const TextEditor = ({ index, text, handleInputChange = () => {}, setTextValue = 
     }
   })
 
+  // Sync the initial value passed into the component
+  useEffect(() => {
+    setValues(value)
+  }, [value])
+
+  // Define the modules for the toolbar
+  const modules = {
+    toolbar: [
+      [{ header: '1' }, { header: '2' }, { font: [] }],
+      [{ size: [] }],
+      ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      [{ indent: '-1' }, { indent: '+1' }],
+      [{ align: [] }],
+      [{ color: [] }, { background: [] }],
+      ['link', 'image', 'video'],
+      ['clean']
+    ]
+  }
+
+  const formats = [
+    'header',
+    'font',
+    'size',
+    'bold',
+    'italic',
+    'underline',
+    'strike',
+    'blockquote',
+    'list',
+    'bullet',
+    'indent',
+    'align',
+    'color',
+    'background',
+    'link',
+    'image',
+    'video'
+  ]
+
+  // Handle content changes
+  const handleChange = (content, delta, source, editor) => {
+    setValues(content) // Update the internal state
+    onChange(content) // Pass the content back to the parent component
+  }
+
   const handleContentChange = newContent => {
     // setEditorContent(newContent);
     handleInputChange(index, newContent)
   }
 
-  return (
-    <Box border='1px solid #cfd0d6' borderRadius={1}>
-      <EditorToolbar editor={editor} />
-      <Divider className='mli-5' />
-      <EditorContent
-        editor={editor}
-        className='bs-[115px] overflow-y-auto flex '
-        content={text}
-        onContextChange={handleContentChange}
+  return quilleditor ? (
+    <div style={{ overflow: 'auto' }}>
+      <ReactQuill
+        theme='snow'
+        value={values}
+        onChange={handleChange}
+        modules={modules}
+        formats={formats}
+        onKeyPress={onKeyPress}
+        placeholder={placeholder}
       />
-    </Box>
+    </div>
+  ) : (
+    <textarea
+      style={{
+        width: width ?? '75vw',
+        border: '1px solid #c2c3c9'
+      }}
+      className='bs-[115px] overflow-y-auto flex '
+      value={value}
+      onChange={onChange}
+    />
   )
 }
 

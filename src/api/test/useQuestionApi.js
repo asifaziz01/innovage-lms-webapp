@@ -4,18 +4,18 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { useTheme } from '@mui/material/styles'
 
-import { QUESTION_MODULE_ENDPOINTS } from '@/Const/ApiEndpoints'
+import { QUESTION_MODULE_ENDPOINTS } from '@/Const/test/ApiEndpoints'
 import { alertMessages } from '@/components/globals/AlertMessages'
 
 export default function useQuestionApi() {
   const [data, setData] = useState([])
   const [QId, setQId] = useState(null)
-  const [questionTypeFixed, setQuestionTypeFized] = useState(false)
+  const [questionTypeFixed, setQuestionTypeFixed] = useState(false)
   const theme = useTheme()
 
   console.info(process.env.NEXT_PUBLIC_DOCS_URL)
 
-  const createQuestion = data => {
+  const createQuestion = (data, mode) => {
     //userData example
     // const data = {
     //   title: userData?.title,
@@ -32,8 +32,16 @@ export default function useQuestionApi() {
             if (choice.choice) {
               formData.append(`choice[${i}]`, choice.choice)
               formData.append(`correct_answer[${i}]`, choice.correct_answer ? '1' : '0')
+              formData.append(`feedback[${i}]`, choice.feedback)
               formData.append(`order[${i}]`, i)
             }
+          })
+        }
+
+        if (key === 'userfile') {
+          data?.userfile?.forEach(file => {
+            formData.append('userfile', file)
+            console.log(file, 'eeeee')
           })
         } else {
           formData.append(key, value)
@@ -49,7 +57,12 @@ export default function useQuestionApi() {
           accept: 'application/json'
         })
         .then(res => {
-          setQuestionTypeFized(true)
+          if (!mode && res?.success) {
+            setQuestionTypeFixed(true)
+          } else {
+            setQuestionTypeFixed(false)
+          }
+
           alertMessages(theme, 'success', res?.data?.message)
           setQId(res?.data?.payload?.question_guid)
         })
@@ -60,14 +73,13 @@ export default function useQuestionApi() {
     }
   }
 
-  const editQuestion = data => {
+  const editQuestion = (data, mode) => {
     //userData example
     // const data = {
     //   title: userData?.title,
     //   type: userData?.type,
     //   details: userData?.description
     // }
-
     const formData = new FormData()
 
     if (typeof data === 'object') {
@@ -77,9 +89,18 @@ export default function useQuestionApi() {
             if (choice.choice) {
               formData.append(`choice[${i}]`, choice.choice)
               formData.append(`correct_answer[${i}]`, choice.correct_answer ? '1' : '0')
+              formData.append(`feedback[${i}]`, choice.feedback)
               formData.append(`order[${i}]`, i)
             }
           })
+        }
+
+        if (key === 'userfile') {
+          data?.userfile?.length >= 1 &&
+            data?.userfile?.forEach(file => {
+              formData.append('userfile', file)
+              console.log(file, 'eeeee')
+            })
         } else {
           formData.append(key, value)
         }
@@ -93,7 +114,15 @@ export default function useQuestionApi() {
           Network: 'dev369',
           accept: 'application/json'
         })
-        .then(res => alertMessages(theme, 'info', res?.data?.message))
+        .then(res => {
+          if (!mode && res?.success) {
+            setQuestionTypeFixed(true)
+          } else {
+            setQuestionTypeFixed(false)
+          }
+
+          alertMessages(theme, 'info', res?.data?.message)
+        })
 
       //   return response.data
     } catch (error) {
@@ -105,6 +134,7 @@ export default function useQuestionApi() {
     editQuestion,
     createQuestion,
     QId,
-    questionTypeFixed
+    questionTypeFixed,
+    setQuestionTypeFixed
   }
 }

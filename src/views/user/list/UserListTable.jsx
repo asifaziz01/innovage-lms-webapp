@@ -54,7 +54,8 @@ import AddUserDrawer from './AddUserDrawer'
 import OptionMenu from '@core/components/option-menu'
 import CustomAvatar from '@core/components/mui/Avatar'
 
-import { getInitials } from '@/Utils/getInitials'
+import { getInitials } from '@/utils/getInitials'
+
 // import { getLocalizedUrl } from '@/Utils/i18n'
 import '../../style/styles.css'
 import tableStyles from '@core/styles/table.module.css'

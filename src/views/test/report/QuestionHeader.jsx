@@ -1,0 +1,118 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+
+import { Typography, Box, Divider } from '@mui/material'
+
+const QuestionHeader = ({
+  timeLeft,
+  currentQuestionNumber,
+  totalQuestions,
+  negativeMarking,
+  questionMarks,
+  attemptQuestions = null,
+  notAnsweredQuestions = null,
+  wrongQuestions = null,
+  correctQuestions = null
+}) => {
+  // Helper function to format time as mm:ss
+  const formatTime = seconds => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box
+          sx={{
+            padding: '8px',
+            height: 32,
+            borderRadius: 1,
+            bgcolor: '#FFDBDB',
+            display: 'flex',
+            alignItems: 'center'
+          }}
+        >
+          {mins.toString().padStart(2, '0')}
+        </Box>
+        :
+        <Box
+          sx={{
+            padding: '8px',
+            height: 32,
+            borderRadius: 1,
+            bgcolor: '#FFDBDB',
+            display: 'flex',
+            alignItems: 'center'
+          }}
+        >
+          {secs.toString().padStart(2, '0')}
+        </Box>
+      </Box>
+    )
+  }
+
+  return (
+    <>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          padding: '30px 30px',
+          backgroundColor: '#fff',
+          width: '100%'
+        }}
+      >
+        {timeLeft && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography variant='body1'>Question Timer:</Typography>
+            {formatTime(timeLeft)}
+          </Box>
+        )}
+        <Divider orientation='vertical' flexItem sx={{ margin: '0 16px' }} />
+        {negativeMarking && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography variant='body1'>Negative Marking</Typography>
+            <Box
+              sx={{
+                padding: '10px',
+                height: 28,
+                borderRadius: 1,
+                bgcolor: '#FF4D49',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#fff'
+              }}
+            >
+              {negativeMarking}
+            </Box>
+          </Box>
+        )}
+
+        <Divider orientation='vertical' flexItem sx={{ margin: '0 16px' }} />
+        {questionsMarks && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography variant='body1'>Question Marks</Typography>
+            <Box
+              sx={{
+                padding: '10px',
+                height: 28,
+                borderRadius: 1,
+                bgcolor: '#55A91E',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              {questionMarks}
+            </Box>
+          </Box>
+        )}
+      </Box>
+
+      <Divider />
+    </>
+  )
+}
+
+export default QuestionHeader

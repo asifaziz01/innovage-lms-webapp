@@ -1,11 +1,14 @@
 // Context Imports
 import { VerticalNavProvider } from '@menu/contexts/verticalNavContext'
 import { SettingsProvider } from '@core/contexts/settingsContext'
+
+import { getMode, getSettingsFromCookie, getSystemMode } from '@core/utils/serverHelpers'
+
 import ThemeProvider from '@/components/theme'
 
 // Util Imports
-import { getMode, getSettingsFromCookie, getSystemMode } from '@core/utils/serverHelpers'
 import ReduxProvider from '@/redux-store/ReduxProvider'
+import AppReactToastify from '@/libs/styles/AppReactToastify'
 
 const Providers = props => {
   // Props
@@ -21,6 +24,7 @@ const Providers = props => {
       <SettingsProvider settingsCookie={settingsCookie} mode={mode}>
         <ThemeProvider direction={direction} systemMode={systemMode}>
           <ReduxProvider>{children}</ReduxProvider>
+          <AppReactToastify direction={direction} hideProgressBar />
         </ThemeProvider>
       </SettingsProvider>
     </VerticalNavProvider>

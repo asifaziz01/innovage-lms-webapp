@@ -7,7 +7,8 @@ const SaveQuestion = ({
   setEditQuestion,
   setNQuestion,
   setFeedback,
-  setAnswerFeedback
+  setAnswerFeedback,
+  setSaveAsNew
 }) => {
   return (
     <Grid container item xs={12} spacing={4}>
@@ -20,6 +21,7 @@ const SaveQuestion = ({
           onClick={() => {
             setEditQuestion(true)
             setSaveQuestion(false)
+            setSaveAsNew(false)
           }}
         >
           Submit
@@ -32,8 +34,8 @@ const SaveQuestion = ({
           type='submit'
           fullWidth
           onClick={() => {
-            setSaveQuestion(true)
             setEditQuestion(false)
+            setSaveAsNew(true)
           }}
         >
           Save As New
@@ -55,7 +57,10 @@ const SaveQuestion = ({
               timeValue: 'second',
               time: '',
               difficulty: '',
-              importance: ''
+              importance: '',
+              question: '',
+              feedback: '',
+              answer_feedback: ''
             })
           }}
           fullWidth
