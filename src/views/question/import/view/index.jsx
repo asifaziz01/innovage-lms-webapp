@@ -185,6 +185,8 @@ const ImportView = () => {
     } else {
       setShowAnswers([]) // Show answer if hidden
     }
+    setIsExpandedAll(true)
+    setIsVisible(true)
   }
   const [filteredData, setFilteredData] = useState(uploadData || []) // Initialize with data from API
 

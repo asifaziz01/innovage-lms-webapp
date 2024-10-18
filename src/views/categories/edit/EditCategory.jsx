@@ -46,8 +46,8 @@ const EditCategory = ({ isLoading = false }) => {
         setTypes(res?.data?.payload?.parent_guid)
         reset({
           title: res?.data?.payload?.title,
-          type: res?.data?.payload?.type,
-          details: res?.data?.payload?.details,
+          // type: res?.data?.payload?.type,
+          // details: res?.data?.payload?.details,
           parent_guid: res?.data.payload?.parent_guid
         })
         console.log(res?.data?.payload?.type, 'sss')

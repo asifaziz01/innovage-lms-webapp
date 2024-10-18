@@ -39,20 +39,23 @@ export default function useCategoryApi() {
   }
   const addCategoryData = userData => {
     console.log(userData, 'checking123')
-    //userData example
+
+    // Create the data object
     const data = {
       title: userData?.title,
-      // type: userData?.type,
-      details: userData?.description,
-      parent_guid: userData?.category || 'null'
+      details: userData?.description
     }
 
     const formData = new FormData()
 
-    if (typeof data === 'object') {
-      Object.entries(data).forEach(([key, value]) => {
-        formData.append(key, value)
-      })
+    // Append all fields to formData
+    Object.entries(data).forEach(([key, value]) => {
+      formData.append(key, value)
+    })
+
+    // Only append parent_guid if userData.category has a value
+    if (userData?.category) {
+      formData.append('parent_guid', userData.category)
     }
 
     try {

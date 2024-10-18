@@ -2,14 +2,37 @@
 import React, { useEffect, useState } from 'react'
 // import useQuestionApi from '../../Api/useQuestionApi'
 import QuestionCard from '../list/QuestionCard'
-import { Grid, Box, CircularProgress, FormControl, CardHeader, TextField, Card } from '@mui/material'
+import {
+  Grid,
+  Box,
+  CircularProgress,
+  FormControl,
+  CardHeader,
+  TextField,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Button,
+  Card
+} from '@mui/material'
 import TableFilters from '../list/TableFilters'
 import TestCard from '../list/TestCard'
 import QuickLinksCard from '../list/QuickLinkCards'
 import useQuestionModuleApi from '@/api/useQuestionModuleApi'
+import QuestionCardEdit from '../list/QuestionCardEdit'
+import PaginationCard from '@/api/Pagination'
 const AllQuestionList = () => {
-  const { allquestionData, setallquestionData, fetchDataallquestion, loader, searchKeyword, setSearchKeyword } =
-    useQuestionModuleApi()
+  const {
+    allquestionData,
+    setallquestionData,
+    fetchDataallquestion,
+    loader,
+    searchKeyword,
+    setSearchKeyword,
+    BulkDelete
+  } = useQuestionModuleApi()
 
   // useEffect(() => {
   //   fetchDataallquestion()
@@ -17,19 +40,40 @@ const AllQuestionList = () => {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
 
   // Function to close the dialog
-
+  const [currentPage, setCurrentPage] = useState(1)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [totalPages, setTotalPages] = useState(1)
   const [expandedPanels, setExpandedPanels] = useState([]) // Tracks which panels are expanded
   const [isVisible, setIsVisible] = useState(false) // Controls visibility of questions
   const [showAnswers, setShowAnswers] = useState([]) // Tracks which panels' answers are shown
   useEffect(() => {
-    fetchDataallquestion(searchKeyword)
-  }, [searchKeyword])
+    fetchDataallquestion({
+      // searchKeyword: searchKeyword,
+      page: currentPage,
+      results_per_page: rowsPerPage
+    })
+  }, [currentPage, rowsPerPage])
+
+  useEffect(() => {
+    if (allquestionData && allquestionData.meta) {
+      setTotalPages(Math.ceil(allquestionData.meta.total_results / rowsPerPage))
+    }
+  }, [allquestionData, rowsPerPage])
+  console.log(allquestionData && allquestionData.pagination, 'kkkk')
+  const handlePageChange = page => {
+    setCurrentPage(page)
+  }
+
+  const handleRowsPerPageChange = rows => {
+    setRowsPerPage(rows)
+    setCurrentPage(1) // Reset to the first page when changing rows per page
+  }
   console.log('1234')
   // Handle search input
   const handleSearch = event => {
     setSearchKeyword(event.target.value) // Update the search keyword
   }
-  //   const questions = [
+
   //     {
   //       id: 1,
   //       text: ' A car covers a distance of 40 km in 24 minutes. If its speed is decreased by 40 km/hr, then what will be the time taken by it to cover the same distance?',
@@ -108,6 +152,7 @@ const AllQuestionList = () => {
   //   console.log(questions, 'questions')
   // Pass this to QuestionCard to manage checkbox selections
   const handleCheckboxChange = (questionId, isChecked) => {
+    console.log(questionId)
     if (isChecked) {
       setSelectedQuestions([...selectedQuestions, questionId]) // Add question to selected list
     } else {
@@ -121,10 +166,17 @@ const AllQuestionList = () => {
     }
   }
 
-  const handleConfirmDelete = () => {
-    console.log('Deleted questions:', selectedQuestions)
-    setSelectedQuestions([]) // Clear the selected questions
-    setOpenDeleteDialog(false) // Close the dialog
+  const handleConfirmDelete = async () => {
+    try {
+      // Call the delete function from your API hook
+      await BulkDelete(selectedQuestions) // Assuming deleteQuestions accepts an array of IDs
+      console.log('Deleted questions:', selectedQuestions)
+      setSelectedQuestions([]) // Clear the selected questions
+      setOpenDeleteDialog(false) // Close the dialog
+      fetchDataallquestion(searchKeyword) // Refresh the questions list after deletion
+    } catch (error) {
+      console.error('Error deleting questions:', error)
+    }
   }
 
   const handleCancelDelete = () => {
@@ -139,12 +191,13 @@ const AllQuestionList = () => {
         id: index + 1,
         text: item.question, // No need for null check here since it's already filtered
         options: item.choices.map(choice => choice.choice), // Map the options
-        correctanswer: item.choices.map(choice => choice.correct_answer) // Map correct answers
+        correctanswer: item.choices.map(choice => choice.correct_answer), // Map correct answers
+        marks: item.marks
       }))
   const filteredQuestions = questions?.filter(question =>
     question.text.toLowerCase().includes(searchKeyword.toLowerCase())
   )
-  const width = '850px'
+  const width = 'auto'
   const deleteIconActive = selectedQuestions.length > 0
   console.log(filteredQuestions, 'questions')
   return (
@@ -182,7 +235,7 @@ const AllQuestionList = () => {
                 </Grid>
               </Grid> */}
             {filteredQuestions && filteredQuestions.length > 0 ? (
-              <QuestionCard
+              <QuestionCardEdit
                 handleSearch={handleSearch}
                 searchKeyword={searchKeyword}
                 setSearchKeyword={setSearchKeyword}
@@ -202,7 +255,7 @@ const AllQuestionList = () => {
                 questions={filteredQuestions}
                 isExpandedAll={isExpandedAll}
                 setIsExpandedAll={setIsExpandedAll}
-                onQuestionSelect={handleCheckboxChange}
+                handleCheckboxChange={handleCheckboxChange}
                 selectedQuestions={selectedQuestions}
                 setSelectedQuestions={setSelectedQuestions}
               />
@@ -215,11 +268,22 @@ const AllQuestionList = () => {
               </>
             )}
           </Grid>
-          <Grid item xs={4} sm={4} md={6} lg={3} style={{ marginRight: '25px' }}>
+          {/* <Grid item xs={4} sm={4} md={6} lg={3} style={{ marginRight: '25px' }}>
             <TestCard />
             <QuickLinksCard />
-          </Grid>
+          </Grid> */}
         </Grid>
+      </Grid>
+      <Grid item xs={12} md={12} style={{ width: '904px' }} sx={{ ml: 4 }}>
+        {/* <div style={{ width: '60%' }}> */} {/* Set the width to 50% */}
+        <PaginationCard
+          rowsPerPage={rowsPerPage} // e.g., 10
+          currentPage={currentPage} // e.g., 1
+          totalPages={totalPages} // e.g., 5
+          onPageChange={handlePageChange} // Your function to handle page changes
+          onRowsPerPageChange={handleRowsPerPageChange} // Your function to handle rows per page change
+        />
+        {/* </div> */}
       </Grid>
       {/* {questions && questions.length > 0 && (
         <QuestionCard
@@ -244,6 +308,31 @@ const AllQuestionList = () => {
           setSelectedQuestions={setSelectedQuestions}
         />
       )} */}
+
+      <Dialog
+        open={openDeleteDialog}
+        onClose={handleCancelDelete}
+        aria-labelledby='alert-dialog-title'
+        aria-describedby='alert-dialog-description'
+        sx={{ '& .MuiDialog-paper': { width: '600px', maxWidth: '600px' } }} // Setting the width and maxWidth
+      >
+        <DialogTitle id='alert-dialog-title'>{'Delete Questions'}</DialogTitle>
+        <DialogContent>
+          <DialogContentText id='alert-dialog-description'>Are you sure you want to delete ?</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCancelDelete}
+            style={{ border: '1px solid black', color: 'black', height: '38px', width: '94px' }}
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleConfirmDelete} variant='contained' style={{ height: '38px', width: '94px' }} autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* </Card> */}
     </>
   )

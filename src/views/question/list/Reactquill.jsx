@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react'
-
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import './quill.css'
-
 const Reactquill = ({ value, onChange, onKeyPress, placeholder, height }) => {
   const [values, setValues] = useState(value)
 

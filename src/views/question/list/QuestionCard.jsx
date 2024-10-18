@@ -227,6 +227,11 @@ const QuestionCard = ({
   }
 
   console.log(expandedPanels, 'showanswert')
+  const decodeHtmlEntities = html => {
+    const txt = document.createElement('textarea')
+    txt.innerHTML = html
+    return txt.value // Return the decoded string
+  }
   return (
     <>
       {check && (
@@ -300,7 +305,6 @@ const QuestionCard = ({
                         margin: '5px 0',
                         border: '1px solid #ddd',
                         borderRadius: '4px',
-                        backgroundColor: '#fff',
                         cursor: 'pointer'
                         // boxShadow: 'none',
                         // border: 'none'
@@ -352,7 +356,7 @@ const QuestionCard = ({
                               variant='body1'
                               style={{ flexGrow: 1, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                               onClick={() => handleEditClick(question.id, processedText)} // Switch to editing mode on click
-                              dangerouslySetInnerHTML={{ __html: `${index + 1}. ${question.text}` }}
+                              dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(`${index + 1}. ${question.text}`) }}
                             >
                               {/* {index + 1}. {processedText} */}
                             </Typography>
@@ -409,8 +413,9 @@ const QuestionCard = ({
                                         cursor: 'pointer'
                                       }}
                                       onClick={() => handleEditAnswerClick(question.id, index, option)} // Switch to editing mode on click
+                                      dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(option) }}
                                     >
-                                      {option}
+                                      {/* {option} */}
                                     </Typography>
                                   )}
                                 </li>
