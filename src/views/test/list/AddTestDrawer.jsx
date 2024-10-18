@@ -181,6 +181,7 @@ const AddTestDrawer = props => {
                       fullWidth
                       width='22vw'
                       quilleditor
+                      simpleeditor
                     />
                   )}
                 />

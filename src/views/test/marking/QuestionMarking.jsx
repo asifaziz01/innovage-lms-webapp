@@ -37,7 +37,7 @@ import {
 } from '@tanstack/react-table'
 
 // Component Imports
-import { Box, Tooltip } from '@mui/material'
+import { Accordion, AccordionSummary, Box, FormControl, Tooltip } from '@mui/material'
 
 import CustomAvatar from '@core/components/mui/Avatar'
 
@@ -73,18 +73,28 @@ const fuzzyFilter = (row, columnId, value, addMeta) => {
 const columnHelper = createColumnHelper()
 
 const QuestionMarking = () => {
+  const [rowId, setRowId] = useState('')
+  const [expanded, setExpanded] = useState(false)
+  const [expandAll, setExpandAll] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+
   // States
   const initialData = [
     {
       id: 1,
 
-      // question:
-      //   'A car covers a distance of 40 km in 24 minutes. If its speed is decreased by 40 km/hr, then what will be the time taken by it to cover the same distance?',
+      question: 'A car covers a distance of 40 km in 24 minutesken by it to cover the same distance?',
       remark: true,
       time: 0.5,
       marks: 1,
       importance: 'high',
-      difficulty: 'high'
+      difficulty: 'high',
+      answers: [
+        { label: '48 minutes', choice: -1 },
+        { label: '36 minutes', value: 0 },
+        { label: '45minutes', choice: 0 },
+        { label: '23 minutes', choice: 1 }
+      ]
     },
     {
       id: 2,
@@ -94,12 +104,18 @@ const QuestionMarking = () => {
       time: 0.5,
       marks: 1,
       importance: 'low',
-      difficulty: 'high'
+      difficulty: 'high',
+      answers: [
+        { label: '28 minutes', choice: 0 },
+        { label: '16 minutes', value: 0 },
+        { label: '85minutes', choice: 0 },
+        { label: '93 minutes', choice: 1 }
+      ]
     },
     {
       id: 3,
 
-      // question: 'hen what will be the time taken by it to cover the same distance?',
+      question: 'hen what will be the time taken by it to cover the same distance?',
       remark: false,
       time: 0.6,
       marks: 2,
@@ -109,7 +125,7 @@ const QuestionMarking = () => {
     {
       id: 4,
 
-      // question: 'sat will be the time taken by it to cover the same distance?',
+      question: 'sat will be the time taken by it to cover the same distance?',
       remark: true,
       time: 0.2,
       marks: 6,
@@ -119,7 +135,7 @@ const QuestionMarking = () => {
     {
       id: 5,
 
-      // question: ', then what will be the time taken by it to cover the same distance?',
+      question: ', then what will be the time taken by it to cover the same distance?',
       remark: false,
       time: 0.1,
       marks: 3,
@@ -128,7 +144,18 @@ const QuestionMarking = () => {
     }
   ]
 
+  const handleExpandAll = () => {
+    setExpandAll(true)
+    setExpanded(true)
+  }
+
+  const handleCollapseAll = () => {
+    setExpandAll(false)
+    setExpanded(false)
+  }
+
   const [rowSelection, setRowSelection] = useState({})
+  const [globalFilter, setGlobalFilter] = useState(null)
 
   // const [data, setData] = useState(...[tableData])
   const [data, setData] = useState(initialData)
@@ -136,13 +163,14 @@ const QuestionMarking = () => {
   console.info(data)
   const [filteredData, setFilteredData] = useState(data)
 
-  const initialColumns = ['question', 'remark', 'time', 'mark']
+  const initialColumns = ['question', 'remark', 'time', 'mark', 'action']
 
   const [visibleColumns, setVisibleColumns] = useState({
     question: true,
     remark: true,
     time: true,
-    mark: true
+    mark: true,
+    action: true
   })
 
   const { items: columnOrder, handleDragOver, handleDrop, handleDragStart } = useDraggableList(initialColumns)
@@ -156,137 +184,185 @@ const QuestionMarking = () => {
   //   setData(prevData => prevData.map(row => (row.id === userId ? { ...row, marks: newMarks } : row)))
   // }
 
-  // const columns = useMemo(
-  //   () =>
-  //     columnOrder
-  //       .map(columnId => {
-  //         switch (columnId) {
-  //           case 'question':
-  //             return visibleColumns.question
-  //               ? columnHelper.accessor('question', {
-  //                   header: 'question',
-  //                   cell: ({ row }) => (
-  //                     <div className='flex items-center flex-wrap'>
-  //                       <div
-  //                         className='flex items-center flex-wrap'
-  //                         style={{
-  //                           wordBreak: 'break-word'
-  //                         }}
-  //                       >
-  //                         <Typography color='text.primary' className='font-medium pl-3'>
-  //                           {row.original.question}
-  //                         </Typography>
-  //                       </div>
-  //                     </div>
-  //                   )
-  //                 })
-  //               : null
-  //           case 'remark':
-  //             return visibleColumns.remark
-  //               ? columnHelper.accessor('remark', {
-  //                   header: 'remark',
-  //                   cell: ({ row }) =>
-  //                     row.original.remark ? (
-  //                       <i class='ri-checkbox-circle-fill'></i>
-  //                     ) : (
-  //                       <i class='ri-close-circle-fill'></i>
-  //                     )
-  //                 })
-  //               : null
-  //           case 'time':
-  //             return visibleColumns.time
-  //               ? columnHelper.accessor('time', {
-  //                   header: 'Time taken (in sec)',
-  //                   cell: ({ row }) => <Typography>{row.original.time}</Typography>
-  //                 })
-  //               : null
-  //           case 'mark':
-  //             return visibleColumns.mark
-  //               ? columnHelper.accessor('mark', {
-  //                   header: 'Mark',
-  //                   cell: info => (
-  //                     <input
-  //                       type='number'
-  //                       value={info.getValue()}
-  //                       onChange={e => updateMarks(info.row.original.id, e?.target?.value)}
-  //                     />
-  //                   )
-  //                 })
-  //               : null
+  const columns = useMemo(
+    () =>
+      columnOrder
+        .map(columnId => {
+          switch (columnId) {
+            case 'question':
+              return visibleColumns.question
+                ? columnHelper.accessor('question', {
+                    header: (
+                      <Typography fontWeight='bold' fontSize={13}>
+                        question
+                      </Typography>
+                    ),
+                    cell: ({ row }) => (
+                      <div className='flex items-center flex-wrap'>
+                        {`${row?.original?.id}. ${row?.original?.question ?? ''}`}
+                      </div>
+                    )
+                  })
+                : null
+            case 'remark':
+              return visibleColumns.remark
+                ? columnHelper.accessor('remark', {
+                    header: (
+                      <Typography fontWeight='bold' fontSize={13}>
+                        remark
+                      </Typography>
+                    ),
+                    cell: ({ row }) =>
+                      row.original.remark ? (
+                        <img
+                          src='/images/icons/remark-check.svg'
+                          alt='no_img'
+                          style={{
+                            width: '20px',
+                            height: '20px',
+                            marginRight: 10
+                          }}
+                        />
+                      ) : (
+                        <img
+                          src='/images/icons/remark-close.svg'
+                          alt='no_img'
+                          style={{
+                            width: '20px',
+                            height: '20px',
+                            marginRight: 10
+                          }}
+                        />
+                      )
+                  })
+                : null
+            case 'time':
+              return visibleColumns.time
+                ? columnHelper.accessor('time', {
+                    header: (
+                      <Typography fontWeight='bold' fontSize={13}>
+                        Time taken (in sec)
+                      </Typography>
+                    ),
+                    cell: info => info.getValue()
+                  })
+                : null
+            case 'mark':
+              return visibleColumns.mark
+                ? columnHelper.accessor('mark', {
+                    header: (
+                      <Typography fontWeight='bold' fontSize={13}>
+                        Mark
+                      </Typography>
+                    ),
+                    cell: ({ row }) => (
+                      <TextField
+                        type='number'
+                        size='small'
+                        value={Number(row.original.marks)}
+                        onChange={e => handleMarksChange(e, row.original.id)}
+                      />
+                    )
+                  })
+                : null
+            case 'action':
+              return visibleColumns.action
+                ? columnHelper.accessor('action', {
+                    header: (
+                      <Typography fontWeight='bold' fontSize={13}>
+                        Action
+                      </Typography>
+                    ),
+                    cell: ({ row }) => (
+                      <Button variant='outlined' color='primary' size='small'>
+                        Grade All Attempts
+                      </Button>
+                    )
+                  })
+                : null
 
-  //           default:
-  //             return null
-  //         }
-  //       })
-  //       .filter(Boolean),
-  //   []
-  // )
+            default:
+              return null
+          }
+        })
+        .filter(Boolean),
+
+    [visibleColumns, columnOrder, data]
+  )
+
   // Function to handle marks change
   const handleMarksChange = (e, id) => {
     const newMarks = e.target.value
 
-    setData(oldData => oldData.map(row => (row.id === id ? { ...row, marks: newMarks } : row)))
+    setExpanded(false)
+    setFilteredData(oldData => oldData.map(row => (row.id === id ? { ...row, marks: Number(newMarks) } : row)))
   }
 
-  const columns = useMemo(
-    () => [
-      {
-        accessorKey: 'id',
-        header: 'SR NO.',
-        cell: info => info.getValue()
-      },
-      {
-        accessorKey: 'question',
-        header: 'Question',
-        cell: info => info.getValue()
-      },
-      {
-        accessorKey: 'remark',
-        header: 'Remark',
-        cell: ({ row }) =>
-          row.original.remark ? (
-            <img
-              src='/images/icons/remark-check.svg'
-              alt='no_img'
-              style={{
-                width: '20px',
-                height: '20px',
-                marginRight: 10
-              }}
-            />
-          ) : (
-            <img
-              src='/images/icons/remark-close.svg'
-              alt='no_img'
-              style={{
-                width: '20px',
-                height: '20px',
-                marginRight: 10
-              }}
-            />
-          )
-      },
-      {
-        accessorKey: 'time',
-        header: 'Time taken (in sec)',
-        cell: info => info.getValue()
-      },
+  console.info(filteredData)
 
-      {
-        accessorKey: 'marks',
-        header: 'Mark',
-        cell: ({ row }) => (
-          <TextField
-            type='number'
-            size='small'
-            value={row.original.marks}
-            onChange={e => handleMarksChange(e, row.original.id)}
-          />
-        )
-      }
-    ],
-    []
-  )
+  // const columns = useMemo(
+  //   () => [
+  //     {
+  //       accessorKey: 'question',
+  //       header: 'Question',
+  //       cell: ({ row }) => `${row?.original?.id}. ${row?.original?.question ?? ''}`
+  //     },
+  //     {
+  //       accessorKey: 'remark',
+  //       header: 'Remark',
+  //       cell: ({ row }) =>
+  //         row.original.remark ? (
+  //           <img
+  //             src='/images/icons/remark-check.svg'
+  //             alt='no_img'
+  //             style={{
+  //               width: '20px',
+  //               height: '20px',
+  //               marginRight: 10
+  //             }}
+  //           />
+  //         ) : (
+  //           <img
+  //             src='/images/icons/remark-close.svg'
+  //             alt='no_img'
+  //             style={{
+  //               width: '20px',
+  //               height: '20px',
+  //               marginRight: 10
+  //             }}
+  //           />
+  //         )
+  //     },
+  //     {
+  //       accessorKey: 'time',
+  //       header: 'Time taken (in sec)',
+  //       cell: info => info.getValue()
+  //     },
+
+  //     {
+  //       accessorKey: 'marks',
+  //       header: 'Mark',
+  //       cell: ({ row }) => (
+  //         <TextField
+  //           type='number'
+  //           size='small'
+  //           value={Number(row.original.marks)}
+  //           onChange={e => handleMarksChange(e, row.original.id)}
+  //         />
+  //       )
+  //     },
+  //     {
+  //       accessorKey: 'action',
+  //       header: 'Action',
+  //       cell: ({ row }) => (
+  //         <Button variant='outlined' color='primary' size='small'>
+  //         Grade All Attempts
+  //       </Button>
+  //       )
+  //     }
+  //   ],
+  //   []
+  // )
 
   const table = useReactTable({
     data: filteredData,
@@ -317,13 +393,51 @@ const QuestionMarking = () => {
     getFacetedMinMaxValues: getFacetedMinMaxValues()
   })
 
+  const handleSearch = event => {
+    const value = event.target.value
+
+    setSearchTerm(value)
+
+    const filtered = initialData.filter(item => item?.question?.toLowerCase().includes(value?.toLowerCase()))
+
+    setFilteredData(filtered)
+  }
+
   return (
     <>
-      <Card>
-        <Grid item xs={12}>
-          <QuestionMarkingFilters setData={setFilteredData} tableData={data} />
+      <FilterHeader title='Grading' subtitle='Math Test' />
+      <Grid container xs={12} display='flex' justifyContent='space-between' pb={5}>
+        <Grid item xs={4}>
+          <FormControl fullWidth>
+            <TextField
+              size='small'
+              value={searchTerm}
+              onChange={handleSearch}
+              placeholder='Search Question'
+              InputProps={{
+                endAdornment: (
+                  <i
+                    class='ri-search-line'
+                    style={{
+                      color: '#B3B5BD'
+                    }}
+                  ></i>
+                )
+              }}
+            />
+          </FormControl>
         </Grid>
-        <div className='overflow-x-auto pt-5'>
+        <Grid item xs={2.6} display='flex' justifyContent='space-between'>
+          <Button color='primary' variant='outlined' onClick={handleExpandAll}>
+            Expand All
+          </Button>
+          <Button color='primary' variant='outlined' onClick={handleCollapseAll}>
+            Collapse All
+          </Button>
+        </Grid>
+      </Grid>
+      <Card>
+        <div className='overflow-x-auto'>
           <table className={tableStyles.table}>
             <thead>
               {table.getHeaderGroups().map(headerGroup => (
@@ -373,12 +487,47 @@ const QuestionMarking = () => {
                   .getRowModel()
                   .rows.slice(0, table.getState().pagination.pageSize)
                   .map(row => {
+                    console.info(row?.original)
+
                     return (
-                      <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
-                        {row.getVisibleCells().map(cell => (
-                          <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-                        ))}
-                      </tr>
+                      <>
+                        <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
+                          {row.getVisibleCells().map(cell => (
+                            <td
+                              key={cell.id}
+                              onClick={() => {
+                                setExpandAll(false)
+                                setRowId(row?.id)
+                                setExpanded(!expanded)
+                              }}
+                            >
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </td>
+                          ))}
+                        </tr>
+                        <tr>
+                          <Box>
+                            {(expandAll ? true : rowId === row?.id) &&
+                              expanded &&
+                              row?.original?.answers?.map((item, index) => (
+                                <Box key={row} display='flex' flexDirection='column' px={5} py={2}>
+                                  <Typography
+                                    color={
+                                      item?.choice === -1
+                                        ? 'error.main'
+                                        : item?.choice === 1
+                                          ? 'success.main'
+                                          : 'secondary.main'
+                                    }
+                                  >
+                                    {index === 0 ? 'a. ' : index === 1 ? 'b. ' : index === 2 ? 'c. ' : 'd. '}
+                                    {item?.label}
+                                  </Typography>
+                                </Box>
+                              ))}
+                          </Box>
+                        </tr>
+                      </>
                     )
                   })}
               </tbody>

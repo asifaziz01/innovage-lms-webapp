@@ -119,9 +119,7 @@ export default function useTestApi() {
           }
         )
         .then(res => {
-          toast.error('Failed to load test')
-
-          // alertMessages(theme, 'success', res?.data?.message)
+          alertMessages(theme, 'success', res?.data?.message)
           fetchData()
         })
 
@@ -155,9 +153,7 @@ export default function useTestApi() {
     try {
       return axios.delete(`${USER_MODULE_ENDPOINTS}/delete/${userId}`).then(() => fetchData())
     } catch (error) {
-      toast.error('Failed to load the test')
-
-      // alertMessages(theme, 'error', 'failed to delete test')
+      alertMessages(theme, 'error', 'failed to delete test')
     }
   }
 

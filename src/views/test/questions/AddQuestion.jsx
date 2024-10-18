@@ -251,6 +251,10 @@ const AddQuestion = () => {
                             autoFocus
                             fullWidth
                             quilleditor
+
+                            // simpleeditor
+
+                            // mkeditor
                           />
                         )}
                       />

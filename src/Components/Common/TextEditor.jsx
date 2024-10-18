@@ -115,6 +115,7 @@ const TextEditor = ({
   placeholder,
   quilleditor,
   simpleeditor,
+  mkeditor,
   width
 }) => {
   const [values, setValues] = useState(value)
@@ -159,6 +160,41 @@ const TextEditor = ({
     ]
   }
 
+  const minimizedModules = {
+    toolbar: [
+      [{ size: [] }, { color: [] }, { background: [] }, { align: [] }],
+
+      [{ header: '1' }, { header: '2' }, { font: [] }],
+      [],
+
+      //   [],
+      ['clean']
+    ]
+  }
+
+  const minimizedFormats = [
+    'header',
+    'font',
+
+    // 'size',
+    'bold',
+    'italic',
+    'underline',
+
+    // 'strike',
+    'blockquote',
+    'list',
+    'bullet',
+    'indent',
+    'align',
+    'color'
+
+    // 'background',
+    // 'link',
+    // 'image',
+    // 'video'
+  ]
+
   const formats = [
     'header',
     'font',
@@ -196,12 +232,14 @@ const TextEditor = ({
         theme='snow'
         value={values}
         onChange={handleChange}
-        modules={modules}
-        formats={formats}
+        modules={simpleeditor ? minimizedModules : modules}
+        formats={simpleeditor ? minimizedFormats : formats}
         onKeyPress={onKeyPress}
         placeholder={placeholder}
       />
     </div>
+  ) : mkeditor ? (
+    <h5>Editor coming soon ... </h5>
   ) : (
     <textarea
       style={{

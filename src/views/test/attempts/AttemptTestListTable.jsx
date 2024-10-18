@@ -54,6 +54,7 @@ import FilterHeader from '@/components/globals/FilterHeader'
 import { getInitials } from '@/utils/getInitials'
 import useDraggableList from '@/components/globals/useDraggableList'
 import AttemptTestFilters from './AttemptTestFilters'
+import { randomColorGenerator } from '@/utils/randomColorGenerator'
 
 // import DialogBoxComponent from '@/Components/Common/DialogBoxComponent'
 
@@ -129,7 +130,16 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
   const [selectedStatus, setSelectedStatus] = useState('')
   const [open, setOpen] = useState(false)
 
-  const initialColumns = ['select', 'user', 'attempted_date', 'submission_date', 'time_taken', 'status']
+  const initialColumns = [
+    'select',
+    'user',
+    'attempted_date',
+    'submission_date',
+    'time_taken',
+    'marks',
+    'status',
+    'action'
+  ]
 
   const [visibleColumns, setVisibleColumns] = useState({
     select: true,
@@ -137,7 +147,9 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
     attempted_date: true,
     submission_date: true,
     time_taken: true,
-    status: true
+    marks: true,
+    status: true,
+    action: true
   })
 
   const { items: columnOrder, handleDragOver, handleDrop, handleDragStart } = useDraggableList(initialColumns)
@@ -185,7 +197,11 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
             case 'user':
               return visibleColumns.user
                 ? columnHelper.accessor('title', {
-                    header: 'user name',
+                    header: (
+                      <Typography fontWeight='bold' fontSize={13}>
+                        user name
+                      </Typography>
+                    ),
                     cell: ({ row }) => (
                       <div className='flex items-center gap-3'>
                         <div className='flex items-center'>
@@ -201,32 +217,59 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
             case 'attempted_date':
               return visibleColumns.attempted_date
                 ? columnHelper.accessor('created_on', {
-                    header: 'Attempted date/time',
+                    header: (
+                      <Typography fontWeight='bold' fontSize={13}>
+                        Attempted date/time
+                      </Typography>
+                    ),
                     cell: ({ row }) => <Typography>{row.original.created_on}</Typography>
                   })
                 : null
             case 'submission_date':
               return visibleColumns.submission_date
                 ? columnHelper.accessor('updated_on', {
-                    header: 'Submission date/time',
+                    header: (
+                      <Typography fontWeight='bold' fontSize={13}>
+                        Submission date/time
+                      </Typography>
+                    ),
                     cell: ({ row }) => <Typography>{row.original.updated_on}</Typography>
                   })
                 : null
             case 'time_taken':
               return visibleColumns.time_taken
-                ? columnHelper.accessor('type', {
-                    header: 'Time taken',
+                ? columnHelper.accessor('time_taken', {
+                    header: (
+                      <Typography fontWeight='bold' fontSize={13}>
+                        Time Taken
+                      </Typography>
+                    ),
                     cell: ({ row }) => (
-                      <Typography className='capitalize' color='text.primary'>
+                      <Typography className='capitalize' color='primary.main'>
                         00:15:20 Secs
                       </Typography>
                     )
                   })
                 : null
+            case 'marks':
+              return visibleColumns.marks
+                ? columnHelper.accessor('marks', {
+                    header: (
+                      <Typography fontWeight='bold' fontSize={13}>
+                        Marks
+                      </Typography>
+                    ),
+                    cell: ({ row }) => <Typography className='capitalize'>30</Typography>
+                  })
+                : null
             case 'status':
               return visibleColumns.status
                 ? columnHelper.accessor('status', {
-                    header: 'Status',
+                    header: (
+                      <Typography fontWeight='bold' fontSize={13}>
+                        Status
+                      </Typography>
+                    ),
                     cell: ({ row }) => (
                       <div className='flex items-center gap-3'>
                         <Chip
@@ -237,6 +280,21 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
                           className='capitalize'
                         />
                       </div>
+                    )
+                  })
+                : null
+            case 'action':
+              return visibleColumns.action
+                ? columnHelper.accessor('action', {
+                    header: (
+                      <Typography fontWeight='bold' fontSize={13}>
+                        Action
+                      </Typography>
+                    ),
+                    cell: ({ row }) => (
+                      <Button variant='outlined' color='primary' size='small'>
+                        Grading
+                      </Button>
                     )
                   })
                 : null
@@ -286,8 +344,8 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
       return <CustomAvatar src={avatar} skin='light' size={34} />
     } else {
       return (
-        <CustomAvatar skin='light' size={34}>
-          {getInitials(fullName)}
+        <CustomAvatar skin='light' size={34} color={randomColorGenerator()}>
+          {fullName?.slice(0, 2)?.toUpperCase()}
         </CustomAvatar>
       )
     }

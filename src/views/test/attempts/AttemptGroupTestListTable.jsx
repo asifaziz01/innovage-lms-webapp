@@ -54,6 +54,7 @@ import FilterHeader from '@/components/globals/FilterHeader'
 import { getInitials } from '@/utils/getInitials'
 import useDraggableList from '@/components/globals/useDraggableList'
 import AttemptTestFilters from './AttemptTestFilters'
+import { randomColorGenerator } from '@/utils/randomColorGenerator'
 
 // import DialogBoxComponent from '@/Components/Common/DialogBoxComponent'
 
@@ -134,11 +135,12 @@ const AttemptGroupTestListTable = ({ tableData, addUserData, deleteUserData, cat
     'batch_name',
     'due_date',
     'end_date',
-    'finalise',
     'no_of_users',
     'total_attempts',
     'attempts_not_grade',
-    'grade'
+    'grade',
+    'finalise',
+    'action'
   ]
 
   const [visibleColumns, setVisibleColumns] = useState({
@@ -150,7 +152,8 @@ const AttemptGroupTestListTable = ({ tableData, addUserData, deleteUserData, cat
     no_of_users: true,
     total_attempts: true,
     attempts_not_grade: true,
-    grade: true
+    grade: true,
+    action: true
   })
 
   const { items: columnOrder, handleDragOver, handleDrop, handleDragStart } = useDraggableList(initialColumns)
@@ -198,7 +201,11 @@ const AttemptGroupTestListTable = ({ tableData, addUserData, deleteUserData, cat
             case 'batch_name':
               return visibleColumns.batch_name
                 ? columnHelper.accessor('title', {
-                    header: 'Batch name',
+                    header: (
+                      <Typography fontWeight='bold' fontSize={13}>
+                        Batch name
+                      </Typography>
+                    ),
                     cell: ({ row }) => (
                       <div className='flex items-center gap-3'>
                         <div className='flex items-center'>
@@ -214,21 +221,67 @@ const AttemptGroupTestListTable = ({ tableData, addUserData, deleteUserData, cat
             case 'due_date':
               return visibleColumns.due_date
                 ? columnHelper.accessor('created_on', {
-                    header: 'Due date',
+                    header: (
+                      <Typography fontWeight='bold' fontSize={13}>
+                        Due date
+                      </Typography>
+                    ),
                     cell: ({ row }) => <Typography>{row.original.created_on}</Typography>
                   })
                 : null
             case 'end_date':
               return visibleColumns.end_date
                 ? columnHelper.accessor('updated_on', {
-                    header: 'End date',
+                    header: (
+                      <Typography fontWeight='bold' fontSize={13}>
+                        End date
+                      </Typography>
+                    ),
                     cell: ({ row }) => <Typography>{row.original.updated_on}</Typography>
+                  })
+                : null
+
+            case 'no_of_users':
+              return visibleColumns.no_of_users
+                ? columnHelper.accessor('no_of_users', {
+                    header: (
+                      <Typography fontWeight='bold' fontSize={13}>
+                        No of users
+                      </Typography>
+                    ),
+                    cell: ({ row }) => <Typography>10</Typography>
+                  })
+                : null
+            case 'total_attempts':
+              return visibleColumns.total_attempts
+                ? columnHelper.accessor('total_attempts', {
+                    header: (
+                      <Typography fontWeight='bold' fontSize={13}>
+                        Total attempts
+                      </Typography>
+                    ),
+                    cell: ({ row }) => <Typography>10</Typography>
+                  })
+                : null
+            case 'attempts_not_grade':
+              return visibleColumns.attempts_not_grade
+                ? columnHelper.accessor('attempts_not_graded', {
+                    header: (
+                      <Typography fontWeight='bold' fontSize={13}>
+                        Attempts not grade
+                      </Typography>
+                    ),
+                    cell: ({ row }) => <Typography>10</Typography>
                   })
                 : null
             case 'finalise':
               return visibleColumns.finalise
-                ? columnHelper.accessor('type', {
-                    header: 'Finalise',
+                ? columnHelper.accessor('finalise', {
+                    header: (
+                      <Typography fontWeight='bold' fontSize={13}>
+                        Finalise
+                      </Typography>
+                    ),
                     cell: ({ row }) => (
                       <div className='flex items-center gap-3'>
                         <Chip
@@ -242,32 +295,19 @@ const AttemptGroupTestListTable = ({ tableData, addUserData, deleteUserData, cat
                     )
                   })
                 : null
-            case 'no_of_users':
-              return visibleColumns.no_of_users
-                ? columnHelper.accessor('status', {
-                    header: 'No of users',
-                    cell: ({ row }) => <Typography>10</Typography>
-                  })
-                : null
-            case 'total_attempts':
-              return visibleColumns.total_attempts
-                ? columnHelper.accessor('status', {
-                    header: 'Total attempts',
-                    cell: ({ row }) => <Typography>10</Typography>
-                  })
-                : null
-            case 'attempts_not_grade':
-              return visibleColumns.attempts_not_grade
-                ? columnHelper.accessor('status', {
-                    header: 'Attempts not grade',
-                    cell: ({ row }) => <Typography>10</Typography>
-                  })
-                : null
-            case 'grade':
-              return visibleColumns.grade
-                ? columnHelper.accessor('status', {
-                    header: 'Grade',
-                    cell: ({ row }) => <Typography>10</Typography>
+            case 'action':
+              return visibleColumns.action
+                ? columnHelper.accessor('action', {
+                    header: (
+                      <Typography fontWeight='bold' fontSize={13}>
+                        Action
+                      </Typography>
+                    ),
+                    cell: ({ row }) => (
+                      <Button variant='outlined' color='primary' size='small'>
+                        Grade Attempts
+                      </Button>
+                    )
                   })
                 : null
             default:
@@ -316,8 +356,8 @@ const AttemptGroupTestListTable = ({ tableData, addUserData, deleteUserData, cat
       return <CustomAvatar src={avatar} skin='light' size={34} />
     } else {
       return (
-        <CustomAvatar skin='light' size={34}>
-          {getInitials(fullName)}
+        <CustomAvatar skin='light' size={34} color={randomColorGenerator()}>
+          {fullName?.slice(0, 2)?.toUpperCase()}
         </CustomAvatar>
       )
     }

@@ -90,7 +90,7 @@ const QuestionHeader = ({
         )}
 
         <Divider orientation='vertical' flexItem sx={{ margin: '0 16px' }} />
-        {questionsMarks && (
+        {questionMarks && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Typography variant='body1'>Question Marks</Typography>
             <Box

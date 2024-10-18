@@ -125,19 +125,23 @@ const UserListCards = () => {
   const questionsData = [
     {
       icon: '/images/icons/badge.svg',
-      title: 'All Questions'
+      title: 'All Questions',
+      handleClick: () => router.push(`/question/list`)
     },
     {
       icon: '/images/icons/preview.svg',
-      title: 'Preview Test'
+      title: 'Preview Test',
+      handleClick: () => router.push(`/instructions/generalinstructions`)
     },
     {
       icon: '/images/icons/import.svg',
-      title: 'Import Questions'
+      title: 'Import Questions',
+      handleClick: () => router.push(`/question/import`)
     },
     {
       icon: '/images/icons/test.svg',
-      title: 'Take test as student'
+      title: 'Take test as student',
+      handleClick: () => router.push(`/taketest`)
     },
     {
       icon: '/images/icons/add.svg',
