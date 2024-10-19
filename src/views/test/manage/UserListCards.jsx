@@ -131,7 +131,7 @@ const UserListCards = () => {
     {
       icon: '/images/icons/preview.svg',
       title: 'Preview Test',
-      handleClick: () => router.push(`/instructions/generalinstructions`)
+      handleClick: () => router.push(`/instructions/generalinstructions?guid=${guid}`)
     },
     {
       icon: '/images/icons/import.svg',
@@ -141,7 +141,7 @@ const UserListCards = () => {
     {
       icon: '/images/icons/test.svg',
       title: 'Take test as student',
-      handleClick: () => router.push(`/taketest`)
+      handleClick: () => router.push(`/taketest?guid=${guid}`)
     },
     {
       icon: '/images/icons/add.svg',

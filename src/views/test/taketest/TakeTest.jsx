@@ -13,7 +13,7 @@ const TakeTest = () => {
   const [timeLeft, setTimeLeft] = useState(initialTime)
   const [openDialog, setOpenDialog] = useState(false)
   const router = useRouter()
-  const [collapseCard, setCollapseCard] = useState(false)
+  const [collapseCard, setCollapseCard] = useState(true)
   useEffect(() => {
     const timerInterval = setInterval(() => {
       setTimeLeft(prevTime => {
@@ -38,7 +38,7 @@ const TakeTest = () => {
   // Buttons passed to AppBar
   const buttons = (
     <>
-      <Button variant='contained' color='primary' onClick={() => router.push('/test/manage')}>
+      <Button variant='contained' color='primary' onClick={() => router.push('/feedbackform')}>
         Submit Test
       </Button>
     </>

@@ -1,109 +1,45 @@
-'use client'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
+import { USER_MODULE_ENDPOINTS } from '@/Const/test/ApiEndpoints'
 
 export default function useTakeTestApi() {
-  const [data, setData] = useState([])
-  const [testData, setTestData] = useState({})
+  const [questions, setQuestions] = useState([]) // Updated to store questions from the payload
+  const [loading, setLoading] = useState(true) // Track loading state
+  const [error, setError] = useState(null) // Track errors
 
-  // Mock API base URL
-  const API_BASE_URL = 'https://669806b502f3150fb66fd477.mockapi.io'
-
-  // Fetch all test data
-  const fetchData = () => {
+  // Fetch all test data by GUID
+  const fetchData = guid => {
+    if (!guid) return
+    setLoading(true)
     try {
       axios
-        .get(`${API_BASE_URL}/TakeTest`)
+        .get(`${USER_MODULE_ENDPOINTS}/questions/${guid}`)
         .then(res => {
-          setData(res?.data) // Setting the fetched data
+          console.log('API Response:', res) // Log the full response for debugging
+
+          if (res?.data?.payload && Array.isArray(res.data.payload)) {
+            setQuestions(res.data.payload) // Set the questions from the payload
+          } else {
+            setError('No questions found in payload')
+          }
+
+          setLoading(false)
         })
         .catch(error => {
-          console.error('Error fetching data:', error)
+          setError('Error fetching data: ' + error.message)
+          setLoading(false)
         })
     } catch (error) {
-      console.error('Error:', error)
+      setError('Error: ' + error.message)
+      setLoading(false)
     }
   }
-
-  // View specific test data by GUID
-  const viewTest = guid => {
-    try {
-      return axios
-        .get(`${API_BASE_URL}/TakeTest/${guid}`)
-        .then(res => {
-          setTestData(res?.data) // Setting specific test data
-        })
-        .catch(error => {
-          console.error('Error fetching test data:', error)
-        })
-    } catch (error) {
-      console.error('Error:', error)
-    }
-  }
-
-  // Add new test data
-  const addTestData = testData => {
-    try {
-      axios
-        .post(`${API_BASE_URL}/TakeTest`, testData)
-        .then(res => {
-          toast.success('Test added successfully!')
-          fetchData() // Refreshing the data after adding
-        })
-        .catch(error => {
-          console.error('Error adding test data:', error)
-        })
-    } catch (error) {
-      console.error('Error:', error)
-    }
-  }
-
-  // Update existing test data by GUID
-  const updateTestData = (guId, updatedData) => {
-    try {
-      axios
-        .put(`${API_BASE_URL}/TakeTest/${guId}`, updatedData)
-        .then(res => {
-          toast.success('Test updated successfully!')
-          fetchData() // Refreshing the data after updating
-        })
-        .catch(error => {
-          console.error('Error updating test data:', error)
-        })
-    } catch (error) {
-      console.error('Error:', error)
-    }
-  }
-
-  // Delete test data by ID
-  const deleteTestData = testId => {
-    try {
-      axios
-        .delete(`${API_BASE_URL}/TakeTest/${testId}`)
-        .then(() => {
-          toast.success('Test deleted successfully!')
-          fetchData() // Refreshing the data after deletion
-        })
-        .catch(error => {
-          console.error('Error deleting test data:', error)
-        })
-    } catch (error) {
-      console.error('Error:', error)
-    }
-  }
-
-  useEffect(() => {
-    fetchData() // Fetch all test data on initial render
-  }, [])
 
   return {
-    data,
-    testData,
-    fetchData,
-    viewTest,
-    addTestData,
-    updateTestData,
-    deleteTestData
+    questions,
+    loading,
+    error,
+    fetchData
   }
 }

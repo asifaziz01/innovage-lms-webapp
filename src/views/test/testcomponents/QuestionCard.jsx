@@ -19,7 +19,9 @@ const QuestionCard = ({
   options,
   selectedOption,
   onOptionChange,
-  onMarkForReviewChange
+  onMarkForReviewChange,
+  totalQuestions,
+  currentQuestionIndex
 }) => {
   const handleOptionChange = event => {
     onOptionChange(event.target.value)
@@ -36,7 +38,9 @@ const QuestionCard = ({
   return (
     <Card sx={{ minHeight: '550px', boxShadow: 'none', border: 'none' }}>
       <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <Typography variant='body2'>1 of 10</Typography>
+        <Typography variant='body2'>
+          {currentQuestionIndex + 1} of {totalQuestions}
+        </Typography>
         <Typography variant='h6'>{questionText}</Typography>
         <Typography variant='body1'>{description}</Typography>
 
