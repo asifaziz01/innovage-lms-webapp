@@ -156,7 +156,7 @@ const QuestionCard = ({
     })
 
     try {
-      const endpoint = `${process.env.NEXT_PUBLIC_LMS_API_URL}tests/save_uploaded_questions/MAT3`
+      const endpoint = `https://developer1.website/dev/caapis/dev/tests/save_uploaded_questions/MAT3`
 
       const response = await axios.post(
         endpoint,

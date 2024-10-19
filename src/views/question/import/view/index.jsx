@@ -10,7 +10,7 @@ import Tablefor from './Tablefor'
 import useQuestionModuleApi from '@/api/useQuestionModuleApi'
 const ImportView = () => {
   const [expandedPanels, setExpandedPanels] = useState([]) // Tracks which panels are expanded
-  const [isVisible, setIsVisible] = useState(true) // Controls visibility of questions
+  const [isVisible, setIsVisible] = useState(false) // Controls visibility of questions
   const [showAnswers, setShowAnswers] = useState([]) // Tracks which panels' answers are shown
 
   const [isExpandedAll, setIsExpandedAll] = useState(false) // Tracks if all are expanded
@@ -290,7 +290,7 @@ const ImportView = () => {
   }
   const handleExpandAll = () => {
     setIsVisible(true) // Show the questions
-    setExpandedPanels(questions.map(q => q.id)) // Expand all panels
+    setExpandedPanels(questionss.map(q => q.id)) // Expand all panels
     setShowAnswers([]) // Reset showing answers (no answers shown)
     setIsExpandedAll(true) // Set the expanded state
   }

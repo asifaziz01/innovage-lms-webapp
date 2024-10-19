@@ -17,7 +17,7 @@ export default function useQuestionModuleApi() {
   const [searchKeyword, setSearchKeyword] = useState('')
   const fetchData = async () => {
     try {
-      const endpoint = `https://developer1.website/dev/caapis/dev/qb/tests/questions/eng2` // Construct the full URL
+      const endpoint = `https://developer1.website/dev/caapis/dev/tests/questions/eng2` // Construct the full URL
 
       const response = await axios.get(endpoint, {
         headers: {
