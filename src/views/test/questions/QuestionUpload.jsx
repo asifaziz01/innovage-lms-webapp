@@ -74,7 +74,7 @@ const QuestionUpload = ({ files, setFiles }) => {
     setFiles([...filtered])
   }
 
-  const fileList = files.map(file => (
+  const fileList = files?.map(file => (
     <ListItem
       key={file.name}
       className='pis-4 plb-3'
@@ -212,7 +212,7 @@ const QuestionUpload = ({ files, setFiles }) => {
               </Button>
             </Box>
           </div>
-          {files.length ? (
+          {files?.length ? (
             <>
               <List>{fileList}</List>
               <div

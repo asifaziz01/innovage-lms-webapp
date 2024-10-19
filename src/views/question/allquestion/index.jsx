@@ -216,7 +216,7 @@ const AllQuestionList = () => {
       {/* <Card> */}
       <Grid container spacing={2}>
         <Grid item xs={12} style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Grid item xs={8}>
+          <Grid item xs={12}>
             {/* <Grid container spacing={5} alignItems='center'>
                 <Grid item xs={12} sm={12}>
                   <FormControl fullWidth sx={{ marginBottom: '10px' }}>
@@ -274,7 +274,7 @@ const AllQuestionList = () => {
           </Grid> */}
         </Grid>
       </Grid>
-      <Grid item xs={12} md={12} style={{ width: '904px' }} sx={{ ml: 4 }}>
+      <Grid item xs={12} md={12}>
         {/* <div style={{ width: '60%' }}> */} {/* Set the width to 50% */}
         <PaginationCard
           rowsPerPage={rowsPerPage} // e.g., 10

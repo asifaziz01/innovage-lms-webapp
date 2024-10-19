@@ -180,13 +180,13 @@ const ImportView = () => {
 
   // Function to toggle the answer visibility of a specific question
   const toggleAnswer = panelId => {
+    setIsVisible(true)
     if (showAnswers.includes(panelId)) {
       setShowAnswers(showAnswers.filter(id => id !== panelId)) // Hide answer if already visible
     } else {
-      setShowAnswers([]) // Show answer if hidden
+      setShowAnswers([...showAnswers, panelId]) // Show answer if hidden
+      setIsVisible(true)
     }
-    setIsExpandedAll(true)
-    setIsVisible(true)
   }
   const [filteredData, setFilteredData] = useState(uploadData || []) // Initialize with data from API
 

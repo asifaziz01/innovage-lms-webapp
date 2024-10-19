@@ -179,7 +179,7 @@ const QuestionCardEdit = ({
           handleImportSelected={handleImportSelected}
         />
       )}
-      <Card style={{ marginTop: '50px', marginLeft: marginLeft, padding: '20px', width: width }}>
+      <Card style={{ marginTop: '50px', padding: '20px', width: width }}>
         <CardHeader
           title={
             <div style={{ display: 'flex', alignItems: 'center' }}>
