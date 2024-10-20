@@ -9,8 +9,10 @@ import { useParams } from 'next/navigation'
 
 // MUI Imports
 import Card from '@mui/material/Card'
-import CardHeader from '@mui/material/CardHeader'
+import Menu from '@mui/material/Menu'
 import Button from '@mui/material/Button'
+import MenuItem from '@mui/material/MenuItem'
+import CardHeader from '@mui/material/CardHeader'
 import Grid from '@mui/material/Grid'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
@@ -77,6 +79,10 @@ const QuestionMarking = () => {
   const [expanded, setExpanded] = useState(false)
   const [expandAll, setExpandAll] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+  const [anchorEl, setAnchorEl] = useState(null)
+  const [toggle, setToggle] = useState(false)
+
+  console.info(toggle)
 
   // States
   const initialData = [
@@ -152,6 +158,16 @@ const QuestionMarking = () => {
   const handleCollapseAll = () => {
     setExpandAll(false)
     setExpanded(false)
+  }
+
+  const handleClick = event => {
+    setAnchorEl(event.currentTarget)
+    setToggle(true)
+  }
+
+  const handleClose = () => {
+    setAnchorEl(null)
+    setToggle(false)
   }
 
   const [rowSelection, setRowSelection] = useState({})
@@ -256,12 +272,32 @@ const QuestionMarking = () => {
                       </Typography>
                     ),
                     cell: ({ row }) => (
-                      <TextField
-                        type='number'
-                        size='small'
-                        value={Number(row.original.marks)}
-                        onChange={e => handleMarksChange(e, row.original.id)}
-                      />
+                      <Box display='flex' alignItems='center'>
+                        <TextField
+                          type='number'
+                          size='small'
+                          value={Number(row.original.marks)}
+                          onChange={e => {
+                            if (e?.target?.value > 1 || e?.target?.value < 0) {
+                              return
+                            } else {
+                              handleMarksChange(e, row.original.id)
+                            }
+                          }}
+                          inputProps={{
+                            min: 0,
+                            max: 1,
+                            step: '0.01' // Optional: for setting step size if needed
+                          }}
+                          sx={{
+                            width: '60%'
+                          }}
+                        />
+                        <Typography fontSize={15} px={1}>
+                          /
+                        </Typography>
+                        <Typography fontSize={15}>{initialData?.[row?.id].marks}</Typography>
+                      </Box>
                     )
                   })
                 : null
@@ -299,70 +335,6 @@ const QuestionMarking = () => {
   }
 
   console.info(filteredData)
-
-  // const columns = useMemo(
-  //   () => [
-  //     {
-  //       accessorKey: 'question',
-  //       header: 'Question',
-  //       cell: ({ row }) => `${row?.original?.id}. ${row?.original?.question ?? ''}`
-  //     },
-  //     {
-  //       accessorKey: 'remark',
-  //       header: 'Remark',
-  //       cell: ({ row }) =>
-  //         row.original.remark ? (
-  //           <img
-  //             src='/images/icons/remark-check.svg'
-  //             alt='no_img'
-  //             style={{
-  //               width: '20px',
-  //               height: '20px',
-  //               marginRight: 10
-  //             }}
-  //           />
-  //         ) : (
-  //           <img
-  //             src='/images/icons/remark-close.svg'
-  //             alt='no_img'
-  //             style={{
-  //               width: '20px',
-  //               height: '20px',
-  //               marginRight: 10
-  //             }}
-  //           />
-  //         )
-  //     },
-  //     {
-  //       accessorKey: 'time',
-  //       header: 'Time taken (in sec)',
-  //       cell: info => info.getValue()
-  //     },
-
-  //     {
-  //       accessorKey: 'marks',
-  //       header: 'Mark',
-  //       cell: ({ row }) => (
-  //         <TextField
-  //           type='number'
-  //           size='small'
-  //           value={Number(row.original.marks)}
-  //           onChange={e => handleMarksChange(e, row.original.id)}
-  //         />
-  //       )
-  //     },
-  //     {
-  //       accessorKey: 'action',
-  //       header: 'Action',
-  //       cell: ({ row }) => (
-  //         <Button variant='outlined' color='primary' size='small'>
-  //         Grade All Attempts
-  //       </Button>
-  //       )
-  //     }
-  //   ],
-  //   []
-  // )
 
   const table = useReactTable({
     data: filteredData,
@@ -405,7 +377,43 @@ const QuestionMarking = () => {
 
   return (
     <>
-      <FilterHeader title='Grading' subtitle='Math Test' />
+      <FilterHeader title='Grading' subtitle='Math Test'>
+        <Grid item xs={6} md={2.8} display='flex' justifyContent='flex-end' alignItems='center'>
+          <Button
+            variant='contained'
+            size='medium'
+            disableRipple
+            disableElevation
+            aria-controls='basic-menu'
+            aria-haspopup='true'
+            onClick={handleClick}
+            endIcon={
+              toggle ? (
+                <i
+                  class='ri-arrow-up-s-line'
+                  style={{
+                    width: '20px',
+                    height: '20px'
+                  }}
+                ></i>
+              ) : (
+                <i
+                  class='ri-arrow-down-s-line'
+                  style={{
+                    width: '20px',
+                    height: '20px'
+                  }}
+                ></i>
+              )
+            }
+          >
+            Show Questions As Created
+          </Button>
+          <Menu keepMounted id='basic-menu' anchorEl={anchorEl} onClose={handleClose} open={Boolean(anchorEl)}>
+            <MenuItem onClick={handleClose}>Show questions as displayed to user </MenuItem>
+          </Menu>
+        </Grid>
+      </FilterHeader>
       <Grid container xs={12} display='flex' justifyContent='space-between' pb={5}>
         <Grid item xs={4}>
           <FormControl fullWidth>
@@ -550,6 +558,9 @@ const QuestionMarking = () => {
           onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
         />
       </Card>
+      <Button size='medium' type='submit' variant='contained' sx={{ mt: 4 }}>
+        Save
+      </Button>
     </>
   )
 }

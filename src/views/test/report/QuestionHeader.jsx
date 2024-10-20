@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 
-import { Typography, Box, Divider } from '@mui/material'
+import { Typography, Box, Divider, Grid } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
 
 const QuestionHeader = ({
   timeLeft,
@@ -10,11 +11,40 @@ const QuestionHeader = ({
   totalQuestions,
   negativeMarking,
   questionMarks,
-  attemptQuestions = null,
-  notAnsweredQuestions = null,
-  wrongQuestions = null,
-  correctQuestions = null
+  attemptQuestions,
+  notAnsweredQuestions,
+  wrongQuestions,
+  correctQuestions
 }) => {
+  const theme = useTheme()
+
+  const reportQuestionsData = [
+    {
+      label: 'Attempt',
+      value: '5',
+      bgcolor: 'warning.main',
+      divider: true
+    },
+    {
+      label: 'Not Answered',
+      value: '4',
+      bgcolor: 'common.white',
+      divider: true
+    },
+    {
+      label: 'Wrong',
+      value: '2',
+      bgcolor: 'error.main',
+      divider: true
+    },
+    {
+      label: 'Correct',
+      value: '3',
+      bgcolor: 'customColors.darkgreen',
+      divider: false
+    }
+  ]
+
   // Helper function to format time as mm:ss
   const formatTime = seconds => {
     const mins = Math.floor(seconds / 60)
@@ -53,62 +83,39 @@ const QuestionHeader = ({
 
   return (
     <>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          padding: '30px 30px',
-          backgroundColor: '#fff',
-          width: '100%'
-        }}
-      >
-        {timeLeft && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant='body1'>Question Timer:</Typography>
-            {formatTime(timeLeft)}
-          </Box>
-        )}
-        <Divider orientation='vertical' flexItem sx={{ margin: '0 16px' }} />
-        {negativeMarking && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant='body1'>Negative Marking</Typography>
-            <Box
-              sx={{
-                padding: '10px',
-                height: 28,
-                borderRadius: 1,
-                bgcolor: '#FF4D49',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff'
-              }}
-            >
-              {negativeMarking}
+      <Grid container p={4} xs={12} display='flex' alignItems='center' bgcolor='var(--mui-palette-common-white)'>
+        {reportQuestionsData?.map(item => (
+          <Grid item xs={item?.label === 'Not Answered' ? 2 : 1.5} key={item}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography variant='body1'>{item?.label} : </Typography>
+              <Box
+                mx={2}
+                p={3}
+                height={28}
+                width='30%'
+                borderRadius={1}
+                bgcolor={item?.bgcolor}
+                border={`${item?.label === 'Not Answered' && `1px solid ${theme?.palette?.common?.black}`}`}
+                display='flex'
+                alignItems='center'
+                justifyContent='center'
+                color={item?.label === 'Not Answered' ? 'common.black' : 'common.white'}
+              >
+                {item?.value}
+              </Box>
+              {item?.divider && (
+                <Box display='flex' height='3vh' mx={1}>
+                  <Divider
+                    orientation='vertical'
+                    flexItem
+                    sx={{ backgroundColor: theme => theme?.palette?.common?.black }}
+                  />
+                </Box>
+              )}
             </Box>
-          </Box>
-        )}
-
-        <Divider orientation='vertical' flexItem sx={{ margin: '0 16px' }} />
-        {questionMarks && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant='body1'>Question Marks</Typography>
-            <Box
-              sx={{
-                padding: '10px',
-                height: 28,
-                borderRadius: 1,
-                bgcolor: '#55A91E',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              {questionMarks}
-            </Box>
-          </Box>
-        )}
-      </Box>
+          </Grid>
+        ))}
+      </Grid>
 
       <Divider />
     </>

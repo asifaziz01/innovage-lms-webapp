@@ -158,7 +158,8 @@ const colorSchemes = skin => {
           tooltipText: '#FFFFFF',
           trackBg: '#F5F5F8',
           testCardColors1: '#9fa3ff',
-          testCardColors2: '#ff7c7a'
+          testCardColors2: '#ff7c7a',
+          darkgreen: '#55A91E'
         }
       }
     },

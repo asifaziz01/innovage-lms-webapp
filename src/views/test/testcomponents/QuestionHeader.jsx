@@ -39,6 +39,7 @@ const QuestionHeader = ({ timeLeft, currentQuestionNumber, totalQuestions, negat
 
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
+
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Box
@@ -115,7 +116,7 @@ const QuestionHeader = ({ timeLeft, currentQuestionNumber, totalQuestions, negat
               padding: '10px',
               height: 28,
               borderRadius: 1,
-              bgcolor: '#55A91E',
+              bgcolor: theme => theme?.palette?.customColors?.darkgreen,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'

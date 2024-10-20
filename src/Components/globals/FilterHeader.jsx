@@ -12,7 +12,7 @@ const FilterHeader = ({ link, title, subtitle, children }) => {
       container
       item
       xs={12}
-      pr={5}
+      // pr={5}
       display='flex'
       justifyContent='space-between'
       spacing={4}

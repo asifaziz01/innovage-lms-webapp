@@ -13,6 +13,7 @@ import TestCardItems from '../manage/TestCardItems'
 import TestChartReport from './TestChartReport'
 import QuestionMarking from '../marking/QuestionMarking'
 import QuestionHeader from './QuestionHeader'
+import QuestionTestReport from './QuestionTestReport'
 
 const TestReport = () => {
   const theme = useTheme()
@@ -48,15 +49,7 @@ const TestReport = () => {
   return (
     <>
       <FilterHeader title='Test Report' subtitle='Mathematics Test' />
-      <QuestionHeader
-        timeLeft='12:30:30'
-        negativeMarking={-4}
-        questionMarks={3}
-        attemptQuestions={3}
-        notAnsweredQuestions={10}
-        wrongQuestions={3}
-        correctQuestions={4}
-      />
+
       <TabContext value={value}>
         <TabList onChange={handleChange} aria-label='simple tabs example'>
           <Tab value='1' label='Summary' />
@@ -77,7 +70,8 @@ const TestReport = () => {
           </Grid>
         </TabPanel>
         <TabPanel value='2'>
-          <QuestionMarking />
+          {/* <QuestionMarking /> */}
+          <QuestionTestReport />
         </TabPanel>
       </TabContext>
     </>
