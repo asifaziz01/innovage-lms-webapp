@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react'
+
 // import useQuestionApi from '../../Api/useQuestionApi'
-import QuestionCard from '../list/QuestionCard'
 import {
   Grid,
   Box,
@@ -17,12 +17,15 @@ import {
   Button,
   Card
 } from '@mui/material'
+
+import QuestionCard from '../list/QuestionCard'
 import TableFilters from '../list/TableFilters'
 import TestCard from '../list/TestCard'
 import QuickLinksCard from '../list/QuickLinkCards'
 import useQuestionModuleApi from '@/api/useQuestionModuleApi'
 import QuestionCardEdit from '../list/QuestionCardEdit'
 import PaginationCard from '@/api/Pagination'
+
 const AllQuestionList = () => {
   const {
     allquestionData,
@@ -46,6 +49,7 @@ const AllQuestionList = () => {
   const [expandedPanels, setExpandedPanels] = useState([]) // Tracks which panels are expanded
   const [isVisible, setIsVisible] = useState(false) // Controls visibility of questions
   const [showAnswers, setShowAnswers] = useState([]) // Tracks which panels' answers are shown
+
   useEffect(() => {
     fetchDataallquestion({
       // searchKeyword: searchKeyword,
@@ -55,11 +59,11 @@ const AllQuestionList = () => {
   }, [currentPage, rowsPerPage])
 
   useEffect(() => {
-    if (allquestionData && allquestionData.meta) {
-      setTotalPages(Math.ceil(allquestionData.meta.total_results / rowsPerPage))
+    if (allquestionData && allquestionData?.meta) {
+      setTotalPages(Math.ceil(allquestionData?.meta?.total_results / rowsPerPage))
     }
   }, [allquestionData, rowsPerPage])
-  console.log(allquestionData && allquestionData.pagination, 'kkkk')
+
   const handlePageChange = page => {
     setCurrentPage(page)
   }
@@ -68,7 +72,7 @@ const AllQuestionList = () => {
     setRowsPerPage(rows)
     setCurrentPage(1) // Reset to the first page when changing rows per page
   }
-  console.log('1234')
+
   // Handle search input
   const handleSearch = event => {
     setSearchKeyword(event.target.value) // Update the search keyword
@@ -108,18 +112,21 @@ const AllQuestionList = () => {
   //   const [showAnswers, setShowAnswers] = useState([]) // Tracks which panels' answers are shown
   const [isExpandedAll, setIsExpandedAll] = useState(false) // Tracks if all are expanded
   const [filteredData, setFilteredData] = useState(allquestionData || [])
+
   const handleExpandAll = () => {
     setIsVisible(true) // Show the questions
-    setExpandedPanels(questions.map(q => q.id)) // Expand all panels
+    setExpandedPanels(questions?.map(q => q?.id)) // Expand all panels
     setShowAnswers([]) // Reset showing answers (no answers shown)
     setIsExpandedAll(true) // Set the expanded state
   }
+
   const handleExpandAllButton = () => {
     setIsVisible(true) // Show the questions
-    setExpandedPanels(questions.map(q => q.id)) // Expand all panels
-    setShowAnswers(questions.map(q => q.id)) // Reset showing answers (no answers shown)
+    setExpandedPanels(questions?.map(q => q?.id)) // Expand all panels
+    setShowAnswers(questions?.map(q => q?.id)) // Reset showing answers (no answers shown)
     // setIsExpandedAll(true) // Set the expanded state
   }
+
   // Function to collapse all accordions and hide everything
   const handleCollapseAll = () => {
     setExpandedPanels([]) // Collapse all panels
@@ -131,13 +138,15 @@ const AllQuestionList = () => {
   // Function to toggle the answer visibility of a specific question
   const toggleAnswer = panelId => {
     setIsVisible(true)
-    if (showAnswers.includes(panelId)) {
-      setShowAnswers(showAnswers.filter(id => id !== panelId)) // Hide answer if already visible
+
+    if (showAnswers?.includes(panelId)) {
+      setShowAnswers(showAnswers?.filter(id => id !== panelId)) // Hide answer if already visible
     } else {
       setShowAnswers([...showAnswers, panelId]) // Show answer if hidden
       setIsVisible(true)
     }
   }
+
   //   const [filteredData, setFilteredData] = useState(data || []) // Initialize with data from API
 
   //   useEffect(() => {
@@ -149,19 +158,19 @@ const AllQuestionList = () => {
 
   // console.log(questionss, 'questionss')
   const [selectedQuestions, setSelectedQuestions] = useState([]) // Track selected checkboxes in QuestionCard
+
   //   console.log(questions, 'questions')
   // Pass this to QuestionCard to manage checkbox selections
   const handleCheckboxChange = (questionId, isChecked) => {
-    console.log(questionId)
     if (isChecked) {
       setSelectedQuestions([...selectedQuestions, questionId]) // Add question to selected list
     } else {
-      setSelectedQuestions(selectedQuestions.filter(id => id !== questionId)) // Remove from list
+      setSelectedQuestions(selectedQuestions?.filter(id => id !== questionId)) // Remove from list
     }
   }
 
   const handleDeleteClick = () => {
-    if (selectedQuestions.length > 0) {
+    if (selectedQuestions?.length > 0) {
       setOpenDeleteDialog(true)
     }
   }
@@ -170,7 +179,6 @@ const AllQuestionList = () => {
     try {
       // Call the delete function from your API hook
       await BulkDelete(selectedQuestions) // Assuming deleteQuestions accepts an array of IDs
-      console.log('Deleted questions:', selectedQuestions)
       setSelectedQuestions([]) // Clear the selected questions
       setOpenDeleteDialog(false) // Close the dialog
       fetchDataallquestion(searchKeyword) // Refresh the questions list after deletion
@@ -182,24 +190,27 @@ const AllQuestionList = () => {
   const handleCancelDelete = () => {
     setOpenDeleteDialog(false)
   }
+
   const questions =
     allquestionData &&
-    allquestionData.data
-      ?.filter(item => item.question !== null) // Filter out items with a null question
-      .map((item, index) => ({
-        guid: item.guid,
+    allquestionData?.data
+      ?.filter(item => item?.question !== null) // Filter out items with a null question
+      ?.map((item, index) => ({
+        guid: item?.guid,
         id: index + 1,
-        text: item.question, // No need for null check here since it's already filtered
-        options: item.choices.map(choice => choice.choice), // Map the options
-        correctanswer: item.choices.map(choice => choice.correct_answer), // Map correct answers
-        marks: item.marks
+        text: item?.question, // No need for null check here since it's already filtered
+        options: item?.choices?.map(choice => choice?.choice), // Map the options
+        correctanswer: item?.choices?.map(choice => choice?.correct_answer), // Map correct answers
+        marks: item?.marks
       }))
+
   const filteredQuestions = questions?.filter(question =>
-    question.text.toLowerCase().includes(searchKeyword.toLowerCase())
+    question?.text?.toLowerCase()?.includes(searchKeyword?.toLowerCase())
   )
+
   const width = 'auto'
-  const deleteIconActive = selectedQuestions.length > 0
-  console.log(filteredQuestions, 'questions')
+  const deleteIconActive = selectedQuestions?.length > 0
+
   return (
     <>
       <TableFilters
@@ -234,7 +245,7 @@ const AllQuestionList = () => {
                   </FormControl>
                 </Grid>
               </Grid> */}
-            {filteredQuestions && filteredQuestions.length > 0 ? (
+            {filteredQuestions && filteredQuestions?.length > 0 ? (
               <QuestionCardEdit
                 handleSearch={handleSearch}
                 searchKeyword={searchKeyword}

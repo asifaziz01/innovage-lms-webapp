@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+
 import CardContent from '@mui/material/CardContent'
 import Grid from '@mui/material/Grid'
 import Button from '@mui/material/Button'
@@ -6,6 +7,7 @@ import Typography from '@mui/material/Typography'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import Card from '@mui/material/Card'
+
 const Tablefor = ({ handleExpandAll, handleCollapseAll, handleImportSelected }) => {
   const [anchorEl, setAnchorEl] = useState(null)
   const open = Boolean(anchorEl)
@@ -23,8 +25,8 @@ const Tablefor = ({ handleExpandAll, handleCollapseAll, handleImportSelected }) 
   // Handler for "Import All"
   const handleImportAll = () => {
     setAnchorEl(null)
+
     // Add your logic for "Import All" here
-    console.log('Import All clicked')
   }
 
   // Handler for "Import Selected"

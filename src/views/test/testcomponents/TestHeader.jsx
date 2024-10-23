@@ -1,5 +1,6 @@
-import { AppBar, Toolbar, IconButton, Typography, Button, Box } from '@mui/material'
 import React from 'react'
+
+import { AppBar, Toolbar, IconButton, Typography, Button, Box } from '@mui/material'
 
 const TestHeader = ({ title, subtitle, timeLeft, buttons, setCollapseCard, collapseCard }) => {
   // Format time as hh:mm:ss
@@ -7,6 +8,7 @@ const TestHeader = ({ title, subtitle, timeLeft, buttons, setCollapseCard, colla
     const hrs = Math.floor(seconds / 3600)
     const mins = Math.floor((seconds % 3600) / 60)
     const secs = seconds % 60
+
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Box
@@ -19,7 +21,7 @@ const TestHeader = ({ title, subtitle, timeLeft, buttons, setCollapseCard, colla
             alignItems: 'center'
           }}
         >
-          {hrs.toString().padStart(2, '0')}
+          {hrs?.toString()?.padStart(2, '0')}
         </Box>
         :
         <Box
@@ -32,7 +34,7 @@ const TestHeader = ({ title, subtitle, timeLeft, buttons, setCollapseCard, colla
             alignItems: 'center'
           }}
         >
-          {mins.toString().padStart(2, '0')}
+          {mins?.toString()?.padStart(2, '0')}
         </Box>
         :
         <Box
@@ -45,7 +47,7 @@ const TestHeader = ({ title, subtitle, timeLeft, buttons, setCollapseCard, colla
             alignItems: 'center'
           }}
         >
-          {secs.toString().padStart(2, '0')}
+          {secs?.toString()?.padStart(2, '0')}
         </Box>
       </Box>
     )

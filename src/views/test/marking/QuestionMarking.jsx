@@ -39,21 +39,13 @@ import {
 } from '@tanstack/react-table'
 
 // Component Imports
-import { Accordion, AccordionSummary, Box, FormControl, Tooltip } from '@mui/material'
+import { Box, FormControl, Tooltip } from '@mui/material'
 
-import CustomAvatar from '@core/components/mui/Avatar'
-
-// Util Imports
-// import { getInitials } from '../../../../../../Utils/getInitials'
-// import { getLocalizedUrl } from '../../../../../../Utils/i18n'
-
-// Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
-import AlertDialogBox from '@/components/Common/AlertDialogBox'
-import DialogBoxComponent from '@/components/Common/DialogBoxComponent'
 import FilterHeader from '@/components/globals/FilterHeader'
-import { getInitials } from '@/utils/getInitials'
+
+import AlertDialogBox from '@/components/Common/AlertDialogBox'
 import useDraggableList from '@/components/globals/useDraggableList'
 import AttemptTestFilters from '../attempts/AttemptTestFilters'
 import QuestionMarkingFilters from './QuestionMarkingFilters'
@@ -81,8 +73,6 @@ const QuestionMarking = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [anchorEl, setAnchorEl] = useState(null)
   const [toggle, setToggle] = useState(false)
-
-  console.info(toggle)
 
   // States
   const initialData = [
@@ -176,7 +166,6 @@ const QuestionMarking = () => {
   // const [data, setData] = useState(...[tableData])
   const [data, setData] = useState(initialData)
 
-  console.info(data)
   const [filteredData, setFilteredData] = useState(data)
 
   const initialColumns = ['question', 'remark', 'time', 'mark', 'action']
@@ -203,10 +192,10 @@ const QuestionMarking = () => {
   const columns = useMemo(
     () =>
       columnOrder
-        .map(columnId => {
+        ?.map(columnId => {
           switch (columnId) {
             case 'question':
-              return visibleColumns.question
+              return visibleColumns?.question
                 ? columnHelper.accessor('question', {
                     header: (
                       <Typography fontWeight='bold' fontSize={13}>
@@ -221,7 +210,7 @@ const QuestionMarking = () => {
                   })
                 : null
             case 'remark':
-              return visibleColumns.remark
+              return visibleColumns?.remark
                 ? columnHelper.accessor('remark', {
                     header: (
                       <Typography fontWeight='bold' fontSize={13}>
@@ -229,7 +218,7 @@ const QuestionMarking = () => {
                       </Typography>
                     ),
                     cell: ({ row }) =>
-                      row.original.remark ? (
+                      row.original?.remark ? (
                         <img
                           src='/images/icons/remark-check.svg'
                           alt='no_img'
@@ -253,7 +242,7 @@ const QuestionMarking = () => {
                   })
                 : null
             case 'time':
-              return visibleColumns.time
+              return visibleColumns?.time
                 ? columnHelper.accessor('time', {
                     header: (
                       <Typography fontWeight='bold' fontSize={13}>
@@ -264,7 +253,7 @@ const QuestionMarking = () => {
                   })
                 : null
             case 'mark':
-              return visibleColumns.mark
+              return visibleColumns?.mark
                 ? columnHelper.accessor('mark', {
                     header: (
                       <Typography fontWeight='bold' fontSize={13}>
@@ -276,7 +265,7 @@ const QuestionMarking = () => {
                         <TextField
                           type='number'
                           size='small'
-                          value={Number(row.original.marks)}
+                          value={Number(row.original?.marks)}
                           onChange={e => {
                             if (e?.target?.value > 1 || e?.target?.value < 0) {
                               return
@@ -296,13 +285,13 @@ const QuestionMarking = () => {
                         <Typography fontSize={15} px={1}>
                           /
                         </Typography>
-                        <Typography fontSize={15}>{initialData?.[row?.id].marks}</Typography>
+                        <Typography fontSize={15}>{initialData?.[row?.id]?.marks}</Typography>
                       </Box>
                     )
                   })
                 : null
             case 'action':
-              return visibleColumns.action
+              return visibleColumns?.action
                 ? columnHelper.accessor('action', {
                     header: (
                       <Typography fontWeight='bold' fontSize={13}>
@@ -331,10 +320,8 @@ const QuestionMarking = () => {
     const newMarks = e.target.value
 
     setExpanded(false)
-    setFilteredData(oldData => oldData.map(row => (row.id === id ? { ...row, marks: Number(newMarks) } : row)))
+    setFilteredData(oldData => oldData?.map(row => (row?.id === id ? { ...row, marks: Number(newMarks) } : row)))
   }
-
-  console.info(filteredData)
 
   const table = useReactTable({
     data: filteredData,
@@ -370,7 +357,7 @@ const QuestionMarking = () => {
 
     setSearchTerm(value)
 
-    const filtered = initialData.filter(item => item?.question?.toLowerCase().includes(value?.toLowerCase()))
+    const filtered = initialData?.filter(item => item?.question?.toLowerCase()?.includes(value?.toLowerCase()))
 
     setFilteredData(filtered)
   }
@@ -450,7 +437,7 @@ const QuestionMarking = () => {
             <thead>
               {table.getHeaderGroups().map(headerGroup => (
                 <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header, index) => (
+                  {headerGroup.headers?.map((header, index) => (
                     <th
                       key={header.id}
                       draggable // Makes the column header draggable

@@ -284,6 +284,7 @@ ul:not([class]) {
 }
 
 .ts-vertical-nav-root {
+  z-index: 9999 !important;
   .ps__thumb-y {
     inline-size: 4px;
     &:hover,

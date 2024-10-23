@@ -52,7 +52,7 @@ const QuestionHeader = ({ timeLeft, currentQuestionNumber, totalQuestions, negat
             alignItems: 'center'
           }}
         >
-          {mins.toString().padStart(2, '0')}
+          {mins?.toString()?.padStart(2, '0')}
         </Box>
         :
         <Box
@@ -65,7 +65,7 @@ const QuestionHeader = ({ timeLeft, currentQuestionNumber, totalQuestions, negat
             alignItems: 'center'
           }}
         >
-          {secs.toString().padStart(2, '0')}
+          {secs?.toString()?.padStart(2, '0')}
         </Box>
       </Box>
     )

@@ -23,8 +23,9 @@ import ReactQuill from 'react-quill'
 
 import 'react-quill/dist/quill.snow.css'
 
-import TextEditor from '@/components/Common/TextEditor'
 import { data } from 'autoprefixer'
+
+import TextEditor from '@/components/Common/TextEditor'
 import ReactQuillLimited from './ReactQuillLimited'
 
 // Vars
@@ -53,6 +54,7 @@ const AddTestDrawer = props => {
     defaultValues: {
       title: '',
       description: '',
+
       // type: '',
       category: ''
     }
@@ -75,9 +77,9 @@ const AddTestDrawer = props => {
       id: (userData?.length && userData?.length + 1) || 1,
 
       // avatar: `/images/avatars/${Math.floor(Math.random() * 8) + 1}.png`,
-      title: data.title,
+      title: data?.title,
       description: description,
-      type: data.type,
+      type: data?.type,
       category: data?.category,
       created_on: moment().format('YYYY-MM-DD HH:mm:ss'),
 
@@ -181,10 +183,10 @@ const AddTestDrawer = props => {
                   render={({ field }) => (
                     <Select label='Parent Category' {...field} error={Boolean(errors.category)}>
                       {userData
-                        .filter(item => !item.parent_guid) // Filter out only the parent categories
-                        .map(parentCategory => (
-                          <MenuItem key={parentCategory.guid} value={parentCategory.guid}>
-                            {parentCategory.title}
+                        ?.filter(item => !item?.parent_guid) // Filter out only the parent categories
+                        ?.map(parentCategory => (
+                          <MenuItem key={parentCategory?.guid} value={parentCategory?.guid}>
+                            {parentCategory?.title}
                           </MenuItem>
                         ))}
                     </Select>

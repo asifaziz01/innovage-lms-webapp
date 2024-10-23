@@ -104,12 +104,9 @@ const AddQuestion = () => {
   const selectedValue = watch('question_type')
   const [nquestion, setNQuestion] = useState('')
 
-  console.info(nquestion)
   const [feedback, setFeedback] = useState('')
   const [answerFeedback, setAnswerFeedback] = useState('')
   const [saveAsNew, setSaveAsNew] = useState(false)
-
-  console.info(nquestion)
 
   // console.info(selectedValue)
 
@@ -117,13 +114,9 @@ const AddQuestion = () => {
     setUnit(event.target.value)
   }
 
-  console.info(mcqFields)
-
   const handleFormSubmit = async data => {
-    console.info(data)
-
     if (selectedValue === 'mcmc') {
-      const hasCorrectAnswer = mcqFields.some(choice => choice.correct_answer)
+      const hasCorrectAnswer = mcqFields?.some(choice => choice?.correct_answer)
 
       if (!hasCorrectAnswer) {
         alertMessages(theme, 'error', 'Choose at least one option')

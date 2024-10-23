@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+
 import { useRouter } from 'next/navigation'
 
 import { Grid, Typography, IconButton, Card, CardContent, Divider, Box } from '@mui/material'
@@ -6,6 +8,29 @@ import { useTheme } from '@mui/material/styles'
 const FilterHeader = ({ link, title, subtitle, children }) => {
   const router = useRouter()
   const theme = useTheme()
+  const [zIndex, setZIndex] = useState(0) // Initial z-index
+
+  console.info(zIndex)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Set the height threshold to change z-index
+      const heightThreshold = 100
+
+      if (window.scrollY > heightThreshold) {
+        setZIndex(1200) // Higher z-index when scrolled past threshold
+      } else {
+        setZIndex(0) // Reset to original z-index
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll)
+
+    // Clean up the event listener
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
 
   return (
     <Grid
@@ -23,7 +48,7 @@ const FilterHeader = ({ link, title, subtitle, children }) => {
         // bottom:80,
         width: '100vw', // Full width of the viewport
         height: 'auto', // Height can be set as per your needs
-        zIndex: 1200, // Ensure it stays above other elements
+        zIndex: zIndex, // Ensure it stays above other elements
         backgroundColor: theme.palette.customColors.bodyBg,
 
         // '#282a42'

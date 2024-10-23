@@ -46,23 +46,21 @@ const AttemptTestFilters = ({ setData, tableData, globalFilter, setGlobalFilter,
 
   useEffect(() => {
     const filteredData = tableData?.filter(user => {
-      if (user.status === '0' && status?.length) {
-        if (status?.length && !status.includes('Unpublished')) return false
+      if (user?.status === '0' && status?.length) {
+        if (status?.length && !status?.includes('Unpublished')) return false
       }
 
-      if (user.status === '1' && status?.length) {
-        if (status?.length && !status.includes('Published')) return false
+      if (user?.status === '1' && status?.length) {
+        if (status?.length && !status?.includes('Published')) return false
       }
 
-      if (types.length > 0 && !types.includes(user.type)) return false
-      const itemStartDate = new Date(user.created_on)
+      if (types?.length > 0 && !types?.includes(user?.type)) return false
+      const itemStartDate = new Date(user?.created_on)
 
       if (dueDate && endDate) {
-        console.info(itemStartDate)
-        const itemEndDate = new Date(user.updated_on)
+        const itemEndDate = new Date(user?.updated_on)
         const start = new Date(dueDate)
 
-        console.info(start)
         const end = new Date(endDate)
 
         return (!dueDate || itemStartDate >= start) && (!endDate || itemEndDate <= end)
@@ -226,16 +224,16 @@ const AttemptTestFilters = ({ setData, tableData, globalFilter, setGlobalFilter,
               labelId='status-select'
               multiple
               onChange={handleStatusChange}
-              renderValue={selected => selected.join(', ')}
+              renderValue={selected => selected?.join(', ')}
 
               // inputProps={{ placeholder: 'Select Status' }}
             >
               <MenuItem key='Published' value='Published'>
-                <Checkbox checked={status.indexOf('Published') > -1} />
+                <Checkbox checked={status?.indexOf('Published') > -1} />
                 <ListItemText primary='Published' /> {/* Capitalize first letter */}
               </MenuItem>
               <MenuItem key='Unpublished' value='Unpublished'>
-                <Checkbox checked={status.indexOf('Unpublished') > -1} />
+                <Checkbox checked={status?.indexOf('Unpublished') > -1} />
                 <ListItemText primary='Unpublished' /> {/* Capitalize first letter */}
               </MenuItem>
             </Select>

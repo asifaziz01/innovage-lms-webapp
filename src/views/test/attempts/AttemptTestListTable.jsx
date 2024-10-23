@@ -166,10 +166,10 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
   const columns = useMemo(
     () =>
       columnOrder
-        .map(columnId => {
+        ?.map(columnId => {
           switch (columnId) {
             case 'select':
-              return visibleColumns.select
+              return visibleColumns?.select
                 ? {
                     id: 'select',
                     header: ({ table }) => (
@@ -195,7 +195,7 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
                   }
                 : null
             case 'user':
-              return visibleColumns.user
+              return visibleColumns?.user
                 ? columnHelper.accessor('title', {
                     header: (
                       <Typography fontWeight='bold' fontSize={13}>
@@ -205,9 +205,9 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
                     cell: ({ row }) => (
                       <div className='flex items-center gap-3'>
                         <div className='flex items-center'>
-                          {getAvatar({ avatar: row.original?.avatar, fullName: row.original.title })}
+                          {getAvatar({ avatar: row.original?.avatar, fullName: row.original?.title })}
                           <Typography color='text.primary' className='font-medium pl-3'>
-                            {row.original.title}
+                            {row.original?.title}
                           </Typography>
                         </div>
                       </div>
@@ -215,29 +215,29 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
                   })
                 : null
             case 'attempted_date':
-              return visibleColumns.attempted_date
+              return visibleColumns?.attempted_date
                 ? columnHelper.accessor('created_on', {
                     header: (
                       <Typography fontWeight='bold' fontSize={13}>
                         Attempted date/time
                       </Typography>
                     ),
-                    cell: ({ row }) => <Typography>{row.original.created_on}</Typography>
+                    cell: ({ row }) => <Typography>{row.original?.created_on}</Typography>
                   })
                 : null
             case 'submission_date':
-              return visibleColumns.submission_date
+              return visibleColumns?.submission_date
                 ? columnHelper.accessor('updated_on', {
                     header: (
                       <Typography fontWeight='bold' fontSize={13}>
                         Submission date/time
                       </Typography>
                     ),
-                    cell: ({ row }) => <Typography>{row.original.updated_on}</Typography>
+                    cell: ({ row }) => <Typography>{row.original?.updated_on}</Typography>
                   })
                 : null
             case 'time_taken':
-              return visibleColumns.time_taken
+              return visibleColumns?.time_taken
                 ? columnHelper.accessor('time_taken', {
                     header: (
                       <Typography fontWeight='bold' fontSize={13}>
@@ -252,7 +252,7 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
                   })
                 : null
             case 'marks':
-              return visibleColumns.marks
+              return visibleColumns?.marks
                 ? columnHelper.accessor('marks', {
                     header: (
                       <Typography fontWeight='bold' fontSize={13}>
@@ -263,7 +263,7 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
                   })
                 : null
             case 'status':
-              return visibleColumns.status
+              return visibleColumns?.status
                 ? columnHelper.accessor('status', {
                     header: (
                       <Typography fontWeight='bold' fontSize={13}>
@@ -284,7 +284,7 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
                   })
                 : null
             case 'action':
-              return visibleColumns.action
+              return visibleColumns?.action
                 ? columnHelper.accessor('action', {
                     header: (
                       <Typography fontWeight='bold' fontSize={13}>
@@ -305,8 +305,6 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
         .filter(Boolean),
     [columnOrder, visibleColumns, data]
   )
-
-  console.info(filteredData)
 
   const table = useReactTable({
     data: filteredData,
@@ -370,9 +368,9 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
         <div className='overflow-x-auto pt-5'>
           <table className={tableStyles.table}>
             <thead>
-              {table.getHeaderGroups().map(headerGroup => (
+              {table.getHeaderGroups()?.map(headerGroup => (
                 <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header, index) => (
+                  {headerGroup.headers?.map((header, index) => (
                     <th
                       key={header.id}
                       draggable // Makes the column header draggable
@@ -403,7 +401,7 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
                 </tr>
               ))}
             </thead>
-            {table.getFilteredRowModel().rows.length === 0 ? (
+            {table.getFilteredRowModel().rows?.length === 0 ? (
               <tbody>
                 <tr>
                   <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
@@ -433,7 +431,7 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
           rowsPerPageOptions={[10, 25, 50]}
           component='div'
           className='border-bs'
-          count={table.getFilteredRowModel().rows.length}
+          count={table.getFilteredRowModel().rows?.length}
           rowsPerPage={table.getState().pagination.pageSize}
           page={table.getState().pagination.pageIndex}
           SelectProps={{

@@ -65,7 +65,7 @@ const Icon = styled('i')({})
 
 const fuzzyFilter = (row, columnId, value, addMeta) => {
   // Rank the item
-  const itemRank = rankItem(row.getValue(columnId), value)
+  const itemRank = rankItem(row?.getValue(columnId), value)
 
   // Store the itemRank info
   addMeta({
@@ -73,7 +73,7 @@ const fuzzyFilter = (row, columnId, value, addMeta) => {
   })
 
   // Return if the item should be filtered in/out
-  return itemRank.passed
+  return itemRank?.passed
 }
 
 const DebouncedInput = ({ value: initialValue, onChange, debounce = 500, ...props }) => {
@@ -328,10 +328,10 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
   const columns = useMemo(
     () =>
       columnOrder
-        .map(columnId => {
+        ?.map(columnId => {
           switch (columnId) {
             case 'select':
-              return visibleColumns.select
+              return visibleColumns?.select
                 ? {
                     id: 'select',
                     header: ({ table }) => (
@@ -357,14 +357,14 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
                   }
                 : null
             case 'title':
-              return visibleColumns.title
+              return visibleColumns?.title
                 ? columnHelper.accessor('title', {
                     header: 'Test Name',
                     cell: ({ row }) => (
                       <div className='flex items-center gap-3'>
                         <div className='flex flex-col'>
                           <Typography color='text.primary' className='font-medium'>
-                            {row.original.title}
+                            {row.original?.title}
                           </Typography>
                           {/* <Typography variant='body2'>{row.original.username}</Typography> */}
                         </div>
@@ -373,46 +373,46 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
                   })
                 : null
             case 'created_by':
-              return visibleColumns.created_by
+              return visibleColumns?.created_by
                 ? columnHelper.accessor('created_by', {
                     header: 'Creator',
-                    cell: ({ row }) => <Typography>{row.original.created_by}</Typography>
+                    cell: ({ row }) => <Typography>{row.original?.created_by}</Typography>
                   })
                 : null
             case 'questions':
-              return visibleColumns.questions
+              return visibleColumns?.questions
                 ? columnHelper.accessor('questions', {
                     header: 'Questions',
                     cell: ({ row }) => <Typography>10</Typography>
                   })
                 : null
             case 'enrolment':
-              return visibleColumns.enrolment
+              return visibleColumns?.enrolment
                 ? columnHelper.accessor('enrolment', {
                     header: 'Enrolment',
                     cell: ({ row }) => <Typography>10</Typography>
                   })
                 : null
             case 'submission':
-              return visibleColumns.submission
+              return visibleColumns?.submission
                 ? columnHelper.accessor('submission', {
                     header: 'Submission',
                     cell: ({ row }) => <Typography>10</Typography>
                   })
                 : null
             case 'type':
-              return visibleColumns.type
+              return visibleColumns?.type
                 ? columnHelper.accessor('type', {
                     header: 'Type',
                     cell: ({ row }) => (
                       <Typography className='capitalize' color='text.primary'>
-                        {row.original.type}
+                        {row.original?.type}
                       </Typography>
                     )
                   })
                 : null
             case 'status':
-              return visibleColumns.status
+              return visibleColumns?.status
                 ? columnHelper.accessor('status', {
                     header: 'Status',
                     cell: ({ row }) => (
@@ -421,7 +421,7 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
                           variant='tonal'
                           label={row?.original?.status === '1' ? 'Published' : 'Unpublished'}
                           size='small'
-                          color={userStatusObj[row?.original?.status === '1' ? 'Published' : 'Unpublished']}
+                          color={userStatusObj?.[row?.original?.status === '1' ? 'Published' : 'Unpublished']}
                           className='capitalize'
                         />
                       </div>
@@ -478,7 +478,7 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
               return null
           }
         })
-        .filter(Boolean),
+        ?.filter(Boolean),
     [columnOrder, visibleColumns, data]
   )
 
@@ -526,11 +526,6 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
       )
     }
   }
-
-  const CustomTooltip = styled(Tooltip)`
-    background-color: #1976d2; /* Change background color */
-    color: #ffffff; /* Change text color */
-  `
 
   return (
     <>
@@ -659,18 +654,18 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
         <div className='overflow-x-auto pt-5'>
           <table className={tableStyles.table}>
             <thead>
-              {table.getHeaderGroups().map(headerGroup => (
+              {table.getHeaderGroups()?.map(headerGroup => (
                 <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header, index) => (
+                  {headerGroup.headers?.map((header, index) => (
                     <th
-                      key={header.id}
+                      key={header?.id}
                       draggable // Makes the column header draggable
                       onDragStart={() => handleDragStart(index)}
                       onDragOver={handleDragOver}
                       onDrop={() => handleDrop(index)}
                       style={{ cursor: 'grab' }}
                     >
-                      {header.isPlaceholder ? null : (
+                      {header?.isPlaceholder ? null : (
                         <>
                           <div
                             className={classnames({
@@ -692,7 +687,7 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
                 </tr>
               ))}
             </thead>
-            {table.getFilteredRowModel().rows.length === 0 ? (
+            {table.getFilteredRowModel().rows?.length === 0 ? (
               <tbody>
                 <tr>
                   <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>

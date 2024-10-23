@@ -16,7 +16,6 @@ function MyDialog() {
 
   const handleSubmit = () => {
     // Handle the submit action here
-    console.log('Submitted value:', inputValue)
     handleClose()
   }
 

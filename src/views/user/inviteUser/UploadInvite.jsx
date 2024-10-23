@@ -1,5 +1,6 @@
 // MUI Imports
 import React, { useState } from 'react'
+
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Button from '@mui/material/Button'
@@ -21,7 +22,7 @@ const Dropzone = styled('div')(({ theme }) => ({
     padding: theme.spacing(12),
     [theme.breakpoints.down('sm')]: {
       paddingInline: theme.spacing(5)
-    },
+    }
   }
 }))
 
@@ -32,26 +33,27 @@ const UploadInviteDialog = () => {
 
   const { getRootProps, getInputProps } = useDropzone({
     onDrop: acceptedFiles => {
-      setFiles(acceptedFiles.map(file => Object.assign(file)))
+      setFiles(acceptedFiles?.map(file => Object.assign(file)))
     }
   })
 
   const handleRemoveFile = file => {
     const uploadedFiles = files
-    const filtered = uploadedFiles.filter(i => i.name !== file.name)
+    const filtered = uploadedFiles?.filter(i => i?.name !== file?.name)
+
     setFiles([...filtered])
   }
 
-  const fileList = files.map(file => (
-    <ListItem key={file.name}>
+  const fileList = files?.map(file => (
+    <ListItem key={file?.name}>
       <div className='file-details'>
         <Typography className='file-name' color='text.primary'>
-          {file.name}
+          {file?.name}
         </Typography>
         <Typography variant='body2'>
-          {Math.round(file.size / 100) / 10 > 1000
-            ? `${(Math.round(file.size / 100) / 10000).toFixed(1)} mb`
-            : `${(Math.round(file.size / 100) / 10).toFixed(1)} kb`}
+          {Math.round(file?.size / 100) / 10 > 1000
+            ? `${(Math.round(file?.size / 100) / 10000).toFixed(1)} mb`
+            : `${(Math.round(file?.size / 100) / 10).toFixed(1)} kb`}
         </Typography>
       </div>
       <IconButton onClick={() => handleRemoveFile(file)}>
@@ -67,12 +69,12 @@ const UploadInviteDialog = () => {
   return (
     <>
       {/* Button to open the dialog */}
-      <Button variant="contained" onClick={() => setOpen(true)}>
+      <Button variant='contained' onClick={() => setOpen(true)}>
         Upload Invite
       </Button>
 
       {/* Upload Invite Dialog */}
-      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
+      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth='sm'>
         <DialogContent>
           <Dropzone>
             <div {...getRootProps({ className: 'dropzone' })}>
@@ -86,24 +88,21 @@ const UploadInviteDialog = () => {
                   Browse File
                 </Button> */}
                 <Typography variant='caption' color='textSecondary' className='text-center'>
-              Upload CSV file
-            </Typography>
+                  Upload CSV file
+                </Typography>
               </div>
             </div>
-
-
-
           </Dropzone>
           <div className='flex justify-center gap-2 items-center'>
-            <Button variant="contained" color="primary" onClick={() => setOpen(false)}>
+            <Button variant='contained' color='primary' onClick={() => setOpen(false)}>
               Upload
             </Button>
-            <Button variant="outlined" color="secondary" onClick={() => setOpen(false)}>
+            <Button variant='outlined' color='secondary' onClick={() => setOpen(false)}>
               Cancel
             </Button>
           </div>
-          <Typography  className='text-center mt-2'>
-            <Link href="/path-to-sample.csv" download>
+          <Typography className='text-center mt-2'>
+            <Link href='/path-to-sample.csv' download>
               Download sample CSV file
             </Link>
           </Typography>

@@ -1,6 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
 
+import { useRouter } from 'next/navigation'
+
 import axios from 'axios'
 import { useTheme } from '@mui/material/styles'
 
@@ -14,6 +16,7 @@ export default function useQuestionApi() {
   const theme = useTheme()
 
   console.info(process.env.NEXT_PUBLIC_DOCS_URL)
+  const router = useRouter()
 
   const createQuestion = (data, mode) => {
     //userData example
@@ -65,6 +68,7 @@ export default function useQuestionApi() {
 
           alertMessages(theme, 'success', res?.data?.message)
           setQId(res?.data?.payload?.question_guid)
+          setTimeout(() => router.push('/question/allquestion'), [2000])
         })
 
       //   return response.data

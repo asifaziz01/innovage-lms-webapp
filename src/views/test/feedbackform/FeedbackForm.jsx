@@ -1,5 +1,6 @@
 'use client'
 import React, { useState } from 'react'
+
 import {
   Grid,
   Typography,
@@ -18,6 +19,7 @@ import {
 
 const FeedbackForm = () => {
   const [rating, setRating] = useState(2) // State for star rating
+
   const [formData, setFormData] = useState({
     consent: '',
     overallSatisfaction: '',
@@ -77,7 +79,12 @@ const FeedbackForm = () => {
               <FormLabel>2. Are you satisfied with the overall environment of Online Examination?</FormLabel>
               <RadioGroup row name='overallSatisfaction' value={formData.overallSatisfaction} onChange={handleChange}>
                 {[1, 2, 3, 4, 5].map(value => (
-                  <FormControlLabel key={value} value={value.toString()} control={<Radio />} label={value.toString()} />
+                  <FormControlLabel
+                    key={value}
+                    value={value?.toString()}
+                    control={<Radio />}
+                    label={value?.toString()}
+                  />
                 ))}
               </RadioGroup>
             </FormControl>
@@ -94,7 +101,12 @@ const FeedbackForm = () => {
                 onChange={handleChange}
               >
                 {[1, 2, 3, 4, 5].map(value => (
-                  <FormControlLabel key={value} value={value.toString()} control={<Radio />} label={value.toString()} />
+                  <FormControlLabel
+                    key={value}
+                    value={value?.toString()}
+                    control={<Radio />}
+                    label={value?.toString()}
+                  />
                 ))}
               </RadioGroup>
             </FormControl>
@@ -106,7 +118,12 @@ const FeedbackForm = () => {
               <FormLabel>4. I was adequately prepared to participate in this Online exam?</FormLabel>
               <RadioGroup row name='preparation' value={formData.preparation} onChange={handleChange}>
                 {[1, 2, 3, 4, 5].map(value => (
-                  <FormControlLabel key={value} value={value.toString()} control={<Radio />} label={value.toString()} />
+                  <FormControlLabel
+                    key={value}
+                    value={value?.toString()}
+                    control={<Radio />}
+                    label={value?.toString()}
+                  />
                 ))}
               </RadioGroup>
             </FormControl>

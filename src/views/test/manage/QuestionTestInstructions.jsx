@@ -44,7 +44,6 @@ const QuestionTestInstructions = () => {
 
   const handleNewSubmit = data => {
     // e
-    alert('Submitted')
     console.info(data)
   }
 
@@ -76,15 +75,6 @@ const QuestionTestInstructions = () => {
                     </Typography>
                   </Grid>
                   <Grid item xs={12}>
-                    {/* <Box minHeight={300}>
-                    <CustomQuill
-                      value={editedText}
-                      onChange={setEditedText}
-                   
-                      autoFocus
-                      fullWidth
-                    />
-                  </Box> */}
                     <Controller
                       name='description'
                       control={control}

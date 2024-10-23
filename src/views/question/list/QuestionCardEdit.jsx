@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
+
 import { useSearchParams, useRouter } from 'next/navigation'
+
 import {
   Card,
   CardHeader,
@@ -18,12 +20,17 @@ import {
   Grid,
   FormControl
 } from '@mui/material'
+
+import axios from 'axios'
+
+import { toast } from 'react-toastify'
+
 import useDraggableList from './useDraggableList' // Import the custom hook
 
 import Reactquill from './Reactquill'
+
 // import Tablefor from '../import/view/Tablefor'
-import axios from 'axios'
-import { toast } from 'react-toastify'
+
 // import TableFilters from '../../../user/components/list/TableFilters'
 import Tablefor from '../import/view/Tablefor'
 import PaginationCard from '@/api/Pagination'
@@ -76,8 +83,8 @@ const QuestionCardEdit = ({
 
   // Handle when the user presses Enter or blurs out of the input
   const handleEditSave = questionId => {
-    const updatedQuestions = questionList.map(question =>
-      question.id === questionId ? { ...question, text: editedText } : question
+    const updatedQuestions = questionList?.map(question =>
+      question?.id === questionId ? { ...question, text: editedText } : question
     )
 
     // Stop editing mode
@@ -86,6 +93,7 @@ const QuestionCardEdit = ({
     setQuestionData(updatedQuestions)
     setEditingQuestionId(null)
   }
+
   // Handle when the user clicks on an answer to edit
   const handleEditAnswerClick = (questionId, answerIndex, currentAnswer) => {
     setEditingAnswerId(`${questionId}-${answerIndex}`) // Set the answer ID being edited
@@ -100,32 +108,33 @@ const QuestionCardEdit = ({
   console.log(editedAnswer, 'gg')
 
   const handleImportSelected = async () => {
-    if (selectedQuestions.length === 0) {
+    if (selectedQuestions?.length === 0) {
       toast.error('Please select at least one question.')
+
       return
     }
 
     // Create a new FormData object
     const formData = new FormData()
 
-    const selectedQuestionData = questionData.filter(q => selectedQuestions.includes(q.id))
+    const selectedQuestionData = questionData?.filter(q => selectedQuestions?.includes(q?.id))
 
     // Loop through selected questions and append to formData
-    selectedQuestionData.forEach((question, index) => {
+    selectedQuestionData?.forEach((question, index) => {
       // Append question fields in the required form-data format
-      formData.append(`questions[${index}][question]`, question.text) // Question text
-      formData.append(`questions[${index}][question_type]`, question.question_type) // Assuming 'mcq' as question type
+      formData.append(`questions[${index}][question]`, question?.text) // Question text
+      formData.append(`questions[${index}][question_type]`, question?.question_type) // Assuming 'mcq' as question type
 
       // Append choices for the question
-      question.options.forEach((choice, choiceIndex) => {
+      question?.options?.forEach((choice, choiceIndex) => {
         formData.append(`questions[${index}][choice][${choiceIndex}]`, choice)
       })
 
-      question.correctanswer.forEach((correctanswer, correctAnswerIndex) => {
+      question?.correctanswer?.forEach((correctanswer, correctAnswerIndex) => {
         formData.append(`questions[${index}][correct_answer][${correctAnswerIndex}]`, correctanswer)
       })
 
-      question.order.forEach((order, orderIndex) => {
+      question?.order?.forEach((order, orderIndex) => {
         formData.append(`questions[${index}][order][${orderIndex}]`, order)
       })
     })
@@ -154,22 +163,28 @@ const QuestionCardEdit = ({
       toast.error('Failed to import selected questions.')
     }
   }
+
   const handleExpandAllButton = () => {
     setIsVisible(true) // Show the questions
-    setExpandedPanels(questionData.map(q => q.id)) // Expand all panels
-    setShowAnswers(questionData.map(q => q.id)) // Reset showing answers (no answers shown)
+    setExpandedPanels(questionData?.map(q => q?.id)) // Expand all panels
+    setShowAnswers(questionData?.map(q => q?.id)) // Reset showing answers (no answers shown)
     // setIsExpandedAll(true) // Set the expanded state
   }
 
   const router = useRouter()
+
   const handleAccordionClick = guid => {
     router.push(`/question/edit?guid=${guid}`) // Redirect to question edit page with the question's guid
   }
+
   const decodeHtmlEntities = html => {
     const txt = document.createElement('textarea')
+
     txt.innerHTML = html
+
     return txt.value // Return the decoded string
   }
+
   return (
     <>
       {check && (
@@ -186,8 +201,8 @@ const QuestionCardEdit = ({
               <FormControlLabel
                 control={
                   <Checkbox
-                    checked={selectedQuestions && selectedQuestions.includes(questions.id)}
-                    onChange={e => handleCheckboxChange(questions.id, e.target.checked)}
+                    checked={selectedQuestions && selectedQuestions?.includes(questions?.id)}
+                    onChange={e => handleCheckboxChange(questions?.id, e.target.checked)}
                   />
                 }
                 style={{ marginRight: '10px' }}
@@ -209,8 +224,8 @@ const QuestionCardEdit = ({
 
         {isVisible && (
           <CardContent>
-            {questionData.length > 0 &&
-              questionData.map((question, index) => {
+            {questionData?.length > 0 &&
+              questionData?.map((question, index) => {
                 const processedText =
                   question?.text !== null && question?.text?.startsWith('#')
                     ? question?.text?.slice(1).trim()
@@ -218,9 +233,9 @@ const QuestionCardEdit = ({
 
                 return (
                   <Accordion
-                    key={question.id}
-                    expanded={expandedPanels.includes(question.id)} // Check if this question is expanded
-                    onChange={() => toggleAnswer(question.id)} // Toggle the answer on accordion change
+                    key={question?.id}
+                    expanded={expandedPanels?.includes(question?.id)} // Check if this question is expanded
+                    onChange={() => toggleAnswer(question?.id)} // Toggle the answer on accordion change
                     onDragStart={() => handleDragStart(index)}
                     onDragOver={handleDragOver}
                     onDrop={() => handleDrop(index)}
@@ -235,14 +250,14 @@ const QuestionCardEdit = ({
                     }}
                     sx={{ '& .MuiAccordionSummary-expandIconWrapper': { display: 'none' } }} // Hide the expand icon
                   >
-                    <AccordionSummary aria-controls={`panel${question.id}-content`} id={`panel${question.id}-header`}>
+                    <AccordionSummary aria-controls={`panel${question?.id}-content`} id={`panel${question?.id}-header`}>
                       <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                         <FormControlLabel
                           aria-label='Select'
                           control={
                             <Checkbox
-                              checked={selectedQuestions && selectedQuestions.includes(question.guid)}
-                              onChange={e => handleCheckboxChange(question.guid, e.target.checked)}
+                              checked={selectedQuestions && selectedQuestions?.includes(question?.guid)}
+                              onChange={e => handleCheckboxChange(question?.guid, e.target.checked)}
                             />
                           }
                           label=''
@@ -252,8 +267,8 @@ const QuestionCardEdit = ({
                         <Typography
                           variant='body1'
                           style={{ flexGrow: 1, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                          onClick={() => handleEditClick(question.id, processedText)}
-                          dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(`${index + 1}. ${question.text}`) }}
+                          onClick={() => handleEditClick(question?.id, processedText)}
+                          dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(`${index + 1}. ${question?.text}`) }}
                         ></Typography>
 
                         {/* Button to toggle answers directly on the accordion */}
@@ -262,10 +277,10 @@ const QuestionCardEdit = ({
                           variant='text'
                           onClick={e => {
                             e.stopPropagation() // Prevent accordion toggle
-                            toggleAnswer(question.id)
+                            toggleAnswer(question?.id)
                           }}
                         >
-                          {showAnswers.includes(question.id) ? (
+                          {showAnswers?.includes(question?.id) ? (
                             <i className='ri-arrow-up-s-line' style={{ color: '#262B43E5' }} />
                           ) : (
                             <i className='ri-arrow-down-s-line' style={{ color: '#262B43E5' }} />
@@ -274,21 +289,23 @@ const QuestionCardEdit = ({
 
                         <Button
                           style={{ color: 'rgba(38, 43, 67, 0.898)', marginTop: '10px' }}
-                          onClick={() => handleAccordionClick(question.guid)}
+                          onClick={() => handleAccordionClick(question?.guid)}
                         >
                           <i className='ri-edit-box-line' style={{ color: 'rgba(38, 43, 67, 0.898)' }}></i>
                         </Button>
                       </div>
                     </AccordionSummary>
 
-                    {showAnswers.includes(question.id) && (
+                    {showAnswers?.includes(question?.id) && (
                       <AccordionDetails style={{ marginLeft: '40px' }}>
-                        {question.options ? (
+                        {question?.options ? (
                           <ul style={{ listStyleType: 'none', paddingLeft: '0' }}>
-                            {question.options.map((option, index) => (
+                            {question?.options?.map((option, index) => (
                               <li key={index} style={{ display: 'flex', alignItems: 'center' }}>
                                 <Checkbox
-                                  checked={question && question.correctanswer && question.correctanswer[index] === '1'}
+                                  checked={
+                                    question && question?.correctanswer && question?.correctanswer?.[index] === '1'
+                                  }
                                   disabled
                                   sx={{
                                     '&.Mui-checked': {
@@ -298,11 +315,11 @@ const QuestionCardEdit = ({
                                 />
                                 <Typography
                                   style={{
-                                    color: question.correctanswer[index] === '1' ? '#34C759' : 'black',
+                                    color: question?.correctanswer?.[index] === '1' ? '#34C759' : 'black',
                                     flexGrow: 1,
                                     cursor: 'pointer'
                                   }}
-                                  onClick={() => handleEditAnswerClick(question.id, index, option)}
+                                  onClick={() => handleEditAnswerClick(question?.id, index, option)}
                                   dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(option) }}
                                 ></Typography>
                               </li>
@@ -377,4 +394,5 @@ const QuestionCardEdit = ({
 }
 
 export default QuestionCardEdit
+
 //}tests/save_uploaded_questions/SAM8 api save

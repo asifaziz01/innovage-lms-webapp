@@ -75,7 +75,6 @@ const EditTest = ({ isLoading = false }) => {
   }
 
   const handleFormSubmit = async data => {
-    console.info(data)
     updateTestData(guid, { ...data, type: types })
   }
 

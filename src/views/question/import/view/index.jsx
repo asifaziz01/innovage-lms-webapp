@@ -1,13 +1,16 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import QuestionCard from '../../list/QuestionCard'
+
 // import useQuestionApi from '../../../Api/useQuestionApi'
 import { Box, CircularProgress } from '@mui/material'
 import { useSelector } from 'react-redux'
+
+import QuestionCard from '../../list/QuestionCard'
 import TableFilters from '../../list/TableFilters'
 import Tablefor from './Tablefor'
 import useQuestionModuleApi from '@/api/useQuestionModuleApi'
+
 const ImportView = () => {
   const [expandedPanels, setExpandedPanels] = useState([]) // Tracks which panels are expanded
   const [isVisible, setIsVisible] = useState(false) // Controls visibility of questions
@@ -18,20 +21,18 @@ const ImportView = () => {
   const [fileReferences, setFileReferences] = useState([])
   const { files, uploading, error } = useSelector(state => state.fileReducer)
 
-  console.log(files, 'ccccc')
-  console.log(uploadData, 'ssssss')
   const createFileArray = fileList => {
-    return Array.from(fileList).map(file => ({
-      path: file.name,
-      name: file.name,
-      lastModified: file.lastModified,
-      lastModifiedDate: new Date(file.lastModified),
-      size: file.size,
-      type: file.type,
-      webkitRelativePath: file.webkitRelativePath || ''
+    return Array.from(fileList)?.map(file => ({
+      path: file?.name,
+      name: file?.name,
+      lastModified: file?.lastModified,
+      lastModifiedDate: new Date(file?.lastModified),
+      size: file?.size,
+      type: file?.type,
+      webkitRelativePath: file?.webkitRelativePath || ''
     }))
   }
-  console.log(files, 'chedcking')
+
   // Simulated file input (e.g., coming from an <input type="file"> or drag-and-drop)
   const fileList = [
     new File(['file content'], 'BulkQuestionUpload.txt', {
@@ -39,11 +40,13 @@ const ImportView = () => {
       lastModified: 1726239009248
     })
   ]
+
   useEffect(() => {
-    if (files.length > 0) {
+    if (files?.length > 0) {
       uploadFiles(files) // Call the API with the files if they exist
     }
   }, [files])
+
   // useEffect(() => {
   //   uploadFiles(files)
   // }, [])
@@ -155,21 +158,19 @@ const ImportView = () => {
   //   }
   // ]
 
-  console.log(uploadData)
-
   const filesArray = createFileArray(fileList)
-  console.log(createFileArray(fileList), 'hhhh')
 
-  console.log(fileReferences, 'files')
   useEffect(() => {
     // uploadFiles(filesArray)
   }, [])
+
   const handleExpandAllButton = () => {
     setIsVisible(true) // Show the questions
-    setExpandedPanels(questions.map(q => q.id)) // Expand all panels
-    setShowAnswers(questions.map(q => q.id)) // Reset showing answers (no answers shown)
+    setExpandedPanels(questions?.map(q => q?.id)) // Expand all panels
+    setShowAnswers(questions?.map(q => q?.id)) // Reset showing answers (no answers shown)
     // setIsExpandedAll(true) // Set the expanded state
   }
+
   // Function to collapse all accordions and hide everything
   const handleCollapseAll = () => {
     setExpandedPanels([]) // Collapse all panels
@@ -181,13 +182,15 @@ const ImportView = () => {
   // Function to toggle the answer visibility of a specific question
   const toggleAnswer = panelId => {
     setIsVisible(true)
-    if (showAnswers.includes(panelId)) {
-      setShowAnswers(showAnswers.filter(id => id !== panelId)) // Hide answer if already visible
+
+    if (showAnswers?.includes(panelId)) {
+      setShowAnswers(showAnswers?.filter(id => id !== panelId)) // Hide answer if already visible
     } else {
       setShowAnswers([...showAnswers, panelId]) // Show answer if hidden
       setIsVisible(true)
     }
   }
+
   const [filteredData, setFilteredData] = useState(uploadData || []) // Initialize with data from API
 
   // const { uploadData } = useQuestionApi(); // Fetching uploadData from the hook
@@ -197,6 +200,7 @@ const ImportView = () => {
       setFilteredData(uploadData) // Make sure uploadData is set here
     }
   }, [uploadData])
+
   // console.log(uploadData, 'checking')
 
   // const questions = uploadData
@@ -224,9 +228,9 @@ const ImportView = () => {
   //     }
   //   })
   const questionss = Object.keys(uploadData)
-    .filter(key => uploadData[key].question !== null) // Filter out items with a null question
+    .filter(key => uploadData?.[key]?.question !== null) // Filter out items with a null question
     .map((key, index) => {
-      const item = uploadData[key]
+      const item = uploadData?.[key]
 
       // Extract the values from each question object
       const { choice, correct_answer, question, parent_id, created_by, order, question_type, guid } = item
@@ -257,17 +261,20 @@ const ImportView = () => {
         question_type
       }
     })
+
   // console.log(questionss, 'questionss')
   const [selectedQuestions, setSelectedQuestions] = useState([]) // Track selected checkboxes in QuestionCard
+
   // console.log(questions, 'questions')
   // Pass this to QuestionCard to manage checkbox selections
   const handleCheckboxChange = (questionId, isChecked) => {
     if (isChecked) {
       setSelectedQuestions([...selectedQuestions, questionId]) // Add question to selected list
     } else {
-      setSelectedQuestions(selectedQuestions.filter(id => id !== questionId)) // Remove from list
+      setSelectedQuestions(selectedQuestions?.filter(id => id !== questionId)) // Remove from list
     }
   }
+
   // const handleCancelDelete = () => {
   //   setUserToDelete(null)
   //   setOpen(false)
@@ -284,22 +291,25 @@ const ImportView = () => {
   //   setIsExpandedAll(true) // Set the expanded state
   // }
   const handleDeleteClick = () => {
-    if (selectedQuestions.length > 0) {
+    if (selectedQuestions?.length > 0) {
       setOpenDeleteDialog(true)
     }
   }
+
   const handleExpandAll = () => {
     setIsVisible(true) // Show the questions
-    setExpandedPanels(questionss.map(q => q.id)) // Expand all panels
+    setExpandedPanels(questionss?.map(q => q?.id)) // Expand all panels
     setShowAnswers([]) // Reset showing answers (no answers shown)
     setIsExpandedAll(true) // Set the expanded state
   }
+
   const width = '100%'
   const marginLeft = '0px'
+
   return (
     <>
       {/* <Tablefor /> */}
-      {questionss.length > 0 && (
+      {questionss?.length > 0 && (
         <QuestionCard
           check={'true'}
           marginLeft={marginLeft}

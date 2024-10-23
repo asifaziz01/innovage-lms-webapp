@@ -29,16 +29,6 @@ const QuestionGeneralSettingsTimingSection = ({ control, heading, children }) =>
       <Box display='flex' flexDirection='column' justifyContent='flex-start' alignItems='flex-start'>
         <Typography component='h3'>{heading}</Typography>
         <Box mt={3} />
-        {/* <Controller
-          name='timer'
-          control={control}
-          render={({ field }) => (
-            <RadioGroup {...field}>
-              <FormControlLabel value='yes' control={<Radio />} label='Yes' />
-              <FormControlLabel value='no' control={<Radio />} label='No' />
-            </RadioGroup>
-          )}
-        /> */}
         {children}
       </Box>
     </Grid>

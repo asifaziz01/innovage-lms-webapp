@@ -1,6 +1,8 @@
 // React Imports
 import { useState } from 'react'
+
 import { Box } from '@mui/material'
+
 // MUI Imports
 import Button from '@mui/material/Button'
 import Drawer from '@mui/material/Drawer'
@@ -15,6 +17,7 @@ import Divider from '@mui/material/Divider'
 
 // Third-party Imports
 import { useForm, Controller } from 'react-hook-form'
+
 import Reactquill from './Reactquill'
 
 // Vars
@@ -49,15 +52,15 @@ const AddUserDrawer = props => {
     const newUser = {
       id: (userData?.length && userData?.length + 1) || 1,
       avatar: `/images/avatars/${Math.floor(Math.random() * 8) + 1}.png`,
-      fullName: data.fullName,
-      username: data.username,
-      email: data.email,
-      role: data.role,
-      currentPlan: data.plan,
-      status: data.status,
-      company: formData.company,
-      country: formData.country,
-      contact: formData.contact
+      fullName: data?.fullName,
+      username: data?.username,
+      email: data?.email,
+      role: data?.role,
+      currentPlan: data?.plan,
+      status: data?.status,
+      company: formData?.company,
+      country: formData?.country,
+      contact: formData?.contact
     }
 
     if (edit) {
@@ -108,6 +111,7 @@ const AddUserDrawer = props => {
                   fullWidth
                   placeholder='Title *'
                   error={Boolean(errors.firstname)}
+
                   //  sx={{ mt: 5 }}
                 />
                 {errors.firstname && <FormHelperText error>{errors.firstname.message}</FormHelperText>}

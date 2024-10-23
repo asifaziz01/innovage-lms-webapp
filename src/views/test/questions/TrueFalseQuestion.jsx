@@ -110,7 +110,7 @@ const TrueFalseQuestion = ({ choiceFields, setChoiceFields }) => {
                       handleChange(e)
                       handleRadioChange(index, field?.choice, e)
                     }}
-                    checked={changes ? false : field.choice === value}
+                    checked={changes ? false : field?.choice === value}
                   />
                 </Grid>
                 <Grid item xs={4}>

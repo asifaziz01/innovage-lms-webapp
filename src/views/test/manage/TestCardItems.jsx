@@ -19,8 +19,6 @@ const TestCardItems = props => {
   const { stats, avatarColor, subtitle: subtitle, linkheading1, linkheading2, report } = props
   const theme = useTheme()
 
-  console.info(report)
-
   return (
     <Card
       sx={{

@@ -25,9 +25,10 @@ const EditCategory = ({ isLoading = false }) => {
   const [types, setTypes] = useState(null)
   const [parentCategories, setParentCategories] = useState([])
   const searchParams = useSearchParams()
-  const guid = searchParams.get('guid')
+  const guid = searchParams?.get('guid')
   const router = useRouter()
   const [routing, setRouting] = useState(false)
+
   //   const [data, setData] = useState(null)
 
   // useForm hook
@@ -39,6 +40,8 @@ const EditCategory = ({ isLoading = false }) => {
   } = useForm()
 
   const { data, viewCategory, updateCategoryData } = useCategoryApi()
+
+
   // Fetch data and populate form on component mount
   useEffect(() => {
     if (guid) {
@@ -46,29 +49,36 @@ const EditCategory = ({ isLoading = false }) => {
         setTypes(res?.data?.payload?.parent_guid)
         reset({
           title: res?.data?.payload?.title,
+
           // type: res?.data?.payload?.type,
           // details: res?.data?.payload?.details,
-          parent_guid: res?.data.payload?.parent_guid
+          parent_guid: res?.data?.payload?.parent_guid
         })
         console.log(res?.data?.payload?.type, 'sss')
       })
     }
 
-    const parentCategories = Object.values(data).filter(category => category.parent_guid === null)
+    const parentCategories = Object.values(data)?.filter(category => category?.parent_guid === null)
+
     setParentCategories(parentCategories) // Set the filtered parent categories
     // setTypes(String(payload.type)) // Set the type from the payload
   }, [guid, reset, data])
   console.log(parentCategories, 'ss')
+
   const handleFormSubmit = async data => {
     updateCategoryData(guid, { ...data, type: types })
     setRouting(true)
+
     // router.push('/categories/list')
   }
+
   if (routing) {
     router.push('/categories/list')
   }
+
   console.log(types, 'cccc')
-  return (
+  
+return (
     <>
       <form onSubmit={handleSubmit(handleFormSubmit)}>
         <Grid container spacing={5} xs={12}>
@@ -165,6 +175,7 @@ const EditCategory = ({ isLoading = false }) => {
                       control={control}
                       render={({ field }) => (
                         <TextField
+
                           // {...field}
                           multiline
                           rows={4}
@@ -187,15 +198,16 @@ const EditCategory = ({ isLoading = false }) => {
                         <TextField
                           fullWidth
                           select
+
                           // label='Parent Category'
                           labelId='parentCategoryLabel'
                           {...field}
                           error={Boolean(errors.parent_guid)}
                           value={field.value || types} // Use types as the default value
                         >
-                          {parentCategories.map(category => (
-                            <MenuItem key={category.guid} value={category.guid}>
-                              {category.title}
+                          {parentCategories?.map(category => (
+                            <MenuItem key={category?.guid} value={category?.guid}>
+                              {category?.title}
                             </MenuItem>
                           ))}
                         </TextField>

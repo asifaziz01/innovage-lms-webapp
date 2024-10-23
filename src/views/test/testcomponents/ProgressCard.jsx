@@ -1,5 +1,6 @@
-import { Box, Card, Grid, Typography } from '@mui/material'
 import React from 'react'
+
+import { Box, Card, Grid, Typography } from '@mui/material'
 import borderColor from 'tailwindcss-logical/plugins/borderColor'
 
 const ProgressCard = ({ totalQuestions, currentQuestionIndex, selectedOptions, markForReview }) => {
@@ -26,10 +27,10 @@ const ProgressCard = ({ totalQuestions, currentQuestionIndex, selectedOptions, m
   )
 
   // Calculate status counts
-  const answeredCount = Object.values(selectedOptions).filter(option => option && option !== 'reset').length
-  const unattendedCount = Object.values(selectedOptions).filter(option => option === 'reset').length
-  const reviewCount = Object.values(markForReview).filter(isMarked => isMarked).length
-  const notVisitedCount = totalQuestions - Object.keys(selectedOptions).length
+  const answeredCount = Object.values(selectedOptions)?.filter(option => option && option !== 'reset')?.length
+  const unattendedCount = Object.values(selectedOptions)?.filter(option => option === 'reset')?.length
+  const reviewCount = Object.values(markForReview)?.filter(isMarked => isMarked)?.length
+  const notVisitedCount = totalQuestions - Object.keys(selectedOptions)?.length
 
   return (
     <Card
@@ -51,13 +52,14 @@ const ProgressCard = ({ totalQuestions, currentQuestionIndex, selectedOptions, m
 
         {/* Grid for questions */}
         <Grid container spacing={2}>
-          {Array.from({ length: totalQuestions }).map((_, index) => {
+          {Array.from({ length: totalQuestions })?.map((_, index) => {
             let bgColor = 'none' // Default
-            if (selectedOptions[index] === 'reset') {
+
+            if (selectedOptions?.[index] === 'reset') {
               bgColor = '#FF4D49' // Unattended
-            } else if (markForReview[index]) {
+            } else if (markForReview?.[index]) {
               bgColor = '#FDC453' // Mark for Review
-            } else if (selectedOptions[index]) {
+            } else if (selectedOptions?.[index]) {
               bgColor = '#72E128' // Answered
             }
 

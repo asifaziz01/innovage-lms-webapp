@@ -1,29 +1,6 @@
 import { Card, CardActions, CardContent, Grid, Typography, Button, Switch, FormControlLabel } from '@mui/material'
 
 const QuestionsSection = ({ title, subtitle, dummyData, children, settings }) => {
-  // const dummyData = [
-  //   {
-  //     icon: '/images/icons/badge.svg',
-  //     title: 'All Questions'
-  //   },
-  //   {
-  //     icon: '/images/icons/preview.svg',
-  //     title: 'Preview Test'
-  //   },
-  //   {
-  //     icon: '/images/icons/import.svg',
-  //     title: 'Import Questions'
-  //   },
-  //   {
-  //     icon: '/images/icons/test.svg',
-  //     title: 'Take test as student'
-  //   },
-  //   {
-  //     icon: '/images/icons/add.svg',
-  //     title: 'Add Questions'
-  //   }
-  // ]
-
   return (
     <Grid item xs={12} md={6}>
       <Card
@@ -68,7 +45,6 @@ const QuestionsSection = ({ title, subtitle, dummyData, children, settings }) =>
                         marginRight: 10
                       }}
                     />
-                    {/* <span onClick={() => item?.handleClick()}> */}
                     <Typography
                       component='a'
                       target='_blank'
@@ -78,7 +54,6 @@ const QuestionsSection = ({ title, subtitle, dummyData, children, settings }) =>
                     >
                       {item?.title}
                     </Typography>
-                    {/* </span> */}
                   </Grid>
                   {item?.component}
                 </>
@@ -89,7 +64,6 @@ const QuestionsSection = ({ title, subtitle, dummyData, children, settings }) =>
             </Grid>
           </Grid>
         </CardContent>
-        <CardActions></CardActions>
       </Card>
     </Grid>
   )

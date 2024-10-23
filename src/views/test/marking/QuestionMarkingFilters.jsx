@@ -18,9 +18,8 @@ const QuestionMarkingFilters = ({ setData, tableData }) => {
 
   useEffect(() => {
     const filteredData = tableData?.filter(user => {
-      console.info(difficulty.includes(user?.difficulty))
-      if (difficulty?.length > 0 && !difficulty.includes(user?.difficulty)) return false
-      if (importance?.length > 0 && !importance.includes(user?.importance)) return false
+      if (difficulty?.length > 0 && !difficulty?.includes(user?.difficulty)) return false
+      if (importance?.length > 0 && !importance?.includes(user?.importance)) return false
 
       return true
     })
@@ -41,7 +40,7 @@ const QuestionMarkingFilters = ({ setData, tableData }) => {
       target: { value }
     } = event
 
-    setImportance(typeof value === 'string' ? value.split(',') : value)
+    setImportance(typeof value === 'string' ? value?.split(',') : value)
   }
 
   return (
@@ -96,18 +95,18 @@ const QuestionMarkingFilters = ({ setData, tableData }) => {
               value={difficulty}
               multiple
               onChange={handleDifficultyChange}
-              renderValue={selected => selected.join(', ')}
+              renderValue={selected => selected?.join(', ')}
             >
               <MenuItem key='high' value='high'>
-                <Checkbox checked={difficulty.indexOf('high') > -1} />
+                <Checkbox checked={difficulty?.indexOf('high') > -1} />
                 <ListItemText primary='High' /> {/* Capitalize first letter */}
               </MenuItem>
               <MenuItem key='medium' value='medium'>
-                <Checkbox checked={difficulty.indexOf('medium') > -1} />
+                <Checkbox checked={difficulty?.indexOf('medium') > -1} />
                 <ListItemText primary='Medium' /> {/* Capitalize first letter */}
               </MenuItem>
               <MenuItem key='low' value='low'>
-                <Checkbox checked={difficulty.indexOf('low') > -1} />
+                <Checkbox checked={difficulty?.indexOf('low') > -1} />
                 <ListItemText primary='Low' /> {/* Capitalize first letter */}
               </MenuItem>
             </Select>
@@ -136,18 +135,18 @@ const QuestionMarkingFilters = ({ setData, tableData }) => {
               labelId='status-importance'
               multiple
               onChange={handleImportanceChange}
-              renderValue={selected => selected.join(', ')}
+              renderValue={selected => selected?.join(', ')}
             >
               <MenuItem key='high' value='high'>
-                <Checkbox checked={importance.indexOf('high') > -1} />
+                <Checkbox checked={importance?.indexOf('high') > -1} />
                 <ListItemText primary='high' />
               </MenuItem>
               <MenuItem key='medium' value='medium'>
-                <Checkbox checked={importance.indexOf('medium') > -1} />
+                <Checkbox checked={importance?.indexOf('medium') > -1} />
                 <ListItemText primary='Medium' />
               </MenuItem>
               <MenuItem key='low' value='low'>
-                <Checkbox checked={importance.indexOf('low') > -1} />
+                <Checkbox checked={importance?.indexOf('low') > -1} />
                 <ListItemText primary='Low' />
               </MenuItem>
             </Select>

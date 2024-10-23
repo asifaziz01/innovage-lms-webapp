@@ -226,7 +226,7 @@ const QuestionTestReport = () => {
   const handleMarksChange = (e, id) => {
     const newMarks = e.target.value
 
-    setData(oldData => oldData.map(row => (row.id === id ? { ...row, marks: newMarks } : row)))
+    setData(oldData => oldData?.map(row => (row?.id === id ? { ...row, marks: newMarks } : row)))
   }
 
   const columns = useMemo(
@@ -336,9 +336,9 @@ const QuestionTestReport = () => {
         <div className='overflow-x-auto pt-5'>
           <table className={tableStyles.table}>
             <thead>
-              {table.getHeaderGroups().map(headerGroup => (
+              {table.getHeaderGroups()?.map(headerGroup => (
                 <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header, index) => (
+                  {headerGroup.headers?.map((header, index) => (
                     <th
                       key={header.id}
                       draggable // Makes the column header draggable
@@ -372,7 +372,7 @@ const QuestionTestReport = () => {
             {table.getFilteredRowModel().rows.length === 0 ? (
               <tbody>
                 <tr>
-                  <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
+                  <td colSpan={table.getVisibleFlatColumns()?.length} className='text-center'>
                     No data available
                   </td>
                 </tr>

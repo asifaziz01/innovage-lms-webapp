@@ -23,8 +23,6 @@ import TextEditor from '@/components/Common/TextEditor'
 import Reactquill from '@/libs/styles/Reactquill'
 
 const McqQuestion = ({ mcqFields, setMcqFields, control, error }) => {
-  console.info(mcqFields)
-
   // Function to handle input text change
   const [openFeedback, setOpenFeedback] = useState(false)
   const [openField, setOpenField] = useState(null)
@@ -32,9 +30,9 @@ const McqQuestion = ({ mcqFields, setMcqFields, control, error }) => {
 
   const toggleTextField = itemId => {
     setOpenTextFieldIds(prevIds => {
-      if (prevIds.includes(itemId)) {
+      if (prevIds?.includes(itemId)) {
         // If the text field for this item is open, remove it from the state
-        return prevIds.filter(id => id !== itemId)
+        return prevIds?.filter(id => id !== itemId)
       } else {
         // If it's not open, add the item ID to the state
         return [...prevIds, itemId]
@@ -67,19 +65,17 @@ const McqQuestion = ({ mcqFields, setMcqFields, control, error }) => {
 
   // Delete item from the list
   const deleteItem = index => {
-    const newItems = mcqFields.filter((_, i) => i !== index)
+    const newItems = mcqFields?.filter((_, i) => i !== index)
 
     setMcqFields(newItems)
   }
 
   // Function to add a new text field and checkbox
   const addField = () => {
-    const newField = { id: mcqFields.length + 1, choice: '', correct_answer: false, feedback: '', remove: true }
+    const newField = { id: mcqFields?.length + 1, choice: '', correct_answer: false, feedback: '', remove: true }
 
     setMcqFields([...mcqFields, newField])
   }
-
-  console.info(mcqFields)
 
   return (
     <Grid item xs={12} py={4}>
@@ -98,7 +94,7 @@ const McqQuestion = ({ mcqFields, setMcqFields, control, error }) => {
               py={3}
             >
               <Grid item xs={12} md={0.5} sx={{ xs: { p: 0 }, md: { p: 1 } }}>
-                <Checkbox checked={field.correct_answer} onChange={() => handleCheckboxChange(index)} />
+                <Checkbox checked={field?.correct_answer} onChange={() => handleCheckboxChange(index)} />
               </Grid>
               <Grid item xs={12} md={11}>
                 <TextEditor
@@ -140,7 +136,7 @@ const McqQuestion = ({ mcqFields, setMcqFields, control, error }) => {
                 </Typography>
               </Grid>
               <Grid item xs={12} sx={{ pt: 3, pl: 12 }}>
-                {openTextFieldIds.includes(field.id) && (
+                {openTextFieldIds?.includes(field?.id) && (
                   <Grid item xs={12} md={11.5}>
                     <TextEditor
                       {...field}

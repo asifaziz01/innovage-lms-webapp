@@ -41,8 +41,6 @@ const AddTestDrawer = props => {
   // Props
   const { open, handleClose, userData, addUserData, categories, getCategories } = props
 
-  console.info(categories)
-
   // States
   const [formData, setFormData] = useState(initialData)
   const [description, setDescription] = useState('')
@@ -73,30 +71,14 @@ const AddTestDrawer = props => {
     // resolver: yupResolver(schema)
   })
 
-  const CustomQuill = styled(ReactQuill)`
-    .ql-container {
-      border-bottom-left-radius: 12px !important;
-      border-bottom-right-radius: 12px !important;
-    }
-    .ql-toolbar {
-      border-bottom: none !important;
-      border-top-left-radius: 12px !important;
-      border-top-right-radius: 12px !important;
-    }
-  `
-
-  const fieldValues = watch()
-
   const onSubmit = data => {
-    console.info(data)
-
     const newUser = {
       id: (userData?.length && userData?.length + 1) || 1,
 
       // avatar: `/images/avatars/${Math.floor(Math.random() * 8) + 1}.png`,
-      title: data.title,
-      description: data.details,
-      type: data.type,
+      title: data?.title,
+      description: data?.details,
+      type: data?.type,
       category: data?.category,
       created_on: moment().format('YYYY-MM-DD HH:mm:ss'),
 

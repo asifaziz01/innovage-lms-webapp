@@ -45,23 +45,18 @@ const QuestionUpload = ({ files, setFiles }) => {
 
   const [uploadFile, setUploadFile] = useState(false)
 
-  console.info(files)
-
   // Hooks
   const { getRootProps, getInputProps } = useDropzone({
     multiple: true,
     accept: 'image/*',
     onDrop: acceptedFiles => {
-      console.info(acceptedFiles)
-
-      // setFiles(acceptedFiles.map(file => Object.assign(file)))
       setFiles(prevFiles => [...prevFiles, ...acceptedFiles])
     }
   })
 
   const renderFilePreview = file => {
-    if (file.type.startsWith('image')) {
-      return <img width={38} height={38} alt={file.name} src={URL.createObjectURL(file)} />
+    if (file?.type?.startsWith('image')) {
+      return <img width={38} height={38} alt={file?.name} src={URL.createObjectURL(file)} />
     } else {
       return <i className='ri-file-text-line' />
     }
@@ -69,14 +64,14 @@ const QuestionUpload = ({ files, setFiles }) => {
 
   const handleRemoveFile = file => {
     const uploadedFiles = files
-    const filtered = uploadedFiles.filter(i => i.name !== file.name)
+    const filtered = uploadedFiles?.filter(i => i?.name !== file?.name)
 
     setFiles([...filtered])
   }
 
   const fileList = files?.map(file => (
     <ListItem
-      key={file.name}
+      key={file?.name}
       className='pis-4 plb-3'
       sx={{
         display: 'flex',
@@ -96,12 +91,12 @@ const QuestionUpload = ({ files, setFiles }) => {
           }}
         >
           <Typography className='file-name font-medium' color='text.primary'>
-            {file.name}
+            {file?.name}
           </Typography>
           <Typography className='file-size' variant='body2'>
-            {Math.round(file.size / 100) / 10 > 1000
-              ? `${(Math.round(file.size / 100) / 10000).toFixed(1)} mb`
-              : `${(Math.round(file.size / 100) / 10).toFixed(1)} kb`}
+            {Math.round(file?.size / 100) / 10 > 1000
+              ? `${(Math.round(file?.size / 100) / 10000).toFixed(1)} mb`
+              : `${(Math.round(file?.size / 100) / 10).toFixed(1)} kb`}
           </Typography>
         </div>
       </div>

@@ -16,18 +16,17 @@ const TableFilters = ({ setData, tableData, globalFilter, setGlobalFilter, type 
   const [types, setTypes] = useState([])
   const [status, setStatus] = useState([])
 
-  console.info(tableData)
   useEffect(() => {
     const filteredData = tableData?.filter(user => {
-      if (user.status === '0' && status?.length) {
-        if (status?.length && !status.includes('Unpublished')) return false
+      if (user?.status === '0' && status?.length) {
+        if (status?.length && !status?.includes('Unpublished')) return false
       }
 
-      if (user.status === '1' && status?.length) {
-        if (status?.length && !status.includes('Published')) return false
+      if (user?.status === '1' && status?.length) {
+        if (status?.length && !status?.includes('Published')) return false
       }
 
-      if (types.length > 0 && !types.includes(user.type)) return false
+      if (types?.length > 0 && !types?.includes(user?.type)) return false
 
       return true
     })
@@ -76,7 +75,7 @@ const TableFilters = ({ setData, tableData, globalFilter, setGlobalFilter, type 
       target: { value }
     } = event
 
-    setTypes(typeof value === 'string' ? value.split(',') : value)
+    setTypes(typeof value === 'string' ? value?.split(',') : value)
   }
 
   const handleStatusChange = event => {
@@ -84,7 +83,7 @@ const TableFilters = ({ setData, tableData, globalFilter, setGlobalFilter, type 
       target: { value }
     } = event
 
-    setStatus(typeof value === 'string' ? value.split(',') : value)
+    setStatus(typeof value === 'string' ? value?.split(',') : value)
   }
 
   return (
@@ -150,20 +149,20 @@ const TableFilters = ({ setData, tableData, globalFilter, setGlobalFilter, type 
               value={types}
               multiple
               onChange={handleTypeChange}
-              renderValue={selected => selected.join(', ')}
+              renderValue={selected => selected?.join(', ')}
 
               // inputProps={{ placeholder: 'Filter by type' }}
             >
               <MenuItem key='evaluated' value='evaluated'>
-                <Checkbox checked={types.indexOf('evaluated') > -1} />
+                <Checkbox checked={types?.indexOf('evaluated') > -1} />
                 <ListItemText primary='Evaluated' /> {/* Capitalize first letter */}
               </MenuItem>
               <MenuItem key='practice' value='practice'>
-                <Checkbox checked={types.indexOf('practice') > -1} />
+                <Checkbox checked={types?.indexOf('practice') > -1} />
                 <ListItemText primary='Practice' /> {/* Capitalize first letter */}
               </MenuItem>
               <MenuItem key='quiz' value='quiz'>
-                <Checkbox checked={types.indexOf('quiz') > -1} />
+                <Checkbox checked={types?.indexOf('quiz') > -1} />
                 <ListItemText primary='Quiz' /> {/* Capitalize first letter */}
               </MenuItem>
             </Select>
@@ -192,17 +191,17 @@ const TableFilters = ({ setData, tableData, globalFilter, setGlobalFilter, type 
               labelId='status-select'
               multiple
               onChange={handleStatusChange}
-              renderValue={selected => selected.join(', ')}
+              renderValue={selected => selected?.join(', ')}
 
               // inputProps={{ placeholder: 'Select Status' }}
             >
               <MenuItem key='Published' value='Published'>
-                <Checkbox checked={status.indexOf('Published') > -1} />
+                <Checkbox checked={status?.indexOf('Published') > -1} />
                 <ListItemText primary='Published' /> {/* Capitalize first letter */}
               </MenuItem>
               {/* <MenuItem value='Published'>Published</MenuItem> */}
               <MenuItem key='Unpublished' value='Unpublished'>
-                <Checkbox checked={status.indexOf('Unpublished') > -1} />
+                <Checkbox checked={status?.indexOf('Unpublished') > -1} />
                 <ListItemText primary='Unpublished' /> {/* Capitalize first letter */}
               </MenuItem>
               {/* <MenuItem value='Unpublished'>Unpublished</MenuItem> */}

@@ -39,16 +39,19 @@ import {
 // Component Imports
 import { Box, Tooltip } from '@mui/material'
 
+import CustomAvatar from '@core/components/mui/Avatar'
+
+import tableStyles from '@core/styles/table.module.css'
+
 import TableFilters from './TableFilters'
 import AddTestDrawer from './AddTestDrawer'
-import CustomAvatar from '@core/components/mui/Avatar'
 
 // Util Imports
 // import { getInitials } from '../../../../../../Utils/getInitials'
 // import { getLocalizedUrl } from '../../../../../../Utils/i18n'
 
 // Style Imports
-import tableStyles from '@core/styles/table.module.css'
+
 import AlertDialogBox from '@/components/Common/AlertDialogBox'
 import DialogBoxComponent from '@/components/Common/DialogBoxComponent'
 import FilterHeader from '@/components/globals/FilterHeader'
@@ -62,7 +65,7 @@ const Icon = styled('i')({})
 
 const fuzzyFilter = (row, columnId, value, addMeta) => {
   // Rank the item
-  const itemRank = rankItem(row.getValue(columnId), value)
+  const itemRank = rankItem(row?.getValue(columnId), value)
 
   // Store the itemRank info
   addMeta({
@@ -70,7 +73,7 @@ const fuzzyFilter = (row, columnId, value, addMeta) => {
   })
 
   // Return if the item should be filtered in/out
-  return itemRank.passed
+  return itemRank?.passed
 }
 
 const DebouncedInput = ({ value: initialValue, onChange, debounce = 500, ...props }) => {
@@ -123,7 +126,7 @@ const TestListTable = ({ tableData, addCategoryData, deleteUserData }) => {
   const [filteredData, setFilteredData] = useState(data)
   const [globalFilter, setGlobalFilter] = useState('')
   const [type, setType] = useState('')
-  console.log(filteredData, 'filterte')
+
   //Dialog states
   const [openStatusDialog, setOpenStatusDialog] = useState(false)
   const statusOptions = ['Unpublished', 'Published']
@@ -172,41 +175,43 @@ const TestListTable = ({ tableData, addCategoryData, deleteUserData }) => {
     // Save status logic here
     handleCloseStatusDialog()
   }
+
   const categories = Object.values(tableData)
+
   const transformPayloadToArray = payload => {
     const resultArray = []
 
     Object.keys(payload).forEach(key => {
-      const category = payload[key]
+      const category = payload?.[key]
 
       // Only add the parent category if its guid is defined
-      if (category.guid !== undefined) {
-        resultArray.push({
-          guid: category.guid,
-          title: category.title,
-          created_by: category.created_by,
-          created_on: category.created_on,
-          updated_by: category.updated_by,
-          updated_on: category.updated_on,
-          parent_guid: category.parent_guid,
-          parent_title: category.parent_title,
-          children: category.children
+      if (category?.guid !== undefined) {
+        resultArray?.push({
+          guid: category?.guid,
+          title: category?.title,
+          created_by: category?.created_by,
+          created_on: category?.created_on,
+          updated_by: category?.updated_by,
+          updated_on: category?.updated_on,
+          parent_guid: category?.parent_guid,
+          parent_title: category?.parent_title,
+          children: category?.children
         })
       }
 
       // If the category has children and their guid is defined, add them to the result array
-      if (category.children && category.children.length > 0) {
-        category.children.forEach(child => {
-          if (child.guid !== undefined) {
-            resultArray.push({
-              guid: child.guid,
-              title: child.title,
-              created_by: child.created_by,
-              created_on: child.created_on,
-              updated_by: child.updated_by,
-              updated_on: child.updated_on,
-              parent_guid: child.parent_guid,
-              parent_title: child.parent_title
+      if (category?.children && category?.children?.length > 0) {
+        category?.children?.forEach(child => {
+          if (child?.guid !== undefined) {
+            resultArray?.push({
+              guid: child?.guid,
+              title: child?.title,
+              created_by: child?.created_by,
+              created_on: child?.created_on,
+              updated_by: child?.updated_by,
+              updated_on: child?.updated_on,
+              parent_guid: child?.parent_guid,
+              parent_title: child?.parent_title
             })
           }
         })
@@ -218,6 +223,7 @@ const TestListTable = ({ tableData, addCategoryData, deleteUserData }) => {
 
   // Apply the transformation
   const transformedPayload = transformPayloadToArray(tableData)
+
   useEffect(() => {
     setData(transformedPayload)
   }, [tableData])
@@ -225,16 +231,15 @@ const TestListTable = ({ tableData, addCategoryData, deleteUserData }) => {
   // Hooks
   const { lang: locale } = useParams()
 
-  console.log(categories, 'check')
-  console.log(transformedPayload, 'check1')
   const handleClick = () => {
     setCategoriesparent(true)
   }
+
   // Filter the displayed categories
   const handleParentClick = parentGuid => {
-    if (expandedParents.includes(parentGuid)) {
+    if (expandedParents?.includes(parentGuid)) {
       // If already expanded, collapse it
-      setExpandedParents(expandedParents.filter(guid => guid !== parentGuid))
+      setExpandedParents(expandedParents?.filter(guid => guid !== parentGuid))
     } else {
       // Otherwise, expand it
       setExpandedParents([...expandedParents, parentGuid])
@@ -245,32 +250,34 @@ const TestListTable = ({ tableData, addCategoryData, deleteUserData }) => {
   const filteredCategories = useMemo(() => {
     const result = []
 
-    transformedPayload.forEach(item => {
-      if (item.parent_guid === null) {
+    transformedPayload?.forEach(item => {
+      if (item?.parent_guid === null) {
         // Add parent category
         result.push(item)
 
         // If the parent is expanded, add its children
-        if (expandedParents.includes(item.guid)) {
-          const children = transformedPayload.filter(child => child.parent_guid === item.guid)
-          result.push(...children)
+        if (expandedParents?.includes(item?.guid)) {
+          const children = transformedPayload?.filter(child => child?.parent_guid === item?.guid)
+
+          result?.push(...children)
         }
       }
     })
 
     return result
   }, [tableData, expandedParents])
+
   const hasChildren = guid => {
-    return transformedPayload.some(category => category.parent_guid === guid)
+    return transformedPayload?.some(category => category?.parent_guid === guid)
   }
-  console.log(expandedParents, 'cccccc')
+
   const columns = useMemo(
     () =>
       columnOrder
-        .map(columnId => {
+        ?.map(columnId => {
           switch (columnId) {
             case 'select':
-              return visibleColumns.select
+              return visibleColumns?.select
                 ? {
                     id: 'select',
                     header: ({ table }) => (
@@ -296,14 +303,16 @@ const TestListTable = ({ tableData, addCategoryData, deleteUserData }) => {
                   }
                 : null
             case 'title':
-              return visibleColumns.title
+              return visibleColumns?.title
                 ? columnHelper.accessor('title', {
                     header: 'Title',
                     cell: ({ row }) => {
                       const isParent = row.original.parent_guid === null
                       const hasChildCategories = isParent && hasChildren(row.original.guid)
                       const isExpanded = expandedParents.includes(row.original.guid)
+
                       console.log(hasChildren, 'hassss')
+
                       return (
                         <div className='flex items-center gap-3'>
                           <div className='flex flex-col'>
@@ -339,17 +348,18 @@ const TestListTable = ({ tableData, addCategoryData, deleteUserData }) => {
                   })
                 : null
             case 'created_by':
-              return visibleColumns.created_by
+              return visibleColumns?.created_by
                 ? columnHelper.accessor('parent_guid', {
                     header: 'Parent Category',
                     cell: ({ row }) => {
-                      const parentCategory = data.find(item => item.guid === row.original.parent_guid)
-                      return <Typography>{parentCategory ? parentCategory.title : 'Main Category'}</Typography>
+                      const parentCategory = data?.find(item => item?.guid === row.original.parent_guid)
+
+                      return <Typography>{parentCategory ? parentCategory?.title : 'Main Category'}</Typography>
                     }
                   })
                 : null
             case 'test':
-              return visibleColumns.test
+              return visibleColumns?.test
                 ? columnHelper.accessor('test', {
                     header: 'Question',
                     cell: ({ row }) => (
@@ -421,8 +431,6 @@ const TestListTable = ({ tableData, addCategoryData, deleteUserData }) => {
     getFacetedUniqueValues: getFacetedUniqueValues(),
     getFacetedMinMaxValues: getFacetedMinMaxValues()
   })
-
-  console.info(Object.keys(rowSelection)?.length)
 
   return (
     <>

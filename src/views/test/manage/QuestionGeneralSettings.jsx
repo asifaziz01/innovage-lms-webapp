@@ -65,7 +65,6 @@ const QuestionGeneralSettings = () => {
   const handleNewSubmit = data => {
     // e
     alert('Submitted')
-    console.info(data)
   }
 
   const handleCloseTemplate = () => {

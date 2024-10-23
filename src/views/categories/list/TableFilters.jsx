@@ -16,31 +16,30 @@ const TableFilters = ({ setData, tableData, globalFilter, setGlobalFilter, type 
   const [types, setTypes] = useState([])
   const [status, setStatus] = useState([])
 
-  console.info(tableData)
   useEffect(() => {
     const filteredData = tableData?.filter(user => {
       // Filter for parent categories where parent_guid is null
-      if (user.parent_guid !== null) return false
+      if (user?.parent_guid !== null) return false
 
       // Find the title of the current user for status filtering
-      const userStatusTitle = tableData.find(item => item.title === user.title)
+      const userStatusTitle = tableData?.find(item => item?.title === user?.title)
 
       // Log userStatusTitle to inspect its value
-      console.log('userStatusTitle:', userStatusTitle)
 
       // Filter by status (title) based on selected status
-      if (status.length > 0) {
+      if (status?.length > 0) {
         // If no userStatusTitle is found or if it doesn't match selected status, filter out the item
-        if (!userStatusTitle || !status.includes(userStatusTitle.title)) {
+        if (!userStatusTitle || !status?.includes(userStatusTitle?.title)) {
           return false
         }
       }
 
       // Filter by types based on selected types
-      if (types.length > 0) {
-        const userTypeTitle = tableData.find(item => item.type === user.type)?.title
+      if (types?.length > 0) {
+        const userTypeTitle = tableData?.find(item => item?.type === user?.type)?.title
+
         // If no userTypeTitle is found or if it doesn't match selected types, filter out the item
-        if (!userTypeTitle || !types.includes(userTypeTitle)) {
+        if (!userTypeTitle || !types?.includes(userTypeTitle)) {
           return false
         }
       }
@@ -49,7 +48,6 @@ const TableFilters = ({ setData, tableData, globalFilter, setGlobalFilter, type 
     })
 
     setData(filteredData || [])
-    console.log(filteredData, 'sss')
   }, [status, types, tableData, setData])
 
   const DebouncedInput = ({ value: initialValue, onChange, debounce = 500, ...props }) => {

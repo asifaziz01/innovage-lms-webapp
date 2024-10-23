@@ -80,9 +80,9 @@ const DialogBoxComponent = ({
               fullWidth
               label='Change Status'
             >
-              {statusOptions.map(status => (
+              {statusOptions?.map(status => (
                 <MenuItem key={status} value={status}>
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                  {status?.charAt(0)?.toUpperCase() + status?.slice(1)}
                 </MenuItem>
               ))}
             </Select>
@@ -90,9 +90,9 @@ const DialogBoxComponent = ({
         )}
         {isRoleDialog && (
           <Select value={selectedRole} onChange={onChangeRole} fullWidth>
-            {roleOptions.map(role => (
+            {roleOptions?.map(role => (
               <MenuItem key={role} value={role}>
-                {role.charAt(0).toUpperCase() + role.slice(1)}
+                {role?.charAt(0)?.toUpperCase() + role?.slice(1)}
               </MenuItem>
             ))}
           </Select>

@@ -10,7 +10,7 @@ import useCategoryApi from '@/api/useCategoryApi'
 
 const CategoriesList = () => {
   const { data, addCategoryData } = useCategoryApi()
-  console.log(data, 'checking')
+
   return (
     <Grid container spacing={6}>
       {/* <Grid item xs={12}>

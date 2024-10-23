@@ -1,6 +1,8 @@
 // React Imports
 import { useState } from 'react'
+
 import { Box } from '@mui/material'
+
 // MUI Imports
 import Button from '@mui/material/Button'
 import Drawer from '@mui/material/Drawer'
@@ -48,15 +50,15 @@ const AddUserDrawer = props => {
     const newUser = {
       id: (userData?.length && userData?.length + 1) || 1,
       avatar: `/images/avatars/${Math.floor(Math.random() * 8) + 1}.png`,
-      fullName: data.fullName,
-      username: data.username,
-      email: data.email,
-      role: data.role,
-      currentPlan: data.plan,
-      status: data.status,
-      company: formData.company,
-      country: formData.country,
-      contact: formData.contact
+      fullName: data?.fullName,
+      username: data?.username,
+      email: data?.email,
+      role: data?.role,
+      currentPlan: data?.plan,
+      status: data?.status,
+      company: formData?.company,
+      country: formData?.country,
+      contact: formData?.contact
     }
 
     if (edit) {
@@ -107,6 +109,7 @@ const AddUserDrawer = props => {
                   fullWidth
                   placeholder='First Name'
                   error={Boolean(errors.firstname)}
+
                   //  sx={{ mt: 5 }}
                 />
                 {errors.firstname && <FormHelperText error>{errors.firstname.message}</FormHelperText>}
@@ -128,6 +131,7 @@ const AddUserDrawer = props => {
                   fullWidth
                   placeholder='Last Name'
                   error={Boolean(errors.lastname)}
+
                   // sx={{ mt: 5 }}
                 />
                 {errors.lastname && <FormHelperText error>{errors.lastname.message}</FormHelperText>}
@@ -150,6 +154,7 @@ const AddUserDrawer = props => {
                   type='email'
                   placeholder='johndoe@gmail.com'
                   error={Boolean(errors.email)}
+
                   // sx={{ mt: 5 }}
                 />
                 {errors.email && <FormHelperText error>{errors.email.message}</FormHelperText>}
@@ -173,6 +178,7 @@ const AddUserDrawer = props => {
                     placeholder='+91'
                     onChange={onChange}
                     error={Boolean(errors.countryCode)}
+
                     // sx={{ mt: 5 }}
                   />
                 )}
@@ -195,6 +201,7 @@ const AddUserDrawer = props => {
                     placeholder='1234567890'
                     onChange={onChange}
                     error={Boolean(errors.phoneNumber)}
+
                     // sx={{ mt: 5 }}
                   />
                 )}
@@ -214,6 +221,7 @@ const AddUserDrawer = props => {
               placeholder='ROle'
               onChange={e => setFormData({ ...formData, country: e.target.value })}
               error={Boolean(errors.country)}
+
               // sx={{ mt: 5 }}
             >
               <MenuItem disabled value=''>

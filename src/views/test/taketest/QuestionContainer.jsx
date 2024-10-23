@@ -1,6 +1,9 @@
-import { Grid, Typography } from '@mui/material'
 import React, { useState, useEffect } from 'react'
+
 import { useSearchParams } from 'next/navigation'
+
+import { Grid, Typography } from '@mui/material'
+
 import useTakeTestApi from '@/api/useTakeTestApi'
 import QuestionCard from '../testcomponents/QuestionCard'
 import QuestionHeader from '../testcomponents/QuestionHeader'
@@ -23,11 +26,12 @@ const QuestionContainer = ({ collapseCard }) => {
     }
   }, [guid])
 
-  const currentQuestion = questions ? questions[currentQuestionIndex] : null
+  const currentQuestion = questions ? questions?.[currentQuestionIndex] : null
 
   useEffect(() => {
     if (currentQuestion) {
-      const fetchedTime = currentQuestion.time
+      const fetchedTime = currentQuestion?.time
+
       setTimeLeft(fetchedTime !== null && fetchedTime !== undefined ? fetchedTime : 0)
     }
   }, [currentQuestionIndex, currentQuestion])
@@ -37,6 +41,7 @@ const QuestionContainer = ({ collapseCard }) => {
       const timer = setInterval(() => {
         setTimeLeft(prevTime => prevTime - 1)
       }, 1000)
+
       return () => clearInterval(timer)
     } else if (timeLeft === 0) {
       handleNextQuestion()
@@ -44,7 +49,7 @@ const QuestionContainer = ({ collapseCard }) => {
   }, [timeLeft])
 
   const handleNextQuestion = () => {
-    if (questions && currentQuestionIndex < questions.length - 1) {
+    if (questions && currentQuestionIndex < questions?.length - 1) {
       setCurrentQuestionIndex(prevIndex => prevIndex + 1)
     }
   }
@@ -87,7 +92,7 @@ const QuestionContainer = ({ collapseCard }) => {
               <QuestionHeader
                 timeLeft={timeLeft}
                 currentQuestionNumber={currentQuestionIndex + 1}
-                totalQuestions={questions.length} // Safely access questions.length
+                totalQuestions={questions?.length} // Safely access questions.length
                 negativeMarking={currentQuestion?.neg_marks ?? 0}
                 questionMarks={currentQuestion?.marks ?? 0}
               />
@@ -100,12 +105,12 @@ const QuestionContainer = ({ collapseCard }) => {
           <Grid item xs={12} sx={{ mt: 2 }}>
             {currentQuestion ? (
               <QuestionCard
-                totalQuestions={questions.length}
+                totalQuestions={questions?.length}
                 currentQuestionIndex={currentQuestionIndex}
                 questionText={currentQuestion?.question ?? 'No question available'}
                 description={currentQuestion?.feedback ?? 'No description available'}
-                options={currentQuestion?.choices?.map(choice => choice.choice) ?? []}
-                selectedOption={selectedOptions[currentQuestionIndex] || ''}
+                options={currentQuestion?.choices?.map(choice => choice?.choice) ?? []}
+                selectedOption={selectedOptions?.[currentQuestionIndex] || ''}
                 onOptionChange={option => handleOptionChange(currentQuestionIndex, option)}
                 onMarkForReviewChange={isMarked => handleMarkForReviewChange(currentQuestionIndex, isMarked)}
               />
@@ -126,7 +131,7 @@ const QuestionContainer = ({ collapseCard }) => {
         >
           {collapseCard && questions && (
             <ProgressCard
-              totalQuestions={questions.length} // Safely access questions.length
+              totalQuestions={questions?.length} // Safely access questions.length
               currentQuestionIndex={currentQuestionIndex}
               selectedOptions={selectedOptions}
               markForReview={markForReview}
@@ -141,7 +146,7 @@ const QuestionContainer = ({ collapseCard }) => {
           handleNext={handleNextQuestion}
           handlePrevious={handlePreviousQuestion}
           disablePrevious={currentQuestionIndex === 0}
-          disableNext={currentQuestionIndex === (questions ? questions.length - 1 : -1)} // Adjust disable logic
+          disableNext={currentQuestionIndex === (questions ? questions?.length - 1 : -1)} // Adjust disable logic
         />
       </Grid>
     </Grid>

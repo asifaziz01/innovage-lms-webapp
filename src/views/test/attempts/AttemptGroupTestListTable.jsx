@@ -63,7 +63,7 @@ const Icon = styled('i')({})
 
 const fuzzyFilter = (row, columnId, value, addMeta) => {
   // Rank the item
-  const itemRank = rankItem(row.getValue(columnId), value)
+  const itemRank = rankItem(row?.getValue(columnId), value)
 
   // Store the itemRank info
   addMeta({
@@ -71,7 +71,7 @@ const fuzzyFilter = (row, columnId, value, addMeta) => {
   })
 
   // Return if the item should be filtered in/out
-  return itemRank.passed
+  return itemRank?.passed
 }
 
 const DebouncedInput = ({ value: initialValue, onChange, debounce = 500, ...props }) => {
@@ -170,10 +170,10 @@ const AttemptGroupTestListTable = ({ tableData, addUserData, deleteUserData, cat
   const columns = useMemo(
     () =>
       columnOrder
-        .map(columnId => {
+        ?.map(columnId => {
           switch (columnId) {
             case 'select':
-              return visibleColumns.select
+              return visibleColumns?.select
                 ? {
                     id: 'select',
                     header: ({ table }) => (
@@ -199,7 +199,7 @@ const AttemptGroupTestListTable = ({ tableData, addUserData, deleteUserData, cat
                   }
                 : null
             case 'batch_name':
-              return visibleColumns.batch_name
+              return visibleColumns?.batch_name
                 ? columnHelper.accessor('title', {
                     header: (
                       <Typography fontWeight='bold' fontSize={13}>
@@ -209,9 +209,9 @@ const AttemptGroupTestListTable = ({ tableData, addUserData, deleteUserData, cat
                     cell: ({ row }) => (
                       <div className='flex items-center gap-3'>
                         <div className='flex items-center'>
-                          {getAvatar({ avatar: row.original?.avatar, fullName: row.original.title })}
+                          {getAvatar({ avatar: row.original?.avatar, fullName: row.original?.title })}
                           <Typography color='text.primary' className='font-medium pl-3'>
-                            {row.original.title}
+                            {row.original?.title}
                           </Typography>
                         </div>
                       </div>
@@ -219,30 +219,30 @@ const AttemptGroupTestListTable = ({ tableData, addUserData, deleteUserData, cat
                   })
                 : null
             case 'due_date':
-              return visibleColumns.due_date
+              return visibleColumns?.due_date
                 ? columnHelper.accessor('created_on', {
                     header: (
                       <Typography fontWeight='bold' fontSize={13}>
                         Due date
                       </Typography>
                     ),
-                    cell: ({ row }) => <Typography>{row.original.created_on}</Typography>
+                    cell: ({ row }) => <Typography>{row.original?.created_on}</Typography>
                   })
                 : null
             case 'end_date':
-              return visibleColumns.end_date
+              return visibleColumns?.end_date
                 ? columnHelper.accessor('updated_on', {
                     header: (
                       <Typography fontWeight='bold' fontSize={13}>
                         End date
                       </Typography>
                     ),
-                    cell: ({ row }) => <Typography>{row.original.updated_on}</Typography>
+                    cell: ({ row }) => <Typography>{row.original?.updated_on}</Typography>
                   })
                 : null
 
             case 'no_of_users':
-              return visibleColumns.no_of_users
+              return visibleColumns?.no_of_users
                 ? columnHelper.accessor('no_of_users', {
                     header: (
                       <Typography fontWeight='bold' fontSize={13}>
@@ -253,7 +253,7 @@ const AttemptGroupTestListTable = ({ tableData, addUserData, deleteUserData, cat
                   })
                 : null
             case 'total_attempts':
-              return visibleColumns.total_attempts
+              return visibleColumns?.total_attempts
                 ? columnHelper.accessor('total_attempts', {
                     header: (
                       <Typography fontWeight='bold' fontSize={13}>
@@ -264,7 +264,7 @@ const AttemptGroupTestListTable = ({ tableData, addUserData, deleteUserData, cat
                   })
                 : null
             case 'attempts_not_grade':
-              return visibleColumns.attempts_not_grade
+              return visibleColumns?.attempts_not_grade
                 ? columnHelper.accessor('attempts_not_graded', {
                     header: (
                       <Typography fontWeight='bold' fontSize={13}>
@@ -275,7 +275,7 @@ const AttemptGroupTestListTable = ({ tableData, addUserData, deleteUserData, cat
                   })
                 : null
             case 'finalise':
-              return visibleColumns.finalise
+              return visibleColumns?.finalise
                 ? columnHelper.accessor('finalise', {
                     header: (
                       <Typography fontWeight='bold' fontSize={13}>
@@ -296,7 +296,7 @@ const AttemptGroupTestListTable = ({ tableData, addUserData, deleteUserData, cat
                   })
                 : null
             case 'action':
-              return visibleColumns.action
+              return visibleColumns?.action
                 ? columnHelper.accessor('action', {
                     header: (
                       <Typography fontWeight='bold' fontSize={13}>
@@ -317,8 +317,6 @@ const AttemptGroupTestListTable = ({ tableData, addUserData, deleteUserData, cat
         .filter(Boolean),
     [columnOrder, visibleColumns, data]
   )
-
-  console.info(filteredData)
 
   const table = useReactTable({
     data: filteredData,
@@ -384,7 +382,7 @@ const AttemptGroupTestListTable = ({ tableData, addUserData, deleteUserData, cat
             <thead>
               {table.getHeaderGroups().map(headerGroup => (
                 <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header, index) => (
+                  {headerGroup.headers?.map((header, index) => (
                     <th
                       key={header.id}
                       draggable // Makes the column header draggable
@@ -393,7 +391,7 @@ const AttemptGroupTestListTable = ({ tableData, addUserData, deleteUserData, cat
                       onDrop={() => handleDrop(index)}
                       style={{ cursor: 'grab' }}
                     >
-                      {header.isPlaceholder ? null : (
+                      {header?.isPlaceholder ? null : (
                         <>
                           <div
                             className={classnames({
@@ -415,10 +413,10 @@ const AttemptGroupTestListTable = ({ tableData, addUserData, deleteUserData, cat
                 </tr>
               ))}
             </thead>
-            {table.getFilteredRowModel().rows.length === 0 ? (
+            {table.getFilteredRowModel().rows?.length === 0 ? (
               <tbody>
                 <tr>
-                  <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
+                  <td colSpan={table.getVisibleFlatColumns()?.length} className='text-center'>
                     No data available
                   </td>
                 </tr>
@@ -445,7 +443,7 @@ const AttemptGroupTestListTable = ({ tableData, addUserData, deleteUserData, cat
           rowsPerPageOptions={[10, 25, 50]}
           component='div'
           className='border-bs'
-          count={table.getFilteredRowModel().rows.length}
+          count={table.getFilteredRowModel().rows?.length}
           rowsPerPage={table.getState().pagination.pageSize}
           page={table.getState().pagination.pageIndex}
           SelectProps={{

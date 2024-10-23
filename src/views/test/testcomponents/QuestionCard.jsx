@@ -1,3 +1,5 @@
+import React from 'react'
+
 import {
   Card,
   CardContent,
@@ -11,7 +13,6 @@ import {
   FormGroup,
   Checkbox
 } from '@mui/material'
-import React from 'react'
 
 const QuestionCard = ({
   questionText,
@@ -49,7 +50,7 @@ const QuestionCard = ({
         <Box>
           <FormControl>
             <RadioGroup value={selectedOption} onChange={handleOptionChange}>
-              {options.map((option, index) => (
+              {options?.map((option, index) => (
                 <FormControlLabel key={index} value={option} control={<Radio />} label={option} />
               ))}
               <FormControlLabel

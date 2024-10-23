@@ -36,7 +36,6 @@ const QuestionResultSettings = () => {
 
   const formValues = watch()
 
-  console.info(formValues)
   const [date, setDate] = useState(new Date())
   const [dateData, setDateData] = useState(false)
 
