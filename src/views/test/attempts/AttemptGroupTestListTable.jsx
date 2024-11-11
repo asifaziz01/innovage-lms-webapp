@@ -5,10 +5,11 @@ import { useEffect, useState, useMemo } from 'react'
 
 // Next Imports
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams, useRouter } from 'next/navigation'
 
 // MUI Imports
 import Card from '@mui/material/Card'
+
 import CardHeader from '@mui/material/CardHeader'
 import Button from '@mui/material/Button'
 import Grid from '@mui/material/Grid'
@@ -112,8 +113,16 @@ const userStatusObj = {
 // Column Definitions
 const columnHelper = createColumnHelper()
 
-const AttemptGroupTestListTable = ({ tableData, addUserData, deleteUserData, categories, getCategories }) => {
+const AttemptGroupTestListTable = ({
+  tableData,
+  addUserData,
+  deleteUserData,
+  categories,
+  getCategories,
+  testSubmissions
+}) => {
   // States
+  const router = useRouter()
   const [addUserOpen, setAddUserOpen] = useState(false)
 
   const [editUserOpen, setEditUserOpen] = useState(false)
@@ -123,6 +132,8 @@ const AttemptGroupTestListTable = ({ tableData, addUserData, deleteUserData, cat
   const [filteredData, setFilteredData] = useState(data)
   const [globalFilter, setGlobalFilter] = useState('')
   const [type, setType] = useState('')
+  const searchParams = useSearchParams()
+  const guid = searchParams?.get('guid')
 
   //Dialog states
   const [openStatusDialog, setOpenStatusDialog] = useState(false)
@@ -210,7 +221,16 @@ const AttemptGroupTestListTable = ({ tableData, addUserData, deleteUserData, cat
                       <div className='flex items-center gap-3'>
                         <div className='flex items-center'>
                           {getAvatar({ avatar: row.original?.avatar, fullName: row.original?.title })}
-                          <Typography color='text.primary' className='font-medium pl-3'>
+                          <Typography
+                            component={Link}
+                            href={`/attempt/students/?guid=${guid}`}
+                            color='text.primary'
+                            className='font-medium pl-3'
+                            sx={{
+                              textDecoration: 'underline',
+                              textUnderlineOffset: 3
+                            }}
+                          >
                             {row.original?.title}
                           </Typography>
                         </div>
@@ -304,8 +324,13 @@ const AttemptGroupTestListTable = ({ tableData, addUserData, deleteUserData, cat
                       </Typography>
                     ),
                     cell: ({ row }) => (
-                      <Button variant='outlined' color='primary' size='small'>
-                        Grade Attempts
+                      <Button
+                        variant='outlined'
+                        color='primary'
+                        size='small'
+                        onClick={() => router.push(`/attempt/students/?guid=${guid}`)}
+                      >
+                        Users
                       </Button>
                     )
                   })
@@ -374,6 +399,8 @@ const AttemptGroupTestListTable = ({ tableData, addUserData, deleteUserData, cat
               setGlobalFilter={setGlobalFilter}
               type={type}
               setType={setType}
+              testSubmissions={testSubmissions}
+              group={true}
             />
           </Grid>
         </Grid>

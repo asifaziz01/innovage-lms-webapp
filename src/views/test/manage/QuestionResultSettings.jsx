@@ -24,24 +24,25 @@ import QuestionGeneralSettingsTimingSection from './QuestionGeneralSettingsTimer
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import Reactquill from '@/libs/styles/Reactquill'
 
-const QuestionResultSettings = () => {
+const QuestionResultSettings = ({ testSettings, guid, formState, setFormState }) => {
   const {
     control,
     handleSubmit,
     reset,
     watch,
     formState: { errors, isValid },
-    getValues
+    getValues,
+    setValue
   } = useForm()
 
+  console.info(formState)
   const formValues = watch()
 
   const [date, setDate] = useState(new Date())
   const [dateData, setDateData] = useState(false)
 
   const handleNewSubmit = data => {
-    // e
-    console.info({ ...data, date: moment(date).format('YYYY-MM-DD') })
+    testSettings(guid, data)
   }
 
   const PickersComponent = forwardRef(({ ...props }, ref) => {
@@ -78,18 +79,18 @@ const QuestionResultSettings = () => {
             <CardContent>
               <QuestionGeneralSettingsTimingSection control={control} heading='Show Result'>
                 <Controller
-                  name='question_result_type'
+                  name='show_result'
                   control={control}
                   render={({ field }) => (
                     <RadioGroup {...field}>
                       <FormControlLabel
-                        value='test_submission_imd'
+                        value='immediately'
                         control={<Radio />}
                         label='Immediately after test submissions'
                         onChange={() => setDateData(false)}
                       />
                       <FormControlLabel
-                        value='man_lt_date'
+                        value='manually'
                         control={<Radio />}
                         label='Manually at a later date'
                         onChange={() => setDateData(false)}
@@ -112,10 +113,16 @@ const QuestionResultSettings = () => {
                           selectsStart
                           id='event-start-date'
                           endDate={moment().format('YYYY-MM-dd')}
+                          showTimeSelect
+                          dateFormat='dd-MM-yyyy hh:mm:ss'
                           selected={date}
-                          dateFormat='YYYY-MM-dd'
                           customInput={<PickersComponent label='' registername='startDate' size='small' />}
-                          onChange={date => date !== null && setDate(new Date(date))}
+                          onChange={date => {
+                            if (date !== null) {
+                              setDate(new Date(date))
+                              setValue('on_date', moment(date)?.format('DD-MM-YYYY hh:mm:ss'))
+                            }
+                          }}
                         />
                       </Box>
                     </RadioGroup>

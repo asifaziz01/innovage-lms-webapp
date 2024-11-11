@@ -1,5 +1,5 @@
-import AttemptTestList from '@/views/test/attempts/AttemptTestList'
+import AttemptGroupTestList from '@/views/test/attempts/AttemptGroupTestList'
 
 export default function Page() {
-  return <AttemptTestList />
+  return <AttemptGroupTestList />
 }

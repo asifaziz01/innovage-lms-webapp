@@ -22,7 +22,7 @@ const QuestionTypeAndTemplate = ({ control, errors, questionTypeFixed }) => {
               >
                 <InputLabel id='country'>Question Type</InputLabel>
                 <Controller
-                  name='question_type'
+                  name='type'
                   control={control}
                   rules={{ required: true }}
                   render={({ field }) => (
@@ -31,7 +31,7 @@ const QuestionTypeAndTemplate = ({ control, errors, questionTypeFixed }) => {
                       label='Question Type'
                       size='small'
                       disabled={questionTypeFixed}
-                      error={Boolean(errors.question_type)}
+                      error={Boolean(errors.type)}
                       fullWidth
                     >
                       <MenuItem value='mcmc'>Multiple Choice Questions</MenuItem>
@@ -40,7 +40,7 @@ const QuestionTypeAndTemplate = ({ control, errors, questionTypeFixed }) => {
                     </Select>
                   )}
                 />
-                {errors.question_type && <FormHelperText error>This field is required.</FormHelperText>}
+                {errors.type && <FormHelperText error>This field is required.</FormHelperText>}
               </FormControl>
             </Grid>
 

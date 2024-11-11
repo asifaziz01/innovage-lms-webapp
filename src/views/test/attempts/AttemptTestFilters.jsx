@@ -9,11 +9,13 @@ import Grid from '@mui/material/Grid'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
-import { Checkbox, InputAdornment, ListItemText, TextField, Typography, IconButton } from '@mui/material'
+import { format, addDays, sub, endOfMonth } from 'date-fns'
+import { Checkbox, InputAdornment, ListItemText, TextField, Typography, IconButton, CardActions } from '@mui/material'
 
 import moment from 'moment'
 
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
+import DateRangePicker from '../../../components/Common/DateRangePicker'
 
 const PickersComponent = forwardRef(({ ...props }, ref) => {
   return (
@@ -37,40 +39,131 @@ const PickersComponent = forwardRef(({ ...props }, ref) => {
   )
 })
 
-const AttemptTestFilters = ({ setData, tableData, globalFilter, setGlobalFilter, type }) => {
+const AttemptTestFilters = ({ setData, tableData, globalFilter, setGlobalFilter, type, testSubmissions, group }) => {
   // States
   const [types, setTypes] = useState([])
   const [status, setStatus] = useState([])
   const [dueDate, setDueDate] = useState(null)
-  const [endDate, setEndDate] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
+
+  //date states
+
+  //attempted date states
+  const now = new Date()
+  const [startDate, setStartDate] = useState(new Date(now.getFullYear(), now.getMonth(), 1))
+  const [endDate, setEndDate] = useState(endOfMonth(new Date()))
+
+  //
+
+  // submission date states
+
+  const [submissionStartDate, setSubmissionStartDate] = useState(new Date(now.getFullYear(), now.getMonth(), 1))
+  const [submissionEndDate, setSubmissionEndDate] = useState(endOfMonth(new Date()))
+
+  console.info(endDate)
+
+  //
+
+  //
+
+  useEffect(() => {
+    // testSubmissions(guid)
+    const data = {
+      guid: 'MAT3',
+      startDate,
+      endDate,
+      submissionStartDate,
+      submissionEndDate
+    }
+
+    testSubmissions(data)
+  }, [startDate, endDate, submissionStartDate, submissionEndDate])
+
+  // date function handlers
+
+  const handleOnChange = dates => {
+    const [start, end] = dates
+
+    setStartDate(start)
+    setEndDate(end)
+  }
+
+  const handleSubmissionDateRange = dates => {
+    const [start, end] = dates
+
+    setSubmissionStartDate(start)
+    setSubmissionEndDate(end)
+  }
+
+  //
+
+  const handleSearch = event => {
+    const value = event.target.value
+
+    setSearchTerm(value)
+
+    const filtered = tableData?.filter(item => {
+      const fullName = `${item?.first_name} ${item?.last_name}`
+
+      return fullName?.toLowerCase()?.includes(value?.toLowerCase())
+    })
+
+    setData(filtered)
+  }
 
   useEffect(() => {
     const filteredData = tableData?.filter(user => {
-      if (user?.status === '0' && status?.length) {
-        if (status?.length && !status?.includes('Unpublished')) return false
+      if (user?.status === 'Expired' && status?.length) {
+        if (status?.length && !status?.includes('Expired')) return false
       }
 
-      if (user?.status === '1' && status?.length) {
-        if (status?.length && !status?.includes('Published')) return false
+      if (user?.status === 'Submitted' && status?.length) {
+        if (status?.length && !status?.includes('Submitted')) return false
       }
 
-      if (types?.length > 0 && !types?.includes(user?.type)) return false
-      const itemStartDate = new Date(user?.created_on)
-
-      if (dueDate && endDate) {
-        const itemEndDate = new Date(user?.updated_on)
-        const start = new Date(dueDate)
-
-        const end = new Date(endDate)
-
-        return (!dueDate || itemStartDate >= start) && (!endDate || itemEndDate <= end)
+      if (user?.status === 'NotStarted' && status?.length) {
+        if (status?.length && !status?.includes('NotStarted')) return false
       }
+
+      if (user?.status === 'InProgress' && status?.length) {
+        if (status?.length && !status?.includes('InProgress')) return false
+      }
+
+      // if (types?.length > 0 && !types?.includes(user?.type)) return false
+      // const attemptedDate = new Date(user?.start_time)
+      // const submittedDate = new Date(user?.submit_time)
+
+      // if (startDate || endDate) {
+      //   const start = new Date(startDate)
+      //   const end = new Date(endDate)
+      //   const submissionStart = new Date(submissionStartDate)
+      //   const submissionEnd = new Date(submissionEndDate)
+
+      //   return (
+      //     (!startDate || attemptedDate >= start) &&
+      //     (!endDate || attemptedDate <= end) &&
+      //     (!submissionStartDate || submittedDate >= submissionStart) &&
+      //     (!submissionEndDate || submittedDate <= submissionEnd)
+      //   )
+      // }
+
+      // if (submissionStartDate || submissionEndDate) {
+      //   const submissionStart = new Date(submissionStartDate)
+      //   const submissionEnd = new Date(submissionEndDate)
+
+      //   return (
+      //     (!submissionStartDate || submittedDate >= submissionStart) &&
+      //     (!submissionEndDate || submittedDate <= submissionEnd)
+      //   )
+      // }
+
+      // }
 
       return true
     })
 
     setData(filteredData || [])
-  }, [type, status, tableData, setData, types, dueDate, endDate])
+  }, [type, status, tableData, setData, types, startDate, endDate, submissionStartDate, submissionEndDate])
 
   const DebouncedInput = ({ value: initialValue, onChange, debounce = 500, ...props }) => {
     // States
@@ -132,63 +225,89 @@ const AttemptTestFilters = ({ setData, tableData, globalFilter, setGlobalFilter,
   }
 
   return (
-    <CardContent>
-      <Grid container spacing={5} xs={12} display='flex' alignItems='center' pr={0}>
-        <Grid item container xs={12} display='flex' justifyContent='space-between'>
-          <Grid item xs={3}>
-            <Typography fontWeight='bold' fontSize={18}>
-              Filter
-            </Typography>
+    <>
+      <CardContent>
+        <Grid container spacing={5} xs={12} display='flex' alignItems='center' pr={0}>
+          <Grid item container xs={12} display='flex' justifyContent='space-between'>
+            <Grid item xs={3}>
+              <Typography fontWeight='bold' fontSize={18}>
+                Filter
+              </Typography>
+            </Grid>
+            <Grid item xs={9} display='flex' justifyContent='flex-end'>
+              <a
+                style={{
+                  cursor: 'pointer',
+                  color: '#FF4D49',
+                  textDecoration: 'underline',
+                  fontWeight: 500,
+                  fontSize: 15,
+                  textUnderlineOffset: 3
+                }}
+                onClick={() => {
+                  setStatus([])
+                  setGlobalFilter('')
+                  setTypes([])
+                  setStartDate(new Date(now.getFullYear(), now.getMonth(), 1))
+                  setEndDate(endOfMonth(new Date()))
+                  setSubmissionStartDate(new Date(now.getFullYear(), now.getMonth(), 1))
+                  setSubmissionEndDate(endOfMonth(new Date()))
+                }}
+              >
+                Reset Filter
+              </a>
+            </Grid>
           </Grid>
-          <Grid item xs={9} display='flex' justifyContent='flex-end'>
-            <a
-              style={{
-                cursor: 'pointer',
-                color: '#FF4D49',
-                textDecoration: 'underline',
-                fontWeight: 500,
-                fontSize: 15,
-                textUnderlineOffset: 3
-              }}
-              onClick={() => {
-                setStatus([])
-                setGlobalFilter('')
-                setTypes([])
-                setDueDate(null)
-                setEndDate(null)
-              }}
-            >
-              Reset Filter
-            </a>
-          </Grid>
-        </Grid>
 
-        <Grid item xs={12} sm={3}>
-          <FormControl fullWidth>
-            <DebouncedInput
+          <Grid item xs={12} sm={3}>
+            {/* <DebouncedInput
               value={globalFilter ?? ''}
               onChange={value => setGlobalFilter(String(value))}
               placeholder='Search User'
               className='max-sm:is-full'
-            />
-          </FormControl>
-        </Grid>
-        <Grid item xs={12} sm={3}>
-          <AppReactDatepicker
-            selectsStart
+            /> */}
+            <FormControl fullWidth>
+              <TextField
+                size='small'
+                value={searchTerm}
+                onChange={handleSearch}
+                placeholder='Search User'
+                InputProps={{
+                  endAdornment: (
+                    <i
+                      class='ri-search-line'
+                      style={{
+                        color: '#B3B5BD'
+                      }}
+                    ></i>
+                  )
+                }}
+              />
+            </FormControl>
+            {/* </> */}
+          </Grid>
+          <Grid item xs={12} sm={3}>
+            {/* <AppReactDatepicker
+            selects
             id='event-attempt-date'
             endDate={endDate}
             selected={dueDate}
             startDate={dueDate}
             showTimeSelect
-            dateFormat='yyyy-MM-dd hh:mm:ss'
+            dateFormat='yyyy-MM-dd'
             customInput={<PickersComponent label='Attempt Date' registername='startDate' size='small' />}
             onChange={date => date !== null && setDueDate(new Date(date))}
             onSelect={handleStartDate}
-          />
-        </Grid>
-        <Grid item xs={12} sm={3}>
-          <AppReactDatepicker
+          /> */}
+            <DateRangePicker
+              startDate={startDate}
+              endDate={endDate}
+              handleOnChange={handleOnChange}
+              labelText='Attempt Date'
+            />
+          </Grid>
+          <Grid item xs={12} sm={3}>
+            {/* <AppReactDatepicker
             selectsEnd
             id='event-submission-date'
             endDate={endDate}
@@ -199,48 +318,75 @@ const AttemptTestFilters = ({ setData, tableData, globalFilter, setGlobalFilter,
             dateFormat='yyyy-MM-dd hh:mm:ss'
             customInput={<PickersComponent label='Submission Date' registername='endDate' size='small' />}
             onChange={date => date !== null && setEndDate(new Date(date))}
-          />
-        </Grid>
-        <Grid item xs={12} sm={3}>
-          <FormControl
-            fullWidth
-            sx={{
-              '& .MuiInputBase-root': {
-                height: '40px',
-                minHeight: 'auto'
-              },
-              '& .MuiInputLabel-root': {
-                top: '-7px'
-              }
-            }}
-          >
-            <InputLabel id='status-select'>Status</InputLabel>
-            <Select
+          /> */}
+            <DateRangePicker
+              startDate={submissionStartDate}
+              endDate={submissionEndDate}
+              handleOnChange={handleSubmissionDateRange}
+              labelText='Submission Date'
+            />
+          </Grid>
+          <Grid item xs={12} sm={3}>
+            <FormControl
               fullWidth
-              id='select-status'
-              label='Status'
-              size='small'
-              value={status}
-              labelId='status-select'
-              multiple
-              onChange={handleStatusChange}
-              renderValue={selected => selected?.join(', ')}
-
-              // inputProps={{ placeholder: 'Select Status' }}
+              sx={{
+                '& .MuiInputBase-root': {
+                  height: '40px',
+                  minHeight: 'auto'
+                },
+                '& .MuiInputLabel-root': {
+                  top: '-7px'
+                }
+              }}
             >
-              <MenuItem key='Published' value='Published'>
-                <Checkbox checked={status?.indexOf('Published') > -1} />
-                <ListItemText primary='Published' /> {/* Capitalize first letter */}
-              </MenuItem>
-              <MenuItem key='Unpublished' value='Unpublished'>
-                <Checkbox checked={status?.indexOf('Unpublished') > -1} />
-                <ListItemText primary='Unpublished' /> {/* Capitalize first letter */}
-              </MenuItem>
-            </Select>
-          </FormControl>
+              <InputLabel id='status-select'>Status</InputLabel>
+              <Select
+                fullWidth
+                id='select-status'
+                label='Status'
+                size='small'
+                value={status}
+                labelId='status-select'
+                multiple
+                onChange={handleStatusChange}
+                renderValue={selected => selected?.join(', ')}
+
+                // inputProps={{ placeholder: 'Select Status' }}
+              >
+                <MenuItem key='Submitted' value='Submitted'>
+                  <Checkbox checked={status?.indexOf('Submitted') > -1} />
+                  <ListItemText primary='Submitted' /> {/* Capitalize first letter */}
+                </MenuItem>
+                <MenuItem key='Expired' value='Expired'>
+                  <Checkbox checked={status?.indexOf('Expired') > -1} />
+                  <ListItemText primary='Expired' /> {/* Capitalize first letter */}
+                </MenuItem>
+                <MenuItem key='NotStarted' value='NotStarted'>
+                  <Checkbox checked={status?.indexOf('NotStarted') > -1} />
+                  <ListItemText primary='Not Started' /> {/* Capitalize first letter */}
+                </MenuItem>
+                <MenuItem key='InProgress' value='InProgress'>
+                  <Checkbox checked={status?.indexOf('InProgress') > -1} />
+                  <ListItemText primary='In Progress' /> {/* Capitalize first letter */}
+                </MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
         </Grid>
-      </Grid>
-    </CardContent>
+      </CardContent>
+      {!group && (
+        <CardActions
+          sx={{
+            display: 'flex',
+            justifyContent: 'flex-start'
+          }}
+        >
+          <Button variant='contained' color='primary' type='submit' size='medium' onClick={() => {}}>
+            Send Email
+          </Button>
+        </CardActions>
+      )}
+    </>
   )
 }
 

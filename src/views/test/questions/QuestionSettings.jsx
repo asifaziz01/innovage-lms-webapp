@@ -21,7 +21,11 @@ import {
 } from '@mui/material'
 import { Controller } from 'react-hook-form'
 
+import useDifficultiesApi from '@/api/useDifficultiesApi'
+
 const QuestionSettings = ({ control, errors }) => {
+  const { data } = useDifficultiesApi()
+
   return (
     <Grid container item xs={12}>
       <Grid item xs={12}>
@@ -145,9 +149,11 @@ const QuestionSettings = ({ control, errors }) => {
                 rules={{ required: true }}
                 render={({ field }) => (
                   <Select label='Select difficulty level *' {...field} error={Boolean(errors.difficulty)}>
-                    <MenuItem value='low'>Low</MenuItem>
-                    <MenuItem value='medium'>Medium</MenuItem>
-                    <MenuItem value='high'>High</MenuItem>
+                    {data?.map(item => (
+                      <MenuItem value={item?.guid} onClick={() => alert('hello')}>
+                        {item?.title}
+                      </MenuItem>
+                    ))}
                   </Select>
                 )}
               />

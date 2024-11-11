@@ -1,9 +1,13 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { ApiRequestHandle } from '@/libs/axios'
-import axios from 'axios'
+
 import { useRouter } from 'next/navigation'
+
+import axios from 'axios'
 import { file } from 'valibot'
+
+import { ApiRequestHandle } from '@/libs/axios'
+
 // import { USER_MODULE_ENDPOINTS } from '../Const/ApiEndpoints'
 
 export default function useQuestionModuleApi() {
@@ -15,6 +19,7 @@ export default function useQuestionModuleApi() {
   const [uploadData, setUploadData] = useState([]) // Fix typo here
   const [allquestionData, setallquestionData] = useState([])
   const [searchKeyword, setSearchKeyword] = useState('')
+
   const fetchData = async () => {
     try {
       const endpoint = `https://developer1.website/dev/caapis/dev/tests/questions/eng2` // Construct the full URL
@@ -26,22 +31,28 @@ export default function useQuestionModuleApi() {
           Accept: 'application/json' // Specify the accepted response format
         }
       })
+
       setLoader(false)
       setData(response.data?.payload) // Update the state with the fetched data
     } catch (error) {
       console.error('Error fetching data:', error)
     }
   }
+
   console.log(data, 'check123')
+
   const uploadFiles = async files => {
     const formData = new FormData()
+
     files.forEach(file => {
       formData.append('userfile', file)
       console.log(file, 'eeeee')
     })
     setFiles(files)
+
     try {
       setUploading(true)
+
       const response = await axios.post(`https://developer1.website/dev/caapis/dev/qb/questions/import`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -49,6 +60,7 @@ export default function useQuestionModuleApi() {
           Network: process.env.NEXT_PUBLIC_LMS_TOKEN
         }
       })
+
       setUploadData(response.data.payload.questions) // Make sure this works
       console.log(response.data.payload.questions, 'uuu')
       console.log(uploadData, 'uuu2')
@@ -59,6 +71,7 @@ export default function useQuestionModuleApi() {
       setUploading(false)
     }
   }
+
   const fetchDataallquestion = async ({ page, results_per_page }) => {
     try {
       const endpoint = `https://developer1.website/dev/caapis/dev/qb/questions/list` // Construct the full URL
@@ -67,6 +80,7 @@ export default function useQuestionModuleApi() {
       // formData.append('search', searchString) // Add the search term to the formData
       formData.append('page', page) // Add pagination: current page
       formData.append('results_per_page', results_per_page) // Add pagination: results per page
+
       const response = await axios.post(endpoint, formData, {
         headers: {
           Authorization: `Bearer ${process.env.NEXT_PUBLIC_LMS_TOKEN}`, // Add Authorization header
@@ -74,12 +88,14 @@ export default function useQuestionModuleApi() {
           Accept: 'application/json' // Specify the accepted response format
         }
       })
+
       setLoader(false)
       setallquestionData(response.data?.payload) // Update the state with the fetched data
     } catch (error) {
       console.error('Error fetching data:', error)
     }
   }
+
   const viewQuestion = guid => {
     // try {
     return axios.post(
@@ -103,6 +119,7 @@ export default function useQuestionModuleApi() {
     // console.error('Error fetching data:', error)
     // }
   }
+
   const BulkDelete = async questionIds => {
     try {
       const formData = new FormData()
@@ -132,9 +149,11 @@ export default function useQuestionModuleApi() {
       throw error // Rethrow error to be handled in the component if necessary
     }
   }
+
   const updateQuestion = async (guid, questionData, uploadedFile) => {
     try {
       const formData = new FormData()
+
       formData.append('question', questionData.question)
       formData.append('question_type', questionData.type)
       formData.append('marks', questionData.marksPerQuestion)
@@ -166,6 +185,7 @@ export default function useQuestionModuleApi() {
       )
 
       console.log('Update response:', response.data)
+
       return response.data // Return response for further processing
     } catch (error) {
       console.error('Error updating question:', error)
@@ -176,6 +196,7 @@ export default function useQuestionModuleApi() {
   useEffect(() => {
     console.log(uploadData, 'updated uploadData')
   }, [uploadData, file])
+
   // Optional: Use useEffect to watch for changes in uploadData
   // useEffect(() => {
   //   if (uploadData.length > 0) {

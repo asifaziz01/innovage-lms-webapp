@@ -22,10 +22,11 @@ const UserListCards = () => {
   const guid = searchParams.get('guid')
   const [checked, setChecked] = useState(false)
   const [open, setOpen] = useState(false)
-  const { deleteTestData } = useTestApi()
+  const { deleteTestData, handleTestPublish } = useTestApi()
 
   const handleChange = event => {
     setChecked(event.target.checked)
+    handleTestPublish(guid, Number(event.target.checked))
   }
 
   const PublishSwitch = () => {

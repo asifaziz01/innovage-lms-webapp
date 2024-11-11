@@ -37,14 +37,11 @@ import {
 } from '@tanstack/react-table'
 
 // Component Imports
-import { Box } from '@mui/material'
+import { Box, Tooltip } from '@mui/material'
 
 import CustomAvatar from '@core/components/mui/Avatar'
 
 import tableStyles from '@core/styles/table.module.css'
-
-import TableFilters from './TableFilters'
-import AddTestDrawer from './AddTestDrawer'
 
 // Util Imports
 // import { getInitials } from '../../../../../../Utils/getInitials'
@@ -52,12 +49,16 @@ import AddTestDrawer from './AddTestDrawer'
 
 // Style Imports
 
+import moment from 'moment'
+
 import AlertDialogBox from '@/components/Common/AlertDialogBox'
 import DialogBoxComponent from '@/components/Common/DialogBoxComponent'
 import FilterHeader from '@/components/globals/FilterHeader'
 import { getInitials } from '@/utils/getInitials'
 import useDraggableList from '@/components/globals/useDraggableList'
-import ColumnVisibility from '@/components/Common/ColumnVisibility'
+import TableFilters from '../../list/TableFilters'
+import AddDifficultiesDrawer from './AddDifficultiesDrawer'
+import DifficultiesListFilter from './DifficultiesListFilter'
 
 // import DialogBoxComponent from '@/Components/Common/DialogBoxComponent'
 
@@ -115,13 +116,46 @@ const userStatusObj = {
 // Column Definitions
 const columnHelper = createColumnHelper()
 
-const TestListTable = ({ tableData, addUserData, deleteUserData, categories, getCategories }) => {
+const DifficultiesListTable = ({
+  tableData,
+  trashedData,
+  addDifficultyData,
+  deleteUserData,
+  trashDifficulties,
+  deleteDifficulties,
+  restoreTrashDifficulties,
+  getTrashedDifficultiesLevel
+}) => {
   // States
   const [addUserOpen, setAddUserOpen] = useState(false)
-
+  const [categoriesParent, setCategoriesparent] = useState(false)
+  const [selectedParentGuid, setSelectedParentGuid] = useState(null)
   const [editUserOpen, setEditUserOpen] = useState(false)
   const [rowSelection, setRowSelection] = useState({})
+  const [selectedRows, setSelectedRows] = useState([])
+
+  const [singleId, setSingleId] = useState(null)
+
+  console.info(singleId)
+  console.log(selectedRows)
+
+  useEffect(() => {
+    const getSelectedRowIds = (rowSelection, tableData) => {
+      return Object.keys(rowSelection)
+        .filter(key => rowSelection[key]) // Filter out only selected rows
+        .map(key => tableData[key]?.guid) // Map to the row IDs or objects
+    }
+
+    // Example usage:
+    const selectedRowIds = getSelectedRowIds(rowSelection, mode === 'all' ? tableData : trashData)
+
+    setSelectedRows(selectedRowIds) // [id1, id2, id3]
+  }, [rowSelection])
+
   const [data, setData] = useState(...[tableData])
+  const [trashData, setTrashData] = useState(...[trashedData])
+  const [mode, setMode] = useState('all')
+
   const [editData, setEditData] = useState()
   const [filteredData, setFilteredData] = useState(data)
   const [globalFilter, setGlobalFilter] = useState('')
@@ -132,39 +166,41 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
   const statusOptions = ['Unpublished', 'Published']
   const [selectedStatus, setSelectedStatus] = useState('')
   const [open, setOpen] = useState(false)
-
-  const initialColumns = [
-    'select',
-    'title',
-    'created_by',
-    'questions',
-    'enrolment',
-    'submission',
-    'type',
-    'status',
-    'action'
-  ]
+  const [expandedParents, setExpandedParents] = useState([])
+  const initialColumns = ['select', 'title', 'created_by', 'description', 'created_at', 'test', 'action']
 
   const [visibleColumns, setVisibleColumns] = useState({
     select: true,
     title: true,
+    test: true,
     created_by: true,
+    description: true,
+    created_at: true,
     questions: true,
     enrolment: true,
     submission: true,
     type: true,
     status: true,
-    action: true
+    action: false
   })
 
   const { items: columnOrder, handleDragOver, handleDrop, handleDragStart } = useDraggableList(initialColumns)
 
   const handleCancelDelete = () => {
+    setSingleId(null)
     setOpen(false)
   }
 
   const handleConfirmDelete = () => {
+    mode === 'all'
+      ? singleId
+        ? trashDifficulties(singleId)
+        : trashDifficulties(selectedRows)
+      : singleId
+        ? deleteDifficulties(singleId)
+        : deleteDifficulties(selectedRows)
     setOpen(false)
+    setSingleId(null)
   }
 
   const handleChangeStatus = event => setSelectedStatus(event.target.value)
@@ -185,146 +221,102 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
     handleCloseStatusDialog()
   }
 
+  const transformPayloadToArray = payload => {
+    const resultArray = []
+
+    Object.keys(payload).forEach(key => {
+      const category = payload?.[key]
+
+      // Only add the parent category if its guid is defined
+      if (category?.guid !== undefined) {
+        resultArray?.push({
+          guid: category?.guid,
+          title: category?.title,
+          created_by: category?.created_by,
+          created_on: category?.created_on,
+          updated_by: category?.updated_by,
+          updated_on: category?.updated_on,
+          parent_guid: category?.parent_guid,
+          parent_title: category?.parent_title,
+          children: category?.children
+        })
+      }
+
+      // If the category has children and their guid is defined, add them to the result array
+      if (category?.children && category?.children?.length > 0) {
+        category?.children?.forEach(child => {
+          if (child?.guid !== undefined) {
+            resultArray?.push({
+              guid: child?.guid,
+              title: child?.title,
+              created_by: child?.created_by,
+              created_on: child?.created_on,
+              updated_by: child?.updated_by,
+              updated_on: child?.updated_on,
+              parent_guid: child?.parent_guid,
+              parent_title: child?.parent_title
+            })
+          }
+        })
+      }
+    })
+
+    return resultArray
+  }
+
+  // Apply the transformation
+  const transformedPayload = transformPayloadToArray(tableData)
+
   useEffect(() => {
-    setData(tableData)
+    setData(transformedPayload)
   }, [tableData])
+
+  useEffect(() => {
+    setTrashData(trashedData)
+  }, [trashedData])
 
   // Hooks
   const { lang: locale } = useParams()
 
-  // const columns = useMemo(
-  //   () => [
-  //     {
-  //       id: 'select',
-  //       header: ({ table }) => (
-  //         <Checkbox
-  //           {...{
-  //             checked: table.getIsAllRowsSelected(),
-  //             indeterminate: table.getIsSomeRowsSelected(),
-  //             onChange: table.getToggleAllRowsSelectedHandler()
-  //           }}
-  //         />
-  //       ),
-  //       cell: ({ row }) => (
-  //         <Checkbox
-  //           {...{
-  //             checked: row.getIsSelected(),
-  //             disabled: !row.getCanSelect(),
-  //             indeterminate: row.getIsSomeSelected(),
-  //             onChange: row.getToggleSelectedHandler()
-  //           }}
-  //         />
-  //       )
-  //     },
-  //     columnHelper.accessor('title', {
-  //       header: 'Test Name',
-  //       cell: ({ row }) => (
-  //         <div className='flex items-center gap-3'>
-  //           <div className='flex flex-col'>
-  //             <Typography color='text.primary' className='font-medium'>
-  //               {row.original.title}
-  //             </Typography>
-  //             {/* <Typography variant='body2'>{row.original.username}</Typography> */}
-  //           </div>
-  //         </div>
-  //       )
-  //     }),
-  //     columnHelper.accessor('created_by', {
-  //       header: 'Creator',
-  //       cell: ({ row }) => <Typography>{row.original.created_by}</Typography>
-  //     }),
-  //     columnHelper.accessor('questions', {
-  //       header: 'Questions',
-  //       cell: ({ row }) => <Typography>10</Typography>
-  //     }),
-  //     columnHelper.accessor('enrolment', {
-  //       header: 'Enrolment',
-  //       cell: ({ row }) => <Typography>10</Typography>
-  //     }),
-  //     columnHelper.accessor('submission', {
-  //       header: 'Submission',
-  //       cell: ({ row }) => <Typography>10</Typography>
-  //     }),
+  const handleClick = () => {
+    setCategoriesparent(true)
+  }
 
-  //     // columnHelper.accessor('created_on', {
-  //     //   header: 'Date of Creation',
-  //     //   cell: ({ row }) => (
-  //     //     <div className='flex items-center gap-2'>
-  //     //       <Typography className='capitalize' color='text.primary'>
-  //     //         {row.original.created_on}
-  //     //       </Typography>
-  //     //     </div>
-  //     //   )
-  //     // }),
-  //     columnHelper.accessor('type', {
-  //       header: 'Type',
-  //       cell: ({ row }) => (
-  //         <Typography className='capitalize' color='text.primary'>
-  //           {row.original.type}
-  //         </Typography>
-  //       )
-  //     }),
-  //     columnHelper.accessor('status', {
-  //       header: 'Status',
-  //       cell: ({ row }) => (
-  //         <div className='flex items-center gap-3'>
-  //           <Chip
-  //             variant='tonal'
-  //             label={row?.original?.status === '1' ? 'Published' : 'Unpublished'}
-  //             size='small'
-  //             color={userStatusObj[row?.original?.status === '1' ? 'Published' : 'Unpublished']}
-  //             className='capitalize'
-  //           />
-  //         </div>
-  //       )
-  //     }),
-  //     columnHelper.accessor('action', {
-  //       header: 'Action',
-  //       cell: ({ row }) => (
-  //         <div className='flex items-center gap-0.5'>
-  //           <IconButton
-  //             size='small'
-  //             onClick={() => {
-  //               deleteUserData(row?.original?.guid)
-  //             }}
-  //           >
-  //             <i className='ri-delete-bin-7-line text-textSecondary' />
-  //           </IconButton>
-  //           <IconButton size='small'>
-  //             <Link
-  //               href={getLocalizedUrl(`/apps/test/questions/?guid=${row?.original?.guid}`, locale)}
-  //               className='flex'
-  //             >
-  //               <i className='ri-eye-line text-textSecondary' />
-  //             </Link>
-  //           </IconButton>
-  //           <IconButton size='small'>
-  //             <Link href={getLocalizedUrl(`/apps/test/edit?guid=${row?.original?.guid}`, locale)} className='flex'>
-  //               <i className='ri-edit-box-line text-textSecondary' />
-  //             </Link>
-  //           </IconButton>
-  //           {/* <OptionMenu
-  //             iconClassName='text-textSecondary'
-  //             data={row}
-  //             options={[
-  //               {
-  //                 text: 'Download',
-  //                 icon: 'ri-download-line'
-  //               },
-  //               {
-  //                 text: 'Edit',
-  //                 icon: 'ri-edit-box-line'
-  //               }
-  //             ]}
-  //           /> */}
-  //         </div>
-  //       ),
-  //       enableSorting: false
-  //     })
-  //   ],
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  //   [data, filteredData]
-  // )
+  // Filter the displayed categories
+  const handleParentClick = parentGuid => {
+    if (expandedParents?.includes(parentGuid)) {
+      // If already expanded, collapse it
+      setExpandedParents(expandedParents?.filter(guid => guid !== parentGuid))
+    } else {
+      // Otherwise, expand it
+      setExpandedParents([...expandedParents, parentGuid])
+    }
+  }
+
+  // Adjust filteredCategories to include children of expanded parents
+  const filteredCategories = useMemo(() => {
+    const result = []
+
+    transformedPayload?.forEach(item => {
+      if (item?.parent_guid === null) {
+        // Add parent category
+        result.push(item)
+
+        // If the parent is expanded, add its children
+        if (expandedParents?.includes(item?.guid)) {
+          const children = transformedPayload?.filter(child => child?.parent_guid === item?.guid)
+
+          result?.push(...children)
+        }
+      }
+    })
+
+    return result
+  }, [tableData, expandedParents, mode])
+
+  const hasChildren = guid => {
+    return transformedPayload?.some(category => category?.parent_guid === guid)
+  }
 
   const columns = useMemo(
     () =>
@@ -360,75 +352,41 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
             case 'title':
               return visibleColumns?.title
                 ? columnHelper.accessor('title', {
-                    header: 'Test Name',
-                    cell: ({ row }) => (
-                      <div className='flex items-center gap-3'>
-                        <div className='flex flex-col'>
-                          <Typography color='text.primary' className='font-medium'>
-                            {row.original?.title}
-                          </Typography>
-                          {/* <Typography variant='body2'>{row.original.username}</Typography> */}
-                        </div>
-                      </div>
-                    )
+                    header: 'Title',
+                    cell: ({ row }) => {
+                      return <Typography>{row?.original?.title}</Typography>
+                    }
                   })
                 : null
-            case 'created_by':
-              return visibleColumns?.created_by
-                ? columnHelper.accessor('created_by', {
-                    header: 'Creator',
-                    cell: ({ row }) => <Typography>{row.original?.created_by}</Typography>
+            case 'description':
+              return visibleColumns?.description
+                ? columnHelper.accessor('description', {
+                    header: 'Description',
+                    cell: ({ row }) => {
+                      // return <Typography>{row?.original?.description ? row?.original?.description : 'N/A'}</Typography>
+
+                      return row?.original?.description ? (
+                        <div dangerouslySetInnerHTML={{ __html: row.original.description }} />
+                      ) : (
+                        'N/A'
+                      )
+                    }
                   })
                 : null
-            case 'questions':
-              return visibleColumns?.questions
-                ? columnHelper.accessor('questions', {
-                    header: 'Questions',
-                    cell: ({ row }) => <Typography>10</Typography>
-                  })
-                : null
-            case 'enrolment':
-              return visibleColumns?.enrolment
-                ? columnHelper.accessor('enrolment', {
-                    header: 'Enrolment',
-                    cell: ({ row }) => <Typography>10</Typography>
-                  })
-                : null
-            case 'submission':
-              return visibleColumns?.submission
-                ? columnHelper.accessor('submission', {
-                    header: 'Submission',
-                    cell: ({ row }) => <Typography>10</Typography>
-                  })
-                : null
-            case 'type':
-              return visibleColumns?.type
-                ? columnHelper.accessor('type', {
-                    header: 'Type',
-                    cell: ({ row }) => (
-                      <Typography className='capitalize' color='text.primary'>
-                        {row.original?.type}
+            case 'created_at':
+              return visibleColumns?.created_at
+                ? columnHelper.accessor('created_at', {
+                    header: (
+                      <Typography fontWeight='bold' fontSize={13}>
+                        Created On
                       </Typography>
-                    )
-                  })
-                : null
-            case 'status':
-              return visibleColumns?.status
-                ? columnHelper.accessor('status', {
-                    header: 'Status',
+                    ),
                     cell: ({ row }) => (
-                      <div className='flex items-center gap-3'>
-                        <Chip
-                          variant='tonal'
-                          label={row?.original?.status === '1' ? 'Published' : 'Unpublished'}
-                          size='small'
-                          color={userStatusObj?.[row?.original?.status === '1' ? 'Published' : 'Unpublished']}
-                          className='capitalize'
-                        />
-                      </div>
+                      <Typography>{moment(row.original?.created_at).format('DD-MM-YYYY hh:mm:ss')}</Typography>
                     )
                   })
                 : null
+
             case 'action':
               return columnHelper.accessor('action', {
                 header: 'Action',
@@ -437,40 +395,44 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
                     <IconButton
                       size='small'
                       onClick={() => {
-                        deleteUserData(row?.original?.guid)
+                        setSingleId(Array(row?.original?.guid))
+
+                        if (mode === 'all') {
+                          setOpen(true)
+                        }
+
+                        mode === 'trash' &&
+                          // ? trashDifficulties(Array(row?.original?.guid))
+                          restoreTrashDifficulties(row?.original?.guid)
                       }}
                     >
-                      <i className='ri-delete-bin-7-line text-textSecondary' />
+                      {mode === 'all' ? (
+                        <i className='ri-delete-bin-7-line text-textSecondary' />
+                      ) : (
+                        <i className='ri-reset-left-line' />
+                      )}
                     </IconButton>
-                    <IconButton size='small'>
-                      <Link href={`/test/questions/?guid=${row?.original?.guid}`} className='flex'>
-                        <i className='ri-eye-line text-textSecondary' />
-                      </Link>
-                    </IconButton>
-                    <IconButton size='small'>
-                      <Link href={`/test/edit?guid=${row?.original?.guid}`} className='flex'>
-                        <i className='ri-edit-box-line text-textSecondary' />
-                      </Link>
-                    </IconButton>
-                    <IconButton size='small'>
-                      <Link href={`/test/manage?guid=${row?.original?.guid}`} className='flex'>
-                        <i class='ri-tools-line'></i>
-                      </Link>
-                    </IconButton>
-                    {/* <OptionMenu
-                      iconClassName='text-textSecondary'
-                      data={row}
-                      options={[
-                        {
-                          text: 'Download',
-                          icon: 'ri-download-line'
-                        },
-                        {
-                          text: 'Edit',
-                          icon: 'ri-edit-box-line'
+
+                    <IconButton
+                      size='small'
+                      onClick={() => {
+                        setSingleId(Array(row?.original?.guid))
+
+                        if (mode === 'trash') {
+                          setOpen(true)
                         }
-                      ]}
-                    /> */}
+
+                        // mode === 'trash' && deleteDifficulties(Array(row?.original?.guid))
+                      }}
+                    >
+                      {mode === 'all' ? (
+                        <Link href={`/difficulty/edit?guid=${row?.original?.guid}`} className='flex'>
+                          <i className='ri-edit-box-line text-textSecondary' />
+                        </Link>
+                      ) : (
+                        <i className='ri-delete-bin-7-line text-textSecondary' />
+                      )}
+                    </IconButton>
                   </div>
                 ),
                 enableSorting: false
@@ -479,12 +441,12 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
               return null
           }
         })
-        ?.filter(Boolean),
-    [columnOrder, visibleColumns, data]
+        .filter(Boolean),
+    [columnOrder, visibleColumns, data, expandedParents, mode]
   )
 
   const table = useReactTable({
-    data: filteredData,
+    data: mode === 'all' ? tableData : trashData,
     columns,
     filterFns: {
       fuzzy: fuzzyFilter
@@ -512,49 +474,31 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
     getFacetedMinMaxValues: getFacetedMinMaxValues()
   })
 
-  console.info(Object.keys(rowSelection)?.length)
-
-  const getAvatar = params => {
-    const { avatar, fullName } = params
-
-    if (avatar) {
-      return <CustomAvatar src={avatar} skin='light' size={34} />
-    } else {
-      return (
-        <CustomAvatar skin='light' size={34}>
-          {getInitials(fullName)}
-        </CustomAvatar>
-      )
-    }
-  }
-
   return (
     <>
-      <FilterHeader title='All Tests' subtitle='Orders placed across your store' link='/test/list'>
-        <Grid item xs={6} md={2} display='flex' alignItems='center' pb={3}>
-          <Button
-            fullWidth
-            variant='contained'
-            onClick={() => setAddUserOpen(!addUserOpen)}
-            className='max-sm:is-full'
-            startIcon={
-              <i
-                class='ri-add-fill'
-                style={{
-                  width: 21.6,
-                  height: 21.6
-                }}
-              />
-            }
-          >
-            Add New Test
-          </Button>
-        </Grid>
-      </FilterHeader>
+      <Box display='flex' justifyContent='flex-end' my={5}>
+        <Button
+          // fullWidth
+          variant='contained'
+          onClick={() => setAddUserOpen(!addUserOpen)}
+          className='max-sm:is-full'
+          startIcon={
+            <i
+              class='ri-add-fill'
+              style={{
+                width: 21.6,
+                height: 21.6
+              }}
+            />
+          }
+        >
+          Add Difficulty Level
+        </Button>
+      </Box>
       <Card>
         <Grid container item xs={12} display='flex' alignItems='center'>
           <Grid item xs={12}>
-            <TableFilters
+            <DifficultiesListFilter
               setData={setFilteredData}
               tableData={data}
               globalFilter={globalFilter}
@@ -565,7 +509,7 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
           </Grid>
         </Grid>
         <Grid container item xs={12} pl={5}>
-          <Grid item xs={0.9}>
+          <Grid item xs={11.5}>
             <Box display='flex' justifyContent='space-between' alignItems='center'>
               <IconButton
                 disableRipple
@@ -592,81 +536,52 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
                 ></i>
                 {/* </CustomTooltip> */}
               </IconButton>
-              <IconButton
-                disableRipple
-                disabled={!Object.keys(rowSelection)?.length}
-                sx={{
-                  border: `1px solid ${Object.keys(rowSelection)?.length ? '#808080' : '#E7E7E7'}`,
-                  borderRadius: 0
-                }}
-                onClick={() => handleOpenStatusDialog('Published')}
-              >
-                <i
-                  class='ri-checkbox-circle-line'
-                  color={Object.keys(rowSelection)?.length ? '#B5B8FA' : '#808080'}
-                  style={{
-                    width: 20,
-                    height: 20,
-                    ...(Object.keys(rowSelection)?.length
-                      ? {
-                          color: '#B5B8FA'
-                        }
-                      : { color: '#808080' })
+              <Box display='flex' justifyContent='space-between' alignItems='center'>
+                <IconButton
+                  disableRipple
+                  disabled={!data?.length}
+                  onClick={() => {
+                    setMode('all')
+                    setSingleId(null)
+                    setSelectedRows(null)
                   }}
-                ></i>
-              </IconButton>
-              {/* <TestOptionMenu
-                iconClassName='text-textSecondary'
-                // setEditFilterOpen={setEditFilterOpen}
-                // data={row}
-                // setEditData={setEditData}
-                rowSelection={rowSelection}
-                options={[
-                  {
-                    text: 'Test Name'
-                  },
-                  {
-                    text: 'Start Date'
-                  },
-                  {
-                    text: 'End Date'
-                  },
-                  {
-                    text: 'Type'
-                  },
-                  {
-                    text: 'Status'
-                  }
-                ]}
-              /> */}
+                >
+                  <Typography>{`Active (${data?.length})`}</Typography>
+                </IconButton>
+                <IconButton
+                  disableRipple
+                  disabled={!trashData?.length}
+                  onClick={() => {
+                    setMode('trash')
+                    setSingleId(null)
+                    setSelectedRows(null)
+                  }}
+                >
+                  <Typography>{`Trash (${trashData?.length})`}</Typography>
+                </IconButton>
+              </Box>
             </Box>
           </Grid>
-          <Grid
-            container
-            pr={8}
-            item
-            xs={11}
-            spacing={3}
-            display='flex'
-            alignItems='center'
-            justifyContent='flex-end'
-          ></Grid>
+          <Grid container pr={8} item xs={11} spacing={3} display='flex' alignItems='center' justifyContent='flex-end'>
+            <Grid item xs={3.5}></Grid>
+          </Grid>
         </Grid>
+
         <div className='overflow-x-auto pt-5'>
           <table className={tableStyles.table}>
             <thead>
-              {table.getHeaderGroups()?.map(headerGroup => (
+              {table.getHeaderGroups().map(headerGroup => (
                 <tr key={headerGroup.id}>
-                  {headerGroup.headers?.map((header, index) => (
+                  {headerGroup.headers.map((header, index) => (
                     <th
-                      key={header?.id}
+                      key={header.id}
                       draggable // Makes the column header draggable
                       onDragStart={() => handleDragStart(index)}
                       onDragOver={handleDragOver}
                       onDrop={() => handleDrop(index)}
                       style={{ cursor: 'grab' }}
                     >
-                      {header?.isPlaceholder ? null : (
+                      {header.isPlaceholder ? null : (
                         <>
                           <div
                             className={classnames({
@@ -685,11 +600,10 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
                       )}
                     </th>
                   ))}
-                  <ColumnVisibility visibleColumns={visibleColumns} setVisibleColumns={setVisibleColumns} />
                 </tr>
               ))}
             </thead>
-            {table.getFilteredRowModel().rows?.length === 0 ? (
+            {table.getFilteredRowModel().rows.length === 0 ? (
               <tbody>
                 <tr>
                   <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
@@ -731,23 +645,21 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
           onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
         />
       </Card>
-      <AddTestDrawer
+      <AddDifficultiesDrawer
         open={addUserOpen}
         handleClose={() => setAddUserOpen(!addUserOpen)}
-        userData={data}
-        setData={setData}
-        addUserData={addUserData}
-        categories={categories}
-        getCategories={getCategories}
+        difficultiesData={data}
+        setDifficultiesData={setData}
+        addDifficultyData={addDifficultyData}
       />
       {open && (
         <AlertDialogBox
           open={open}
           handleCancel={handleCancelDelete}
           handleConfirm={handleConfirmDelete}
-          title='Delete Test'
-          textContent='Are you sure you want to delete this test?'
-          acceptedButton='Delete'
+          title={`${mode === 'all' ? 'Trash' : 'Delete'} Difficulty`}
+          textContent={`Are you sure you want to ${mode === 'all' ? 'trash' : 'delete'} this difficulty?`}
+          acceptedButton={mode === 'all' ? 'Trash' : 'Delete'}
           rejectedButton='Cancel'
         />
       )}
@@ -768,4 +680,4 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
   )
 }
 
-export default TestListTable
+export default DifficultiesListTable

@@ -64,6 +64,8 @@ const AddQuestion = () => {
   const [template, setTemplate] = useState('template_1')
   const [unit, setUnit] = useState('second') // Default unit
   const [files, setFiles] = useState([])
+
+  console.info(files)
   const theme = useTheme()
 
   const [mcqFields, setMcqFields] = useState([
@@ -88,7 +90,7 @@ const AddQuestion = () => {
     setValue
   } = useForm({
     defaultValues: {
-      question_type: 'mcmc',
+      type: 'mcmc',
       template: 'template_1',
       marks: '1',
       neg_marks: '0',
@@ -101,7 +103,7 @@ const AddQuestion = () => {
   })
 
   const fieldValues = watch()
-  const selectedValue = watch('question_type')
+  const selectedValue = watch('type')
   const [nquestion, setNQuestion] = useState('')
 
   const [feedback, setFeedback] = useState('')
@@ -154,7 +156,6 @@ const AddQuestion = () => {
               choices: selectedValue === 'mcmc' ? mcqFields : choiceFields
             }),
             question: fieldValues?.question,
-            feedback: fieldValues?.general_feedback,
             answer_feedback: fieldValues?.answer_feedback,
             userfile: files
           },
@@ -172,7 +173,6 @@ const AddQuestion = () => {
               choices: selectedValue === 'mcmc' ? mcqFields : choiceFields
             }),
             question: fieldValues?.question,
-            feedback: fieldValues?.general_feedback,
             answer_feedback: fieldValues?.answer_feedback,
             userfile: files
           },
@@ -230,7 +230,6 @@ const AddQuestion = () => {
                 <CardContent>
                   <Grid container xs={12}>
                     <Grid item xs={12}>
-                      {/* <TextEditor setTextValue={setNQuestion} /> */}
                       <Controller
                         name='question'
                         control={control}
@@ -268,7 +267,7 @@ const AddQuestion = () => {
                       {openQuestionFeedback && (
                         <Grid item xs={12} py={3}>
                           <Controller
-                            name='question_feedback'
+                            name='hint'
                             control={control}
                             rules={{ required: true }}
                             render={({ field }) => (

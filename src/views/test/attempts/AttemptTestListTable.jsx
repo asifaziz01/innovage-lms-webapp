@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo } from 'react'
 
 // Next Imports
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -74,37 +74,11 @@ const fuzzyFilter = (row, columnId, value, addMeta) => {
   return itemRank.passed
 }
 
-const DebouncedInput = ({ value: initialValue, onChange, debounce = 500, ...props }) => {
-  // States
-  const [value, setValue] = useState(initialValue)
-
-  useEffect(() => {
-    setValue(initialValue)
-  }, [initialValue])
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      onChange(value)
-    }, debounce)
-
-    return () => clearTimeout(timeout)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value])
-
-  return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
-}
-
-// Vars
-const userRoleObj = {
-  admin: { icon: 'ri-vip-crown-line', color: 'error' },
-  author: { icon: 'ri-computer-line', color: 'warning' },
-  editor: { icon: 'ri-edit-box-line', color: 'info' },
-  maintainer: { icon: 'ri-pie-chart-2-line', color: 'success' },
-  subscriber: { icon: 'ri-user-3-line', color: 'primary' }
-}
-
 const userStatusObj = {
-  Published: 'success',
-  Unpublished: 'warning'
+  Submitted: 'success',
+  InProgress: 'warning',
+  NotStarted: 'info',
+  Expired: 'error'
 
   // Unpublished: 'secondary'
 }
@@ -112,7 +86,7 @@ const userStatusObj = {
 // Column Definitions
 const columnHelper = createColumnHelper()
 
-const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categories, getCategories }) => {
+const AttemptTestListTable = ({ tableData, testSubmissions }) => {
   // States
   const [addUserOpen, setAddUserOpen] = useState(false)
 
@@ -123,6 +97,9 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
   const [filteredData, setFilteredData] = useState(data)
   const [globalFilter, setGlobalFilter] = useState('')
   const [type, setType] = useState('')
+  const searchParams = useSearchParams()
+  const guid = searchParams?.get('guid')
+  const router = useRouter()
 
   //Dialog states
   const [openStatusDialog, setOpenStatusDialog] = useState(false)
@@ -130,22 +107,13 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
   const [selectedStatus, setSelectedStatus] = useState('')
   const [open, setOpen] = useState(false)
 
-  const initialColumns = [
-    'select',
-    'user',
-    'attempted_date',
-    'submission_date',
-    'time_taken',
-    'marks',
-    'status',
-    'action'
-  ]
+  const initialColumns = ['select', 'user', 'start_time', 'submit_time', 'time_taken', 'marks', 'status', 'action']
 
   const [visibleColumns, setVisibleColumns] = useState({
     select: true,
     user: true,
-    attempted_date: true,
-    submission_date: true,
+    start_time: true,
+    submit_time: true,
     time_taken: true,
     marks: true,
     status: true,
@@ -154,14 +122,15 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
 
   const { items: columnOrder, handleDragOver, handleDrop, handleDragStart } = useDraggableList(initialColumns)
 
-  // Function to close the dialog
-  const handleCloseStatusDialog = () => {
-    setOpenStatusDialog(false)
-  }
-
   useEffect(() => {
     setData(tableData)
   }, [tableData])
+
+  const hours = data => String(Math.floor(data / 3600)).padStart(2, '0')
+
+  const minutes = data => String(Math.floor((data % 3600) / 60)).padStart(2, '0')
+
+  const seconds = data => String(data % 60).padStart(2, '0')
 
   const columns = useMemo(
     () =>
@@ -196,7 +165,7 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
                 : null
             case 'user':
               return visibleColumns?.user
-                ? columnHelper.accessor('title', {
+                ? columnHelper.accessor('first_name', {
                     header: (
                       <Typography fontWeight='bold' fontSize={13}>
                         user name
@@ -205,35 +174,37 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
                     cell: ({ row }) => (
                       <div className='flex items-center gap-3'>
                         <div className='flex items-center'>
-                          {getAvatar({ avatar: row.original?.avatar, fullName: row.original?.title })}
+                          {getAvatar({ avatar: row.original?.avatar, fullName: row.original?.first_name })}
                           <Typography color='text.primary' className='font-medium pl-3'>
-                            {row.original?.title}
+                            {row?.original?.first_name
+                              ? `${row.original?.first_name} ${row.original?.middle_name} ${row.original?.last_name}`
+                              : 'N/A'}
                           </Typography>
                         </div>
                       </div>
                     )
                   })
                 : null
-            case 'attempted_date':
-              return visibleColumns?.attempted_date
-                ? columnHelper.accessor('created_on', {
+            case 'start_time':
+              return visibleColumns?.start_time
+                ? columnHelper.accessor('start_time', {
                     header: (
                       <Typography fontWeight='bold' fontSize={13}>
                         Attempted date/time
                       </Typography>
                     ),
-                    cell: ({ row }) => <Typography>{row.original?.created_on}</Typography>
+                    cell: ({ row }) => <Typography>{row.original?.start_time}</Typography>
                   })
                 : null
-            case 'submission_date':
-              return visibleColumns?.submission_date
-                ? columnHelper.accessor('updated_on', {
+            case 'submit_time':
+              return visibleColumns?.submit_time
+                ? columnHelper.accessor('submit_time', {
                     header: (
                       <Typography fontWeight='bold' fontSize={13}>
                         Submission date/time
                       </Typography>
                     ),
-                    cell: ({ row }) => <Typography>{row.original?.updated_on}</Typography>
+                    cell: ({ row }) => <Typography>{row.original?.submit_time}</Typography>
                   })
                 : null
             case 'time_taken':
@@ -246,7 +217,8 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
                     ),
                     cell: ({ row }) => (
                       <Typography className='capitalize' color='primary.main'>
-                        00:15:20 Secs
+                        {/* {(new Date(row?.original?.submit_time) - new Date(row?.original?.start_time)) / 1000} */}
+                        {`${hours((new Date(row?.original?.submit_time) - new Date(row?.original?.start_time)) / 1000)} : ${minutes((new Date(row?.original?.submit_time) - new Date(row?.original?.start_time)) / 1000)} : ${seconds((new Date(row?.original?.submit_time) - new Date(row?.original?.start_time)) / 1000)}`}
                       </Typography>
                     )
                   })
@@ -274,9 +246,9 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
                       <div className='flex items-center gap-3'>
                         <Chip
                           variant='tonal'
-                          label={row?.original?.status === '1' ? 'Published' : 'Unpublished'}
+                          label={row?.original?.status?.replace(/([a-z])([A-Z])/g, '$1 $2')}
                           size='small'
-                          color={userStatusObj[row?.original?.status === '1' ? 'Published' : 'Unpublished']}
+                          color={userStatusObj[row?.original?.status]}
                           className='capitalize'
                         />
                       </div>
@@ -292,9 +264,26 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
                       </Typography>
                     ),
                     cell: ({ row }) => (
-                      <Button variant='outlined' color='primary' size='small'>
-                        Grading
-                      </Button>
+                      <Box display='flex' justifyContent='space-between'>
+                        {row?.original?.status === 'Submitted' && (
+                          <Button
+                            variant='outlined'
+                            color='primary'
+                            size='small'
+                            onClick={() => router.push(`/marking?guid=${guid}`)}
+                          >
+                            Grading
+                          </Button>
+                        )}
+                        <Button
+                          variant='outlined'
+                          color='primary'
+                          size='small'
+                          onClick={() => router.push(`/report?guid=${guid}`)}
+                        >
+                          Report
+                        </Button>
+                      </Box>
                     )
                   })
                 : null
@@ -351,7 +340,9 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
 
   return (
     <>
-      {/* <FilterHeader title='Attempts' subtitle='Mathematics Test' /> */}
+      {/* <FilterHeade
+      
+      r title='Attempts' subtitle='Mathematics Test' /> */}
       <Card>
         <Grid container item xs={12} display='flex' alignItems='center'>
           <Grid item xs={12}>
@@ -362,6 +353,7 @@ const AttemptTestListTable = ({ tableData, addUserData, deleteUserData, categori
               setGlobalFilter={setGlobalFilter}
               type={type}
               setType={setType}
+              testSubmissions={testSubmissions}
             />
           </Grid>
         </Grid>

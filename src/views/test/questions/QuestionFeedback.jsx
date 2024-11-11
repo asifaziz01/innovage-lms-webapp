@@ -18,7 +18,7 @@ const QuestionFeedback = ({ control }) => {
             </Grid>
             <Grid item xs={12}>
               <Controller
-                name='general_feedback'
+                name='answer_feedback'
                 control={control}
                 render={({ field }) => (
                   <TextEditor
@@ -41,7 +41,7 @@ const QuestionFeedback = ({ control }) => {
             </Grid>
             <Grid item xs={12}>
               <Controller
-                name='answer_feedback'
+                name='feedback_for_instructor'
                 control={control}
                 render={({ field }) => (
                   <TextEditor

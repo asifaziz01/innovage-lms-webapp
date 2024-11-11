@@ -9,7 +9,7 @@ export default function useUserApi() {
 
   const fetchData = async () => {
     try {
-      const endpoint = `${process.env.NEXT_PUBLIC_LMS_API_URL}/users/list`
+      const endpoint = `${process.env.NEXT_PUBLIC_LMS_API_URL}users/list`
 
       const response = await axios.get(endpoint, {
         headers: {

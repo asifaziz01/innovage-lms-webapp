@@ -8,7 +8,7 @@ import { useTheme } from '@mui/material/styles'
 
 import { QUESTION_MODULE_ENDPOINTS } from '@/Const/test/ApiEndpoints'
 
-// import { alertMessages } from '@/components/globals/AlertMessages'
+import { alertMessages } from '@/components/globals/AlertMessages'
 
 export default function useQuestionApi() {
   const [data, setData] = useState([])
@@ -20,32 +20,29 @@ export default function useQuestionApi() {
   const router = useRouter()
 
   const createQuestion = (data, mode) => {
-    //userData example
-    // const data = {
-    //   title: userData?.title,
-    //   type: userData?.type,
-    //   details: userData?.description
-    // }
-
     const formData = new FormData()
 
     if (typeof data === 'object') {
       Object.entries(data).forEach(([key, value]) => {
         if (key === 'choices') {
           value.map((choice, i) => {
+            console.info(choice?.feedback?.length)
+
             if (choice.choice) {
               formData.append(`choice[${i}]`, choice.choice)
               formData.append(`correct_answer[${i}]`, choice.correct_answer ? '1' : '0')
-              formData.append(`feedback[${i}]`, choice.feedback)
               formData.append(`order[${i}]`, i)
+            }
+
+            if (choice.feedback) {
+              formData.append(`choice_feedback[${i}]`, choice?.feedback)
             }
           })
         }
 
         if (key === 'userfile') {
-          data?.userfile?.forEach(file => {
-            formData.append('userfile', file)
-            console.log(file, 'eeeee')
+          data?.userfile?.forEach((file, i) => {
+            formData.append(`question_attachment[${i}]`, file)
           })
         } else {
           formData.append(key, value)
@@ -55,8 +52,10 @@ export default function useQuestionApi() {
 
     try {
       axios
-        .post(`${QUESTION_MODULE_ENDPOINTS}/${data?.guid}`, formData, {
-          Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
+
+        // .post(`${process.env.NEXT_PUBLIC_BASEPATH}tests/create_question`,formData,{
+        .post(`${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/questions/create`, formData, {
+          Authorization: 'Bearer 2a59a7e2800e94ae59a44b4084393b5b5df9d6a0ccfab01bd17ba5f9dc58f262',
           Network: 'dev369',
           accept: 'application/json'
         })
@@ -67,9 +66,10 @@ export default function useQuestionApi() {
             setQuestionTypeFixed(false)
           }
 
-          // alertMessages(theme, 'success', res?.data?.message)
-          setQId(res?.data?.payload?.question_guid)
-          setTimeout(() => router.push('/question/allquestion'), [2000])
+          alertMessages(theme, 'success', res?.data?.message)
+          setQId(res?.data?.payload?.guid)
+
+          // setTimeout(() => router.push('/question/allquestion'), [2000])
         })
 
       //   return response.data
@@ -79,12 +79,6 @@ export default function useQuestionApi() {
   }
 
   const editQuestion = (data, mode) => {
-    //userData example
-    // const data = {
-    //   title: userData?.title,
-    //   type: userData?.type,
-    //   details: userData?.description
-    // }
     const formData = new FormData()
 
     if (typeof data === 'object') {
@@ -114,7 +108,7 @@ export default function useQuestionApi() {
 
     try {
       axios
-        .post(`${QUESTION_MODULE_ENDPOINTS}/${data?.guid}/${data?.qId}`, formData, {
+        .post(`${process.env.NEXT_PUBLIC_BASEPATH}tests/create_question/${data?.guid}/${data?.qId}`, formData, {
           Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
           Network: 'dev369',
           accept: 'application/json'
@@ -126,7 +120,7 @@ export default function useQuestionApi() {
             setQuestionTypeFixed(false)
           }
 
-          // alertMessages(theme, 'info', res?.data?.message)
+          alertMessages(theme, 'info', res?.data?.message)
         })
 
       //   return response.data

@@ -34,7 +34,7 @@ import WeightedMarksSettings from '../attempts/WeightedMarksSettings'
 const EditTest = ({ isLoading = false }) => {
   const [types, setTypes] = useState(null)
   const [activeTab, setActiveTab] = useState('edit_details') // Ensure activeTab is initialized properly
-
+  const [formState, setFormState] = useState(null)
   const searchParams = useSearchParams()
   const guid = searchParams.get('guid')
   const router = useRouter()
@@ -49,7 +49,7 @@ const EditTest = ({ isLoading = false }) => {
     formState: { errors, isValid }
   } = useForm()
 
-  const { data, testData, viewTest, updateTestData, categories, getCategories } = useTestApi()
+  const { data, testData, viewTest, updateTestData, categories, getCategories, testSettings } = useTestApi()
 
   // Fetch data and populate form on component mount
   useEffect(() => {
@@ -223,10 +223,15 @@ const EditTest = ({ isLoading = false }) => {
                 </form>
               </TabPanel>
               <TabPanel value='general_settings' sx={{ marginTop: 10 }}>
-                <QuestionGeneralSettings />
+                <QuestionGeneralSettings testSettings={testSettings} guid={guid} setFormState={setFormState} />
               </TabPanel>
               <TabPanel value='result_settings' sx={{ marginTop: 10 }}>
-                <QuestionResultSettings />
+                <QuestionResultSettings
+                  formState={formState}
+                  guid={guid}
+                  testSettings={testSettings}
+                  setFormState={setFormState}
+                />
               </TabPanel>
               <TabPanel value='test_instructions' sx={{ marginTop: 10 }}>
                 <QuestionTestInstructions />

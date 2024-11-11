@@ -73,6 +73,7 @@ const QuestionMarking = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [anchorEl, setAnchorEl] = useState(null)
   const [toggle, setToggle] = useState(false)
+  const [openTextFieldIds, setOpenTextFieldIds] = useState([])
 
   // States
   const initialData = [
@@ -140,6 +141,18 @@ const QuestionMarking = () => {
     }
   ]
 
+  const toggleTextField = itemId => {
+    setOpenTextFieldIds(prevIds => {
+      if (prevIds?.includes(itemId)) {
+        // If the text field for this item is open, remove it from the state
+        return prevIds?.filter(id => id !== itemId)
+      } else {
+        // If it's not open, add the item ID to the state
+        return [...prevIds, itemId]
+      }
+    })
+  }
+
   const handleExpandAll = () => {
     setExpandAll(true)
     setExpanded(true)
@@ -148,6 +161,7 @@ const QuestionMarking = () => {
   const handleCollapseAll = () => {
     setExpandAll(false)
     setExpanded(false)
+    setOpenTextFieldIds([])
   }
 
   const handleClick = event => {
@@ -290,21 +304,22 @@ const QuestionMarking = () => {
                     )
                   })
                 : null
-            case 'action':
-              return visibleColumns?.action
-                ? columnHelper.accessor('action', {
-                    header: (
-                      <Typography fontWeight='bold' fontSize={13}>
-                        Action
-                      </Typography>
-                    ),
-                    cell: ({ row }) => (
-                      <Button variant='outlined' color='primary' size='small'>
-                        Grade All Attempts
-                      </Button>
-                    )
-                  })
-                : null
+
+            // case 'action':
+            //   return visibleColumns?.action
+            //     ? columnHelper.accessor('action', {
+            //         header: (
+            //           <Typography fontWeight='bold' fontSize={13}>
+            //             Action
+            //           </Typography>
+            //         ),
+            //         cell: ({ row }) => (
+            //           <Button variant='outlined' color='primary' size='small'>
+            //             Grade All Attempts
+            //           </Button>
+            //         )
+            //       })
+            //     : null
 
             default:
               return null
@@ -486,13 +501,20 @@ const QuestionMarking = () => {
 
                     return (
                       <>
-                        <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
+                        <tr
+                          key={row.id}
+                          style={{
+                            cursor: 'pointer'
+                          }}
+                          className={classnames({ selected: row.getIsSelected() })}
+                        >
                           {row.getVisibleCells().map(cell => (
                             <td
                               key={cell.id}
                               onClick={() => {
                                 setExpandAll(false)
                                 setRowId(row?.id)
+                                toggleTextField(row?.id)
                                 setExpanded(!expanded)
                               }}
                             >
@@ -502,8 +524,7 @@ const QuestionMarking = () => {
                         </tr>
                         <tr>
                           <Box>
-                            {(expandAll ? true : rowId === row?.id) &&
-                              expanded &&
+                            {(expandAll ? true : openTextFieldIds?.includes(row?.id)) &&
                               row?.original?.answers?.map((item, index) => (
                                 <Box key={row} display='flex' flexDirection='column' px={5} py={2}>
                                   <Typography
