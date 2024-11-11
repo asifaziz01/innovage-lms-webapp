@@ -7,7 +7,8 @@ import axios from 'axios'
 import { useTheme } from '@mui/material/styles'
 
 import { QUESTION_MODULE_ENDPOINTS } from '@/Const/test/ApiEndpoints'
-import { alertMessages } from '@/components/globals/AlertMessages'
+
+// import { alertMessages } from '@/components/globals/AlertMessages'
 
 export default function useQuestionApi() {
   const [data, setData] = useState([])
@@ -66,7 +67,7 @@ export default function useQuestionApi() {
             setQuestionTypeFixed(false)
           }
 
-          alertMessages(theme, 'success', res?.data?.message)
+          // alertMessages(theme, 'success', res?.data?.message)
           setQId(res?.data?.payload?.question_guid)
           setTimeout(() => router.push('/question/allquestion'), [2000])
         })
@@ -125,7 +126,7 @@ export default function useQuestionApi() {
             setQuestionTypeFixed(false)
           }
 
-          alertMessages(theme, 'info', res?.data?.message)
+          // alertMessages(theme, 'info', res?.data?.message)
         })
 
       //   return response.data

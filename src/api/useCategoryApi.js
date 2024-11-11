@@ -9,7 +9,7 @@ import { IconButton, Typography } from '@mui/material'
 
 import { CATEGORY_DATA, CATEGORY_MODULE_ENDPOINTS, CATEGORY_MODULE_ENDPOINTS_CHILDREN } from '@/Const/test/ApiEndpoints'
 
-import { alertMessages } from '@/components/globals/AlertMessages'
+// import { alertMessages } from '@/components/globals/AlertMessages'
 
 export default function useCategoryApi() {
   const [data, setData] = useState([])
@@ -37,6 +37,7 @@ export default function useCategoryApi() {
       console.error('Error fetching data:', error)
     }
   }
+
   const addCategoryData = userData => {
     console.log(userData, 'checking123')
 
@@ -72,7 +73,7 @@ export default function useCategoryApi() {
           }
         )
         .then(res => {
-          alertMessages(theme, 'success', res?.data?.message)
+          // alertMessages(theme, 'success', res?.data?.message)
           fetchData()
         })
 
@@ -81,6 +82,7 @@ export default function useCategoryApi() {
       console.error('Error:', error)
     }
   }
+
   const viewCategory = guid => {
     // try {
     return axios.post(
@@ -104,6 +106,7 @@ export default function useCategoryApi() {
     // console.error('Error fetching data:', error)
     // }
   }
+
   const updateCategoryData = (guId, data) => {
     const formData = new FormData()
 
@@ -115,7 +118,7 @@ export default function useCategoryApi() {
 
     try {
       axios.post(`${CATEGORY_DATA}/${guId}/edit`, formData).then(res => {
-        alertMessages(theme, 'success', res?.data?.message)
+        // alertMessages(theme, 'success', res?.data?.message)
       })
 
       //   return response.data
@@ -123,6 +126,7 @@ export default function useCategoryApi() {
       console.error('Error:', error)
     }
   }
+
   useEffect(() => {
     fetchData()
   }, [])
