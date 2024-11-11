@@ -10,7 +10,7 @@ import { IconButton, Typography } from '@mui/material'
 
 import { USER_MODULE_ENDPOINTS } from '@/Const/test/ApiEndpoints'
 
-// import { alertMessages } from '@/components/globals/AlertMessages'
+
 
 export default function useTestApi() {
   const [data, setData] = useState([])
@@ -119,7 +119,7 @@ export default function useTestApi() {
           }
         )
         .then(res => {
-          // alertMessages(theme, 'success', res?.data?.message)
+        
           fetchData()
         })
 
@@ -140,7 +140,7 @@ export default function useTestApi() {
 
     try {
       axios.post(`${USER_MODULE_ENDPOINTS}/add/${guId}`, formData).then(res => {
-        // alertMessages(theme, 'success', res?.data?.message)
+        
       })
 
       //   return response.data
@@ -153,7 +153,7 @@ export default function useTestApi() {
     try {
       return axios.delete(`${USER_MODULE_ENDPOINTS}/delete/${userId}`).then(() => fetchData())
     } catch (error) {
-      // alertMessages(theme, 'error', 'failed to delete test')
+     
     }
   }
 
