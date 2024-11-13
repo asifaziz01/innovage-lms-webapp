@@ -1,9 +1,8 @@
 'use client'
-import { useEffect, useState } from 'react'
-
 import CircularProgress from '@mui/material/CircularProgress'
 
 // React Imports
+import { useEffect, useState } from 'react'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -14,7 +13,6 @@ import DialogActions from '@mui/material/DialogActions'
 import DialogContent from '@mui/material/DialogContent'
 import DialogContentText from '@mui/material/DialogContentText'
 import DialogTitle from '@mui/material/DialogTitle'
-
 // Third-party Imports
 
 import Box from '@mui/material/Box'
@@ -23,12 +21,9 @@ import Box from '@mui/material/Box'
 import TableFilters from './TableFilters'
 
 import '../../style/styles.css'
-
 // Style Imports
 import TestCard from './TestCard'
-
 import { Grid } from '@mui/material'
-
 import QuickLinksCard from './QuickLinkCards'
 import QuestionCard from './QuestionCard'
 import useQuestionModuleApi from '@/api/useQuestionModuleApi'
@@ -41,13 +36,12 @@ const QuestionList = ({ tableData }) => {
   const { data, fetchData } = useQuestionModuleApi()
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
   const [expandedPanels, setExpandedPanels] = useState([]) // Tracks which panels are expanded
-  const [isVisible, setIsVisible] = useState(false) // Controls visibility of questions
+  const [isVisible, setIsVisible] = useState(true) // Controls visibility of questions
   const [showAnswers, setShowAnswers] = useState([]) // Tracks which panels' answers are shown
 
   useEffect(() => {
     fetchData()
   }, [])
-
   //   const questions = [
   //     {
   //       id: 1,
@@ -85,18 +79,16 @@ const QuestionList = ({ tableData }) => {
 
   const handleExpandAll = () => {
     setIsVisible(true) // Show the questions
-    setExpandedPanels(questions?.map(q => q?.id)) // Expand all panels
+    setExpandedPanels(questions.map(q => q.id)) // Expand all panels
     setShowAnswers([]) // Reset showing answers (no answers shown)
     setIsExpandedAll(true) // Set the expanded state
   }
-
   const handleExpandAllButton = () => {
     setIsVisible(true) // Show the questions
-    setExpandedPanels(questions?.map(q => q?.id)) // Expand all panels
-    setShowAnswers(questions?.map(q => q?.id)) // Reset showing answers (no answers shown)
+    setExpandedPanels(questions.map(q => q.id)) // Expand all panels
+    setShowAnswers(questions.map(q => q.id)) // Reset showing answers (no answers shown)
     // setIsExpandedAll(true) // Set the expanded state
   }
-
   // Function to collapse all accordions and hide everything
   const handleCollapseAll = () => {
     setExpandedPanels([]) // Collapse all panels
@@ -107,15 +99,13 @@ const QuestionList = ({ tableData }) => {
 
   // Function to toggle the answer visibility of a specific question
   const toggleAnswer = panelId => {
-    if (showAnswers?.includes(panelId)) {
-      setShowAnswers(showAnswers?.filter(id => id !== panelId)) // Hide answer if already visible
+    if (showAnswers.includes(panelId)) {
+      setShowAnswers(showAnswers.filter(id => id !== panelId)) // Hide answer if already visible
     } else {
       setShowAnswers([...showAnswers, panelId]) // Show answer if hidden
     }
-
     // setIsExpandedAll(true)
   }
-
   const [filteredData, setFilteredData] = useState(data || []) // Initialize with data from API
 
   useEffect(() => {
@@ -124,7 +114,6 @@ const QuestionList = ({ tableData }) => {
     }
   }, [data])
   console.log(isExpandedAll)
-
   // console.log(questionss, 'questionss')
   const [selectedQuestions, setSelectedQuestions] = useState([]) // Track selected checkboxes in QuestionCard
 
@@ -133,17 +122,18 @@ const QuestionList = ({ tableData }) => {
     if (isChecked) {
       setSelectedQuestions([...selectedQuestions, questionId]) // Add question to selected list
     } else {
-      setSelectedQuestions(selectedQuestions?.filter(id => id !== questionId)) // Remove from list
+      setSelectedQuestions(selectedQuestions.filter(id => id !== questionId)) // Remove from list
     }
   }
 
   const handleDeleteClick = () => {
-    if (selectedQuestions?.length > 0) {
+    if (selectedQuestions.length > 0) {
       setOpenDeleteDialog(true)
     }
   }
 
   const handleConfirmDelete = () => {
+    console.log('Deleted questions:', selectedQuestions)
     setSelectedQuestions([]) // Clear the selected questions
     setOpenDeleteDialog(false) // Close the dialog
   }
@@ -151,19 +141,17 @@ const QuestionList = ({ tableData }) => {
   const handleCancelDelete = () => {
     setOpenDeleteDialog(false)
   }
-
   const questions = data
-    ?.filter(item => item?.question !== null) // Filter out items with a null question
+    ?.filter(item => item.question !== null) // Filter out items with a null question
     .map((item, index) => ({
       id: index + 1,
-      text: item?.question, // No need for null check here since it's already filtered
-      options: item?.choices?.map(choice => choice?.choice), // Map the options
-      correctanswer: item?.choices?.map(choice => choice?.correct_answer) // Map correct answers
+      text: item.question, // No need for null check here since it's already filtered
+      options: item.choices.map(choice => choice.choice), // Map the options
+      correctanswer: item.choices.map(choice => choice.correct_answer) // Map correct answers
     }))
-
   const width = '850px'
-  const deleteIconActive = selectedQuestions?.length > 0
-
+  const deleteIconActive = selectedQuestions.length > 0
+  console.log(showAnswers, 'sssss')
   return (
     <>
       <Card>
@@ -184,7 +172,7 @@ const QuestionList = ({ tableData }) => {
 
           <Grid item xs={12} style={{ display: 'flex', justifyContent: 'space-between' }}>
             <Grid item xs={8} md={8} lg={8} sm={12}>
-              {questions && questions?.length > 0 ? (
+              {questions && questions.length > 0 ? (
                 <QuestionCard
                   userListTable={'true'}
                   marginLeft={'17px'}

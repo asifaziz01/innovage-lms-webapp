@@ -1,38 +1,39 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-
+import QuestionCard from '../../list/QuestionCard'
 // import useQuestionApi from '../../../Api/useQuestionApi'
 import { Box, CircularProgress } from '@mui/material'
 import { useSelector } from 'react-redux'
-
-import QuestionCard from '../../list/QuestionCard'
 import TableFilters from '../../list/TableFilters'
 import Tablefor from './Tablefor'
 import useQuestionModuleApi from '@/api/useQuestionModuleApi'
-
+import EditImport from '../../list/EditImport'
 const ImportView = () => {
   const [expandedPanels, setExpandedPanels] = useState([]) // Tracks which panels are expanded
-  const [isVisible, setIsVisible] = useState(false) // Controls visibility of questions
+  const [isVisible, setIsVisible] = useState(true) // Controls visibility of questions
   const [showAnswers, setShowAnswers] = useState([]) // Tracks which panels' answers are shown
-
+  const [edit, setEdit] = useState(false)
   const [isExpandedAll, setIsExpandedAll] = useState(false) // Tracks if all are expanded
   const { uploadData, uploadFiles, file, uploadingData, uploadFiled } = useQuestionModuleApi()
   const [fileReferences, setFileReferences] = useState([])
   const { files, uploading, error } = useSelector(state => state.fileReducer)
-
+  const [editingQuestion, setEditingQuestion] = useState(null)
+  const [questions, setQuestions] = useState([])
+  console.log(files, 'ccccc')
+  console.log(uploadData, 'ssssss')
   const createFileArray = fileList => {
-    return Array.from(fileList)?.map(file => ({
-      path: file?.name,
-      name: file?.name,
-      lastModified: file?.lastModified,
-      lastModifiedDate: new Date(file?.lastModified),
-      size: file?.size,
-      type: file?.type,
-      webkitRelativePath: file?.webkitRelativePath || ''
+    return Array.from(fileList).map(file => ({
+      path: file.name,
+      name: file.name,
+      lastModified: file.lastModified,
+      lastModifiedDate: new Date(file.lastModified),
+      size: file.size,
+      type: file.type,
+      webkitRelativePath: file.webkitRelativePath || ''
     }))
   }
-
+  console.log(files, 'chedcking')
   // Simulated file input (e.g., coming from an <input type="file"> or drag-and-drop)
   const fileList = [
     new File(['file content'], 'BulkQuestionUpload.txt', {
@@ -40,137 +41,49 @@ const ImportView = () => {
       lastModified: 1726239009248
     })
   ]
-
   useEffect(() => {
-    if (files?.length > 0) {
+    if (files.length > 0) {
       uploadFiles(files) // Call the API with the files if they exist
     }
   }, [files])
-
-  // useEffect(() => {
-  //   uploadFiles(files)
-  // }, [])
-  // const questionsArray = [
-  //   {
-  //     question: 'Who among the following got the Bharat Ratna award before becoming the president of India?',
-  //     options: ['R Venkataraman', 'Dr. Rajendra Prasad', 'DR Zakir Hussian', 'W Giri'],
-  //     correctAnswer: 'DR Zakir Hussian'
-  //   },
-  //   {
-  //     question: 'Who is the first non-indian to receive the Bharat Ratna?',
-  //     options: ['Martin Luther King', 'Mother Terasa', 'Khan Abdul Ghaffar Khan', 'Aubin Mehta'],
-  //     correctAnswer: 'Khan Abdul Ghaffar Khan'
-  //   },
-  //   {
-  //     question: 'When did Mother Teresa win the Nobel Peace Prize?',
-  //     options: ['1975', '1979', '1981', '1982'],
-  //     correctAnswer: '1979'
-  //   },
-  //   {
-  //     question: 'Which one of the following glasses is used in bullet proof screens?',
-  //     options: ['Soda glass', 'Pyrex glasss', 'Jena glass', 'Reinforced glass'],
-  //     correctAnswer: 'Reinforced glass'
-  //   },
-  //   {
-  //     question: 'Which substance is used to retard the setting action of cement?',
-  //     options: ['CaO', 'AlO', 'CaSO4.2H2O', 'NaO + KO'],
-  //     correctAnswer: 'CaSO4.2H2O'
-  //   },
-  //   {
-  //     question: 'The mineral in which India depends largely on imports is',
-  //     options: ['Iron Ore', 'Bauxite', 'Mica', 'Mercury'],
-  //     correctAnswer: 'Mercury'
-  //   },
-  //   {
-  //     question: 'Was Babur the last Mughal Emperor of India?',
-  //     options: ['Yes', 'No'],
-  //     correctAnswer: 'No'
-  //   },
-  //   {
-  //     question: 'The longest mountain range in the world is',
-  //     options: ['The Alps', 'The Himalayas', 'The Andes', 'The Rockies'],
-  //     correctAnswer: 'The Andes'
-  //   },
-  //   {
-  //     question: 'The most populous city in the world is',
-  //     options: ['Paris', 'London', 'Peking', 'Tokyo'],
-  //     correctAnswer: 'Paris'
-  //   },
-  //   {
-  //     question: 'Which state produces maximum soyabean?',
-  //     options: ['Madhya Pradesh', 'Uttar Pradesh', 'Bihar', 'Rajasthan'],
-  //     correctAnswer: 'Madhya Pradesh'
-  //   },
-  //   {
-  //     question: 'Which one among the following radiations carries maximum energy?',
-  //     options: ['Ultraviolet rays', 'Gamma rays', 'X- rays', 'Infra red rays'],
-  //     correctAnswer: 'Gamma rays'
-  //   },
-  //   {
-  //     question: 'Bokaro Steel Limited was established with the assistance of',
-  //     options: ['Germany', 'Soviet Union', 'UK', 'USA'],
-  //     correctAnswer: 'UK'
-  //   },
-  //   {
-  //     question: 'The headquarters of world trade organisation is in',
-  //     options: ['montreal', 'seatle', 'geneva', 'the hague'],
-  //     correctAnswer: 'geneva'
-  //   },
-  //   {
-  //     question: 'The 2014 football world cup was NOT held in',
-  //     options: ['China', 'Australia', 'Japan', 'Brazil'],
-  //     correctAnswer: 'China, Australia, Japan'
-  //   },
-  //   {
-  //     question: 'The Second Italian Satellite launched from Soviet Union was',
-  //     options: ['Rohini', 'Aryabhatta', 'Bhaskara–1', 'Apsara'],
-  //     correctAnswer: 'Bhaskara–1'
-  //   },
-  //   {
-  //     question: 'The metal whose salts are sensitive to light is',
-  //     options: ['Silver', 'Zinc', 'Copper', 'Gold'],
-  //     correctAnswer: 'Silver'
-  //   },
-  //   {
-  //     question: 'The instrument useful for measuring curvature of surface is',
-  //     options: ['Odometer', 'Spherometer', 'Tachometer', 'Speedometer'],
-  //     correctAnswer: 'Spherometer'
-  //   },
-  //   {
-  //     question: 'The brain fever which affects young children is',
-  //     options: ['Malaria', 'Typhoid', 'Encephatitis', 'Pneumonia'],
-  //     correctAnswer: 'Encephatitis'
-  //   },
-  //   {
-  //     question: 'Which of the following cash crops is not grown in Kerala?',
-  //     options: ['Spices', 'Tobacco', 'Rubber', 'Coffee'],
-  //     correctAnswer: 'Tobacco'
-  //   },
-  //   {
-  //     question: 'The highest peak in South India is',
-  //     options: ['Dhottabetta', 'Nandadevi', 'Anaimudi', 'Mt. Abu'],
-  //     correctAnswer: 'Anaimudi'
-  //   },
-  //   {
-  //     question: 'The age of retirement of a Judge of a supreme court is 65 years',
-  //     options: ['True', 'False'],
-  //     correctAnswer: 'True'
-  //   }
-  // ]
+  console.log(files, 'filesarray')
+  console.log(uploadData)
+  useEffect(() => {
+    if (uploadData) {
+      const formattedQuestions = Object.keys(uploadData)
+        .filter(key => uploadData[key].question !== null)
+        .map((key, index) => {
+          const item = uploadData[key]
+          const { choice, correct_answer, question, parent_id, created_by, order, question_type, guid } = item
+          return {
+            guid: guid,
+            id: index + 1,
+            text: question,
+            options: choice || [],
+            correctanswer: correct_answer,
+            order,
+            created_by,
+            parent_id,
+            question_type
+          }
+        })
+      setQuestions(formattedQuestions)
+    }
+  }, [uploadData])
 
   const filesArray = createFileArray(fileList)
+  console.log(createFileArray(fileList), 'hhhh')
 
+  console.log(fileReferences, 'files')
   useEffect(() => {
     // uploadFiles(filesArray)
   }, [])
-
-  const handleExpandAllButton = () => {
-    setIsVisible(true) // Show the questions
-    setExpandedPanels(questions?.map(q => q?.id)) // Expand all panels
-    setShowAnswers(questions?.map(q => q?.id)) // Reset showing answers (no answers shown)
-    // setIsExpandedAll(true) // Set the expanded state
-  }
-
+  // const handleExpandAllButton = () => {
+  //   setIsVisible(true) // Show the questions
+  //   setExpandedPanels(questions.map(q => q.id)) // Expand all panels
+  //   setShowAnswers(questions.map(q => q.id)) // Reset showing answers (no answers shown)
+  //   // setIsExpandedAll(true) // Set the expanded state
+  // }
   // Function to collapse all accordions and hide everything
   const handleCollapseAll = () => {
     setExpandedPanels([]) // Collapse all panels
@@ -182,25 +95,28 @@ const ImportView = () => {
   // Function to toggle the answer visibility of a specific question
   const toggleAnswer = panelId => {
     setIsVisible(true)
-
-    if (showAnswers?.includes(panelId)) {
-      setShowAnswers(showAnswers?.filter(id => id !== panelId)) // Hide answer if already visible
+    if (showAnswers.includes(panelId)) {
+      setShowAnswers(showAnswers.filter(id => id !== panelId)) // Hide answer if already visible
     } else {
       setShowAnswers([...showAnswers, panelId]) // Show answer if hidden
       setIsVisible(true)
     }
   }
-
   const [filteredData, setFilteredData] = useState(uploadData || []) // Initialize with data from API
 
   // const { uploadData } = useQuestionApi(); // Fetching uploadData from the hook
+  const handleSave = updatedQuestion => {
+    setQuestions(prevQuestions =>
+      prevQuestions.map(question => (question.id === updatedQuestion.id ? updatedQuestion : question))
+    )
+    setEditingQuestion(null) // Close the EditImport component
+  }
 
   useEffect(() => {
     if (uploadData) {
       setFilteredData(uploadData) // Make sure uploadData is set here
     }
   }, [uploadData])
-
   // console.log(uploadData, 'checking')
 
   // const questions = uploadData
@@ -227,10 +143,11 @@ const ImportView = () => {
   //       correctanswer: item.correctAnswer
   //     }
   //   })
+
   const questionss = Object.keys(uploadData)
-    .filter(key => uploadData?.[key]?.question !== null) // Filter out items with a null question
+    .filter(key => uploadData[key].question !== null) // Filter out items with a null question
     .map((key, index) => {
-      const item = uploadData?.[key]
+      const item = uploadData[key]
 
       // Extract the values from each question object
       const { choice, correct_answer, question, parent_id, created_by, order, question_type, guid } = item
@@ -261,20 +178,17 @@ const ImportView = () => {
         question_type
       }
     })
-
   // console.log(questionss, 'questionss')
   const [selectedQuestions, setSelectedQuestions] = useState([]) // Track selected checkboxes in QuestionCard
-
   // console.log(questions, 'questions')
   // Pass this to QuestionCard to manage checkbox selections
   const handleCheckboxChange = (questionId, isChecked) => {
     if (isChecked) {
       setSelectedQuestions([...selectedQuestions, questionId]) // Add question to selected list
     } else {
-      setSelectedQuestions(selectedQuestions?.filter(id => id !== questionId)) // Remove from list
+      setSelectedQuestions(selectedQuestions.filter(id => id !== questionId)) // Remove from list
     }
   }
-
   // const handleCancelDelete = () => {
   //   setUserToDelete(null)
   //   setOpen(false)
@@ -291,27 +205,37 @@ const ImportView = () => {
   //   setIsExpandedAll(true) // Set the expanded state
   // }
   const handleDeleteClick = () => {
-    if (selectedQuestions?.length > 0) {
+    if (selectedQuestions.length > 0) {
       setOpenDeleteDialog(true)
     }
   }
-
   const handleExpandAll = () => {
     setIsVisible(true) // Show the questions
-    setExpandedPanels(questionss?.map(q => q?.id)) // Expand all panels
+    setExpandedPanels(questionss.map(q => q.id)) // Expand all panels
     setShowAnswers([]) // Reset showing answers (no answers shown)
     setIsExpandedAll(true) // Set the expanded state
   }
+  const handleEditClick = question => {
+    setEditingQuestion(question) // Set the selected question to be edited
+  }
+
+  // Function to reset editing state
+  const resetEditing = () => {
+    setEditingQuestion(null)
+  }
+  // const handleEditClick = question => {
+  //   setEditingQuestion(question)
+  // }
 
   const width = '100%'
   const marginLeft = '0px'
-
   return (
     <>
       {/* <Tablefor /> */}
-      {questionss?.length > 0 && (
+      {questions.length > 0 && !editingQuestion && (
         <QuestionCard
           check={'true'}
+          onEditClick={handleEditClick}
           marginLeft={marginLeft}
           width={width}
           expandedPanels={expandedPanels}
@@ -323,14 +247,17 @@ const ImportView = () => {
           handleCollapseAll={handleCollapseAll}
           handleExpandAll={handleExpandAll}
           toggleAnswer={toggleAnswer}
-          questions={questionss}
+          questions={questions}
           isExpandedAll={isExpandedAll}
           setIsExpandedAll={setIsExpandedAll}
           onQuestionSelect={handleCheckboxChange}
           selectedQuestions={selectedQuestions}
           setSelectedQuestions={setSelectedQuestions}
+          edit={edit}
+          setEdit={setEdit}
         />
       )}
+      {editingQuestion && <EditImport question={editingQuestion} onSave={handleSave} />}
       {/* // ) : ( //{' '}
       <>
         //{' '}

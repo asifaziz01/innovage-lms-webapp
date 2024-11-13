@@ -113,12 +113,12 @@ const TableFilters = ({ setData, tableData, globalFilter, setGlobalFilter, type 
     <CardContent>
       <Grid container spacing={5} xs={12} display='flex' alignItems='center' pr={0}>
         <Grid item container xs={12} display='flex' justifyContent='space-between'>
-          <Grid item xs={3}>
+          {/* <Grid item xs={3}>
             <Typography fontWeight='bold' fontSize={18}>
               Filter
             </Typography>
-          </Grid>
-          <Grid item xs={9} display='flex' justifyContent='flex-end'>
+          </Grid> */}
+          {/* <Grid item xs={9} display='flex' justifyContent='flex-end'>
             <a
               style={{
                 cursor: 'pointer',
@@ -136,10 +136,10 @@ const TableFilters = ({ setData, tableData, globalFilter, setGlobalFilter, type 
             >
               Reset Filter
             </a>
-          </Grid>
+          </Grid> */}
         </Grid>
 
-        <Grid item xs={12} sm={6}>
+        <Grid item xs={12} sm={3}>
           <FormControl fullWidth>
             <DebouncedInput
               value={globalFilter ?? ''}
@@ -189,7 +189,7 @@ const TableFilters = ({ setData, tableData, globalFilter, setGlobalFilter, type 
             </Select>
           </FormControl>
         </Grid> */}
-        <Grid item xs={12} sm={6}>
+        {/* <Grid item xs={12} sm={6}>
           <FormControl
             fullWidth
             sx={{
@@ -231,7 +231,7 @@ const TableFilters = ({ setData, tableData, globalFilter, setGlobalFilter, type 
               </MenuItem>
             </Select>
           </FormControl>
-        </Grid>
+        </Grid> */}
       </Grid>
     </CardContent>
   )

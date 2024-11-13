@@ -1,8 +1,8 @@
 'use client'
+import useQuestionModuleApi from '@/api/useQuestionModuleApi'
 import React, { useEffect, useState } from 'react'
-
 import { useSearchParams, useRouter } from 'next/navigation'
-
+import Reactquill from '../list/Reactquill'
 import {
   Box,
   TextField,
@@ -21,13 +21,9 @@ import {
   InputLabel
 } from '@mui/material'
 import { Controller } from 'react-hook-form'
-
-import Reactquill from '../list/Reactquill'
-import useQuestionModuleApi from '@/api/useQuestionModuleApi'
-import FilterHeader from '@/components/globals/FilterHeader'
+import FilterHeader from '@/Components/globals/FilterHeader'
 import QuestionUpload from '@/views/test/questions/QuestionUpload'
 import PaginationCard from '@/api/Pagination'
-
 const questionTypeMapping = {
   mcmc: 'Multiple Choice Question',
   fib: 'Fill in the Blanks',
@@ -40,7 +36,6 @@ const EditQuestion = () => {
   const searchParams = useSearchParams()
   const guid = searchParams.get('guid')
   const router = useRouter()
-
   const [questionData, setQuestionData] = useState({
     question: '',
     type: '',
@@ -51,12 +46,10 @@ const EditQuestion = () => {
     timeUnit: 'Second',
     choices: [] // Initialize choices
   })
-
   useEffect(() => {
     if (guid) {
       viewQuestion(guid).then(res => {
         const payload = res?.data?.payload
-
         setQuestionData({
           question: payload?.question || '', // Update the question value
           type: payload?.question_type || '',
@@ -70,7 +63,6 @@ const EditQuestion = () => {
       })
     }
   }, [guid])
-
   //quill changes updates
   const handleQuillChange = value => {
     setQuestionData(prevState => ({
@@ -78,24 +70,20 @@ const EditQuestion = () => {
       question: value
     }))
   }
-
   //handle input changes for the form data
   const handleInputChange = e => {
     const { name, value } = e.target
-
     setQuestionData(prevState => ({
       ...prevState,
       [name]: value
     }))
   }
-
   //handle choice change
   const handleChoiceChange = (value, index) => {
-    const updatedChoices = questionData?.choices?.map((choice, idx) => ({
+    const updatedChoices = questionData.choices.map((choice, idx) => ({
       ...choice,
-      choice: idx === index ? value : choice?.choice
+      choice: idx === index ? value : choice.choice
     }))
-
     setQuestionData(prevState => ({
       ...prevState,
       choices: updatedChoices
@@ -104,21 +92,18 @@ const EditQuestion = () => {
 
   // Handle correct answer selection
   const handleSelectCorrectAnswer = index => {
-    const updatedChoices = questionData?.choices?.map((choice, idx) => ({
+    const updatedChoices = questionData.choices.map((choice, idx) => ({
       ...choice,
       correct_answer: idx === index ? '1' : '0'
     }))
-
     setQuestionData(prevState => ({
       ...prevState,
       choices: updatedChoices
     }))
   }
-
   const handleUpdate = async () => {
     try {
       const updatedData = { ...questionData }
-
       await updateQuestion(guid, updatedData)
       alert('Question updated successfully')
       router.push('/question/allquestion') // Navigate back to the list after successful update
@@ -128,7 +113,6 @@ const EditQuestion = () => {
       alert('Failed to update the question. Please try again.')
     }
   }
-
   // console.log(questionData, 'questionData')
   return (
     <>
@@ -153,10 +137,10 @@ const EditQuestion = () => {
                   }}
                 >
                   <InputLabel id='question-type'>Question Type</InputLabel>
-                  <Select labelId='question-type' value={questionData?.type} readOnly>
+                  <Select labelId='question-type' value={questionData.type} readOnly>
                     {/* Map the type to readable text */}
-                    <MenuItem value={questionData?.type} disabled>
-                      {questionTypeMapping?.[questionData?.type] || 'Unknown Type'}
+                    <MenuItem value={questionData.type} disabled>
+                      {questionTypeMapping[questionData.type] || 'Unknown Type'}
                     </MenuItem>
                   </Select>
                 </FormControl>
@@ -171,7 +155,7 @@ const EditQuestion = () => {
                 <Grid item xs={12}>
                   {/* <Typography variant='h6'>Question:</Typography> */}
                   <Reactquill
-                    value={questionData?.question}
+                    value={questionData.question}
                     onChange={handleQuillChange}
                     style={{ marginBottom: '1.5rem' }}
                   />
@@ -191,7 +175,7 @@ const EditQuestion = () => {
                   <TextField
                     label='Marks Per Question *'
                     name='marksPerQuestion'
-                    value={questionData?.marksPerQuestion}
+                    value={questionData.marksPerQuestion}
                     onChange={handleInputChange}
                     fullWidth
                   />
@@ -202,7 +186,7 @@ const EditQuestion = () => {
                   <TextField
                     label='Negative Marks *'
                     name='negativeMarks'
-                    value={questionData?.negativeMarks}
+                    value={questionData.negativeMarks}
                     onChange={handleInputChange}
                     fullWidth
                   />
@@ -213,13 +197,13 @@ const EditQuestion = () => {
                   <TextField
                     label='Time Allowed *'
                     name='timeAllowed'
-                    value={questionData?.timeAllowed}
+                    value={questionData.timeAllowed}
                     onChange={handleInputChange}
                     fullWidth
                     InputProps={{
                       endAdornment: (
                         <Select
-                          value={questionData?.timeUnit} // Dynamic time unit
+                          value={questionData.timeUnit} // Dynamic time unit
                           name='timeUnit'
                           onChange={handleInputChange}
                           sx={{ ml: 4 }}
@@ -299,14 +283,14 @@ const EditQuestion = () => {
             <CardContent>
               <Grid item xs={12}>
                 {/* <Typography variant='h6'>Answer Choices:</Typography> */}
-                {questionData?.choices?.map((choice, index) => (
+                {questionData.choices.map((choice, index) => (
                   <Grid container alignItems='center' spacing={2} key={index}>
                     <Grid item xs={1}>
                       {/* Radio button for selecting correct answer */}
                       <FormControlLabel
                         control={
                           <Checkbox
-                            checked={choice?.correct_answer === '1'}
+                            checked={choice.correct_answer === '1'}
                             onChange={() => handleSelectCorrectAnswer(index)}
                           />
                         }
@@ -314,7 +298,7 @@ const EditQuestion = () => {
                     </Grid>
                     <Grid item xs={11} sx={{ mb: 2 }}>
                       {/* ReactQuill for editing the choice */}
-                      <Reactquill value={choice?.choice} onChange={value => handleChoiceChange(value, index)} />
+                      <Reactquill value={choice.choice} onChange={value => handleChoiceChange(value, index)} />
                     </Grid>
                   </Grid>
                 ))}
@@ -332,7 +316,6 @@ const EditQuestion = () => {
                   </Grid>
                   <Grid item xs={12}>
                     <Reactquill
-
                     // setTextValue={setFeedback}
                     />
                   </Grid>
@@ -345,7 +328,6 @@ const EditQuestion = () => {
                   </Grid>
                   <Grid item xs={12}>
                     <Reactquill
-
                     // setTextValue={setAnswerFeedback}
                     />
                   </Grid>
@@ -359,7 +341,6 @@ const EditQuestion = () => {
             </Button>
           </Grid>
         </form>
-        <PaginationCard />
       </Box>
     </>
   )

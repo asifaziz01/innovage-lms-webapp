@@ -1,29 +1,23 @@
 import { useState, useEffect } from 'react'
-
-import { useRouter } from 'next/navigation'
-
 import CardContent from '@mui/material/CardContent'
 import FormControl from '@mui/material/FormControl'
 import Grid from '@mui/material/Grid'
 import InputLabel from '@mui/material/InputLabel'
-
 // import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
 import TextField from '@mui/material/TextField'
 import Checkbox from '@mui/material/Checkbox'
 import ListItemText from '@mui/material/ListItemText'
 import { CardHeader, Button, Typography, DividerMenu, Menu, MenuItem } from '@mui/material'
-
 // import DeleteIcon from '@mui/icons-material/Delete'
 // import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 // import AddIcon from '@mui/icons-material/Add';
+import { useRouter } from 'next/navigation'
 import AddUserDrawer from './AddUserDrawer'
 import DialogBox from './DialogBox'
-
 const DebouncedInput = ({ value: initialValue, onChange, debounce = 500, ...props }) => {
   const [value, setValue] = useState(initialValue)
   const router = useRouter()
-
   useEffect(() => {
     setValue(initialValue)
   }, [initialValue])
@@ -48,7 +42,7 @@ const TableFilters = ({
   deleteIconActive,
   onDeleteClick
 }) => {
-  const isDeleteActive = selectedQuestions && selectedQuestions?.length > 0
+  const isDeleteActive = selectedQuestions && selectedQuestions.length > 0
   const [roles, setRoles] = useState([])
   const [anchorEl, setAnchorEl] = useState(null)
   const open = Boolean(anchorEl)
@@ -56,7 +50,6 @@ const TableFilters = ({
   const [globalFilter, setGlobalFilter] = useState('')
   const [addUserOpen, setAddUserOpen] = useState(false)
   const router = useRouter()
-
   // // useEffect(() => {
   // //   const filteredData = tableData?.filter(user => {
   // //     if (roles.length > 0 && !roles.includes(user.role)) return false
@@ -72,16 +65,14 @@ const TableFilters = ({
     const {
       target: { value }
     } = event
-
-    setRoles(typeof value === 'string' ? value?.split(',') : value)
+    setRoles(typeof value === 'string' ? value.split(',') : value)
   }
 
   const handleStatusChange = event => {
     const {
       target: { value }
     } = event
-
-    setStatuses(typeof value === 'string' ? value?.split(',') : value)
+    setStatuses(typeof value === 'string' ? value.split(',') : value)
   }
 
   const handleReset = () => {
@@ -89,34 +80,31 @@ const TableFilters = ({
     setStatuses([])
     setGlobalFilter('')
   }
-
   console.log(deleteIconActive, 'isdeleye')
-
   const handleImportClick = event => {
     // router.push('/question/import') // Replace with the actual path to the import page
     setAnchorEl(event.currentTarget)
   }
-
   const handleClose = () => {
     setAnchorEl(null) // Close the dropdown
   }
 
   const handleImportFromBank = () => {
     // Implement your logic for importing from the question bank
+    console.log('Importing from question bank')
     handleClose()
   }
 
   const handleImportFromFile = () => {
     router.push('/question/import')
+    console.log('Importing from file')
     handleClose()
   }
-
   // const [anchorEl, setAnchorEl] = useState(null)
 
   const handleClick = event => {
     setAnchorEl(event.currentTarget)
   }
-
   const handleAddQuestion = () => {
     router.push('/test/questions')
   }
@@ -132,7 +120,6 @@ const TableFilters = ({
             <i
               className='ri-arrow-left-line'
               style={{ color: '#262B43E5' }}
-
               // onClick={e => handleDeleteClick(e, 1)}
             />
             <Typography style={{ fontWeight: '500', fontSize: '24px', color: '#262B43E5' }}>All Questions</Typography>
@@ -148,7 +135,6 @@ const TableFilters = ({
                 <i
                   className='ri-download-line'
                   style={{ color: 'silver' }}
-
                   // onClick={e => handleDeleteClick(e, 1)}
                 />
               }
@@ -189,7 +175,6 @@ const TableFilters = ({
                 <i
                   className='ri-add-fill'
                   style={{ color: '#007AFF' }}
-
                   // onClick={e => handleDeleteClick(e, 1)}
                 />
               }
@@ -203,7 +188,6 @@ const TableFilters = ({
                 <i
                   className='ri-add-fill'
                   style={{ color: 'white' }}
-
                   // onClick={e => handleDeleteClick(e, 1)}
                 />
               }
@@ -296,7 +280,6 @@ const TableFilters = ({
                 className='ri-delete-bin-6-line'
                 // style={{ color: '#8080808C' }}
                 style={{ color: deleteIconActive ? '#007AFF' : '#8080808C' }}
-
                 // onClick={e => handleDeleteClick(e, 1)}
               />
             </Button>
@@ -367,7 +350,6 @@ const TableFilters = ({
         // userData={data}
         // setData={setData}
         edit={false}
-
         // updateUserData={updateUserData}
         // addUserData={addUserData}
       />

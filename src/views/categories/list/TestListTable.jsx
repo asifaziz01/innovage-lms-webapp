@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo } from 'react'
 
 // Next Imports
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -19,7 +19,7 @@ import Checkbox from '@mui/material/Checkbox'
 import IconButton from '@mui/material/IconButton'
 import { styled } from '@mui/material/styles'
 import TablePagination from '@mui/material/TablePagination'
-
+// import { useRouter } from 'next/router'
 // Third-party Imports
 import classnames from 'classnames'
 import { rankItem } from '@tanstack/match-sorter-utils'
@@ -39,19 +39,16 @@ import {
 // Component Imports
 import { Box, Tooltip } from '@mui/material'
 
-import CustomAvatar from '@core/components/mui/Avatar'
-
-import tableStyles from '@core/styles/table.module.css'
-
 import TableFilters from './TableFilters'
 import AddTestDrawer from './AddTestDrawer'
+import CustomAvatar from '@core/components/mui/Avatar'
 
 // Util Imports
 // import { getInitials } from '../../../../../../Utils/getInitials'
 // import { getLocalizedUrl } from '../../../../../../Utils/i18n'
 
 // Style Imports
-
+import tableStyles from '@core/styles/table.module.css'
 import AlertDialogBox from '@/components/Common/AlertDialogBox'
 import DialogBoxComponent from '@/components/Common/DialogBoxComponent'
 import FilterHeader from '@/components/globals/FilterHeader'
@@ -65,7 +62,7 @@ const Icon = styled('i')({})
 
 const fuzzyFilter = (row, columnId, value, addMeta) => {
   // Rank the item
-  const itemRank = rankItem(row?.getValue(columnId), value)
+  const itemRank = rankItem(row.getValue(columnId), value)
 
   // Store the itemRank info
   addMeta({
@@ -73,7 +70,7 @@ const fuzzyFilter = (row, columnId, value, addMeta) => {
   })
 
   // Return if the item should be filtered in/out
-  return itemRank?.passed
+  return itemRank.passed
 }
 
 const DebouncedInput = ({ value: initialValue, onChange, debounce = 500, ...props }) => {
@@ -114,27 +111,47 @@ const userStatusObj = {
 // Column Definitions
 const columnHelper = createColumnHelper()
 
-const TestListTable = ({ tableData, addCategoryData, deleteUserData }) => {
+const TestListTable = ({
+  tableData,
+  addCategoryData,
+  deleteUserData,
+  trashCategoryData,
+  handleTrashClick,
+  trashView,
+  resetCategoryData
+}) => {
   // States
   const [addUserOpen, setAddUserOpen] = useState(false)
   const [categoriesParent, setCategoriesparent] = useState(false)
   const [selectedParentGuid, setSelectedParentGuid] = useState(null)
   const [editUserOpen, setEditUserOpen] = useState(false)
   const [rowSelection, setRowSelection] = useState({})
-  const [data, setData] = useState(...[tableData])
+  const [data, setData] = useState(tableData)
   const [editData, setEditData] = useState()
   const [filteredData, setFilteredData] = useState(data)
   const [globalFilter, setGlobalFilter] = useState('')
   const [type, setType] = useState('')
-
+  console.log(data, 'filterte')
   //Dialog states
   const [openStatusDialog, setOpenStatusDialog] = useState(false)
+  const [trashOpen, setTrashOpen] = useState(false)
   const statusOptions = ['Unpublished', 'Published']
   const [selectedStatus, setSelectedStatus] = useState('')
   const [open, setOpen] = useState(false)
+  const [trashid, setTrashId] = useState(null)
+  const [resetId, setResetId] = useState(null)
   const [expandedParents, setExpandedParents] = useState([])
   const initialColumns = ['select', 'title', 'created_by', 'test', 'action']
-
+  const router = useRouter()
+  // const router = useRouter()
+  // const selectCategoriesPage = () => {
+  //   console.log('Navigating to categories list with category:', 'check')
+  //   router.push({
+  //     pathname: '/categories/list',
+  //     query: { category: 'check' }
+  //   })
+  // }
+  // console.log(selectedCategory, 'ssss')
   const [visibleColumns, setVisibleColumns] = useState({
     select: true,
     title: true,
@@ -149,14 +166,16 @@ const TestListTable = ({ tableData, addCategoryData, deleteUserData }) => {
   })
 
   const { items: columnOrder, handleDragOver, handleDrop, handleDragStart } = useDraggableList(initialColumns)
-
+  console.log(data, 'datachecking')
   const handleCancelDelete = () => {
     setOpen(false)
   }
 
-  const handleConfirmDelete = () => {
-    setOpen(false)
-  }
+  // const handleConfirmDelete = () => {
+  //   setOpen(false)
+  //   trashCategoryData(deleteId) // Call the delete function with the stored ID
+  //   setDeleteId(null) // Reset th
+  // }
 
   const handleChangeStatus = event => setSelectedStatus(event.target.value)
 
@@ -175,109 +194,247 @@ const TestListTable = ({ tableData, addCategoryData, deleteUserData }) => {
     // Save status logic here
     handleCloseStatusDialog()
   }
-
   const categories = Object.values(tableData)
-
-  const transformPayloadToArray = payload => {
-    const resultArray = []
-
-    Object.keys(payload).forEach(key => {
-      const category = payload?.[key]
-
-      // Only add the parent category if its guid is defined
-      if (category?.guid !== undefined) {
-        resultArray?.push({
-          guid: category?.guid,
-          title: category?.title,
-          created_by: category?.created_by,
-          created_on: category?.created_on,
-          updated_by: category?.updated_by,
-          updated_on: category?.updated_on,
-          parent_guid: category?.parent_guid,
-          parent_title: category?.parent_title,
-          children: category?.children
-        })
+  console.log(categories, 'checkinggggggggggg')
+  const flattenData = categories => {
+    return categories.map(category => {
+      // Check if the category has children
+      if (category.children && category.children.length > 0) {
+        return {
+          ...category,
+          children: flattenData(category.children) // Recursively flatten children
+        }
       }
-
-      // If the category has children and their guid is defined, add them to the result array
-      if (category?.children && category?.children?.length > 0) {
-        category?.children?.forEach(child => {
-          if (child?.guid !== undefined) {
-            resultArray?.push({
-              guid: child?.guid,
-              title: child?.title,
-              created_by: child?.created_by,
-              created_on: child?.created_on,
-              updated_by: child?.updated_by,
-              updated_on: child?.updated_on,
-              parent_guid: child?.parent_guid,
-              parent_title: child?.parent_title
-            })
-          }
-        })
-      }
+      return category
     })
+  }
+  console.log(flattenData, 'flatten')
+  function formatCategoriesResponse(categories) {
+    // Helper function to build a nested structure
+    const buildHierarchy = (parentId = null) =>
+      categories
+        .filter(category => category.parent_id === parentId)
+        .map(category => ({
+          ...category,
+          children: buildHierarchy(category.id)
+        }))
 
-    return resultArray
+    // Build the hierarchical structure starting with top-level categories
+    const bata = buildHierarchy()
+
+    // Return the structured response object
+    return {
+      success: true,
+      message: 'RECORDS_FOUND',
+      payload: {
+        meta: {
+          first_page: 1,
+          last_page: 1,
+          current_page: 1,
+          num_results: categories.length,
+          total_results: categories.length
+        },
+        bata
+      }
+    }
+  }
+  console.log(formatCategoriesResponse, 'format')
+  // const transformPayloadToArray = data => {
+  //   const resultArray = []
+
+  //   // Recursive helper function to process a category and its children
+  //   const processCategory = (category, parentTitle = null, parentGuid = null) => {
+  //     // Add the current category to the result array
+  //     resultArray.push({
+  //       guid: category.guid,
+  //       title: category.title,
+  //       created_by: category.created_by,
+  //       created_on: category.created_at,
+  //       updated_by: category.updated_by,
+  //       updated_on: category.updated_at,
+  //       parent_guid: parentGuid,
+  //       parent_title: parentTitle,
+  //       id: category.id
+  //     })
+
+  //     // If there are children, recursively process each child
+  //     if (category.children && category.children.length > 0) {
+  //       category.children.forEach(child => {
+  //         processCategory(child, category.title, category.parent_id)
+  //       })
+  //     }
+  //   }
+
+  // Start processing each top-level category
+  //   data.forEach(category => {
+  //     if (category.parent_id === null) {
+  //       // This is a parent category
+  //       processCategory(category)
+  //     }
+  //   })
+
+  //   return resultArray
+  // }
+  const handlemultipletrashDelete = id => {
+    setOpen(false)
+    console.log(id, 'idsss')
+    trashCategoryData(trashid)
+  }
+  const handlemultipletrashRecover = id => {
+    setOpen(false)
+    console.log(id, 'idsss')
+    resetCategoryData(resetId)
+  }
+  // Usage:
+  // const transformedPayload = transformPayloadToArray(tableData)
+  // useEffect(() => {
+  //   setData(transformedPayload)
+  // }, [tableData])
+  console.log(data, 'checkingparent')
+  const trashData = id => {
+    setOpen(true)
+    setTrashId(id)
+    // trashCategoryData(id)
+
+    console.log(id, 'odsss')
+  }
+  const resetData = id => {
+    setOpen(true)
+    setResetId(id)
+  }
+  const renderCategories = categories => {
+    // Group categories by parent and child based on parent_id
+    console.log(categories, 'sssstest')
+    const parents = categories.filter(category => category.parent_id === null)
+    const children = categories.filter(category => category.parent_id !== null)
+
+    return parents.map(parent => ({
+      id: parent.id,
+      title: parent.title,
+      childs: children
+        .filter(child => child.parent_id === parent.id)
+        .map(child => ({
+          id: child.id,
+          title: child.title
+        }))
+    }))
+  }
+  console.log(renderCategories, 'sssssss')
+  const handleConfirmDelete = () => {
+    setOpen(false)
+    trashCategoryData(trashid) // Call the delete function with the stored ID
+    setTrashId(null) // Reset th
+  }
+  const handleConfirmRecover = () => {
+    setOpen(false)
+    resetCategoryData(resetId) // Call the delete function with the stored ID
+    setResetId(null) // Reset th
   }
 
-  // Apply the transformation
-  const transformedPayload = transformPayloadToArray(tableData)
-
+  // // Apply the transformation
+  // const transformedPayload = transformPayloadToArray(tableData)
   useEffect(() => {
-    setData(transformedPayload)
+    setData(tableData)
   }, [tableData])
 
   // Hooks
   const { lang: locale } = useParams()
 
+  console.log(categories, 'check')
+  // console.log(transformedPayload, 'check1')
   const handleClick = () => {
     setCategoriesparent(true)
   }
-
   // Filter the displayed categories
-  const handleParentClick = parentGuid => {
-    if (expandedParents?.includes(parentGuid)) {
-      // If already expanded, collapse it
-      setExpandedParents(expandedParents?.filter(guid => guid !== parentGuid))
-    } else {
-      // Otherwise, expand it
-      setExpandedParents([...expandedParents, parentGuid])
-    }
-  }
 
+  console.log(tableData, 'datachecking123')
+  console.log(expandedParents, 'expandedparentsss')
   // Adjust filteredCategories to include children of expanded parents
+  const selectedGuids = useMemo(() => {
+    return Object.keys(rowSelection)
+      .filter(key => rowSelection[key])
+      .map(key => data[key]?.guid)
+  }, [rowSelection, data, tableData])
+  console.info(selectedGuids, 'selectedGuids')
   const filteredCategories = useMemo(() => {
     const result = []
 
-    transformedPayload?.forEach(item => {
-      if (item?.parent_guid === null) {
-        // Add parent category
-        result.push(item)
+    // transformedPayload.forEach(item => {
+    //   if (item.parent_guid === null) {
+    //     // Add parent category
+    //     result.push(item)
 
-        // If the parent is expanded, add its children
-        if (expandedParents?.includes(item?.guid)) {
-          const children = transformedPayload?.filter(child => child?.parent_guid === item?.guid)
-
-          result?.push(...children)
-        }
-      }
-    })
-
+    //     // If the parent is expanded, add its children
+    //     if (expandedParents.includes(item.guid)) {
+    //       const children = transformedPayload.filter(child => child.parent_guid === item.guid)
+    //       result.push(...children)
+    //     }
+    //   }
+    // })
+    setFilteredData(result)
     return result
   }, [tableData, expandedParents])
-
   const hasChildren = guid => {
-    return transformedPayload?.some(category => category?.parent_guid === guid)
+    console.log(guid, 'guid')
+    return transformedPayload.some(category => category.id === guid)
+  }
+  console.log(expandedParents, 'kkkkkk')
+  //need to create a global component for this Date format function so that we can use in dfferent components
+  function formatDate(inputDate) {
+    const date = new Date(inputDate)
+    console.log(inputDate, 'sssss')
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+      console.error('Invalid date:', inputDate)
+      return '' // Return an empty string or handle the error as needed
+    }
+
+    // Options for formatting the date
+    const options = {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }
+
+    return new Intl.DateTimeFormat('en-GB', options).format(date).replace(',', ',') // Ensure the format is "DD Mon, YYYY HH:MM"
+  }
+  console.log('123456')
+  const handleExpandCollapse = parentId => {
+    setExpandedParents(
+      prevState =>
+        prevState.includes(parentId)
+          ? prevState.filter(id => id !== parentId) // Collapse if already expanded
+          : [...prevState, parentId] // Expand if not in the list
+    )
   }
 
+  // Flatten tree data for the table
+  const flattenTreeData = (data, expandedParents) => {
+    const flatten = (items, level = 0) => {
+      return items.flatMap(item => {
+        const isExpanded = expandedParents.includes(item.id)
+        return [
+          { ...item, level }, // Include the parent item
+          ...(isExpanded && item.children ? flatten(item.children, level + 1) : []) // Include children if expanded
+        ]
+      })
+    }
+    return flatten(data)
+  }
+
+  const tableDatas = useMemo(() => flattenTreeData(tableData, expandedParents), [tableData, expandedParents, data])
+  console.log(data, 'table123')
+  // console.log(hasChildCategories, 'cccccc')
   const columns = useMemo(
     () =>
       columnOrder
-        ?.map(columnId => {
+        .map(columnId => {
           switch (columnId) {
             case 'select':
-              return visibleColumns?.select
+              return visibleColumns.select
                 ? {
                     id: 'select',
                     header: ({ table }) => (
@@ -303,65 +460,68 @@ const TestListTable = ({ tableData, addCategoryData, deleteUserData }) => {
                   }
                 : null
             case 'title':
-              return visibleColumns?.title
+              return visibleColumns.title
                 ? columnHelper.accessor('title', {
                     header: 'Title',
                     cell: ({ row }) => {
                       const isParent = row.original.parent_guid === null
-                      const hasChildCategories = isParent && hasChildren(row.original.guid)
-                      const isExpanded = expandedParents.includes(row.original.guid)
-
-                      console.log(hasChildren, 'hassss')
-
+                      const hasChildCategories = isParent && hasChildren(row.original.parent_guid)
+                      // const isExpanded = expandedParents.includes(row.original.id)
+                      const hasChildren = row.original.children && row.original.children.length > 0
+                      const isExpanded = expandedParents.includes(row.original.id)
+                      console.log(row.original.title, 'cccc')
+                      // console.log(hasChildren(row.original.parent_guid), 'hassss')
                       return (
                         <div className='flex items-center gap-3'>
-                          <div className='flex flex-col'>
-                            {isParent ? (
-                              <Typography
-                                color='text.primary'
-                                className='font-medium cursor-pointer flex items-center'
-                                onClick={() => hasChildCategories && handleParentClick(row.original.guid)}
-                              >
-                                {row.original.title}
-                                {hasChildCategories &&
-                                  (isExpanded ? (
-                                    <i className='ri-arrow-down-s-line' />
-                                  ) : (
-                                    <i className='ri-arrow-right-s-line' />
-                                  ))}
-                              </Typography>
-                            ) : (
-                              <Typography
-                                color='text.primary '
-                                className='font-medium'
-                                sx={{
-                                  marginLeft: '25px'
-                                }}
-                              >
-                                {row.original.title}
-                              </Typography>
-                            )}
-                          </div>
+                          <Typography
+                            color='text.primary'
+                            className='font-medium'
+                            style={{
+                              marginLeft: `${row.original.level * 20}px`,
+                              cursor: hasChildren ? 'pointer' : 'default'
+                            }}
+                          >
+                            {row.original.title}
+                          </Typography>
+                          {hasChildren && (
+                            <button
+                              className='expand-collapse-button'
+                              style={{ background: 'none' }}
+                              onClick={e => {
+                                e.stopPropagation() // Prevent row click events
+                                handleExpandCollapse(row.original.id)
+                              }}
+                            >
+                              {isExpanded ? (
+                                <i className='ri-arrow-down-s-line' />
+                              ) : (
+                                <i className='ri-arrow-right-s-line' />
+                              )}
+                            </button>
+                          )}
                         </div>
                       )
                     }
                   })
                 : null
             case 'created_by':
-              return visibleColumns?.created_by
+              return visibleColumns.created_by
                 ? columnHelper.accessor('parent_guid', {
-                    header: 'Parent Category',
+                    header: 'Creation Date',
                     cell: ({ row }) => {
-                      const parentCategory = data?.find(item => item?.guid === row.original.parent_guid)
-
-                      return <Typography>{parentCategory ? parentCategory?.title : 'Main Category'}</Typography>
+                      const parentCategory = data.find(item => item.guid === row.original.parent_guid)
+                      {
+                        console.log(row?.original, 'wos')
+                      }
+                      const formattedDate = formatDate(row?.original?.created_at)
+                      return <Typography>{formattedDate}</Typography>
                     }
                   })
                 : null
             case 'test':
-              return visibleColumns?.test
+              return visibleColumns.test
                 ? columnHelper.accessor('test', {
-                    header: 'Question',
+                    header: ' number of Questions',
                     cell: ({ row }) => (
                       <Typography>
                         <a href='#' style={{ textDecoration: 'underline', color: '#5C61E6', cursor: 'pointer' }}>
@@ -377,20 +537,47 @@ const TestListTable = ({ tableData, addCategoryData, deleteUserData }) => {
                 header: 'Action',
                 cell: ({ row }) => (
                   <div className='flex items-center gap-0.5'>
-                    <IconButton
-                      size='small'
-                      onClick={() => {
-                        deleteUserData(row?.original?.guid)
-                      }}
-                    >
-                      <i className='ri-delete-bin-7-line text-textSecondary' />
-                    </IconButton>
+                    {!trashView ? (
+                      <>
+                        <IconButton
+                          size='small'
+                          onClick={() => {
+                            // deleteUserData(row?.original?.guid)
+                            trashData(row?.original?.guid)
+                          }}
+                        >
+                          <i className='ri-delete-bin-7-line text-textSecondary' />
+                        </IconButton>
 
-                    <IconButton size='small'>
-                      <Link href={`/categories/edit?guid=${row?.original?.guid}`} className='flex'>
-                        <i className='ri-edit-box-line text-textSecondary' />
-                      </Link>
-                    </IconButton>
+                        <IconButton size='small'>
+                          <Link href={`/categories/edit?guid=${row?.original?.guid}`} className='flex'>
+                            <i className='ri-edit-box-line text-textSecondary' />
+                          </Link>
+                        </IconButton>
+                      </>
+                    ) : (
+                      <>
+                        <IconButton
+                          size='small'
+                          onClick={() => {
+                            // deleteUserData(row?.original?.guid)
+                            // trashData(row?.original?.guid)
+                            resetData(row?.original?.guid)
+                          }}
+                        >
+                          <i className='ri-reset-left-line' />
+                        </IconButton>
+                        <IconButton
+                          size='small'
+                          onClick={() => {
+                            // deleteUserData(row?.original?.guid)
+                            trashData(row?.original?.guid)
+                          }}
+                        >
+                          <i className='ri-delete-bin-7-line text-textSecondary' />
+                        </IconButton>
+                      </>
+                    )}
                   </div>
                 ),
                 enableSorting: false
@@ -400,11 +587,11 @@ const TestListTable = ({ tableData, addCategoryData, deleteUserData }) => {
           }
         })
         .filter(Boolean),
-    [columnOrder, visibleColumns, data, expandedParents]
+    [columnOrder, visibleColumns, expandedParents, tableDatas, data]
   )
 
   const table = useReactTable({
-    data: filteredCategories,
+    data: tableDatas,
     columns,
     filterFns: {
       fuzzy: fuzzyFilter
@@ -432,6 +619,9 @@ const TestListTable = ({ tableData, addCategoryData, deleteUserData }) => {
     getFacetedMinMaxValues: getFacetedMinMaxValues()
   })
 
+  console.info(rowSelection, 'row')
+  const [addData, setAddData] = useState(tableData)
+  console.log(addData, 'ssssscheck')
   return (
     <>
       <FilterHeader title='All Category' subtitle='Orders placed across your store' link='/test/list'>
@@ -476,39 +666,100 @@ const TestListTable = ({ tableData, addCategoryData, deleteUserData }) => {
             />
           </Grid>
         </Grid>
-        <Grid container item xs={12} pl={5}>
-          <Grid item xs={0.9}>
+        <Grid container item xs={12} pl={5} alignItems='center' justifyContent='space-between'>
+          <Grid item>
             <Box display='flex' justifyContent='space-between' alignItems='center'>
-              <IconButton
-                disableRipple
-                disabled={!Object.keys(rowSelection)?.length}
-                sx={{
-                  border: `1px solid ${Object.keys(rowSelection)?.length ? '#808080' : '#E7E7E7'}`,
-                  borderRadius: 0
-                }}
-                onClick={() => setOpen(true)}
-              >
-                {/* <CustomTooltip title='Add' arrow> */}
-                <i
-                  class='ri-delete-bin-6-fill'
-                  color={Object.keys(rowSelection)?.length ? '#B5B8FA' : '#808080'}
-                  style={{
-                    width: 20,
-                    height: 20,
-                    ...(Object.keys(rowSelection)?.length
-                      ? {
-                          color: '#B5B8FA'
-                        }
-                      : { color: '#808080' })
+              {!trashView ? (
+                <IconButton
+                  disableRipple
+                  disabled={!Object.keys(rowSelection)?.length}
+                  sx={{
+                    border: `1px solid ${Object.keys(rowSelection)?.length ? '#808080' : '#E7E7E7'}`,
+                    borderRadius: 0
                   }}
-                ></i>
-                {/* </CustomTooltip> */}
-              </IconButton>
+                  onClick={() => trashData(selectedGuids)}
+                >
+                  {/* <CustomTooltip title='Add' arrow> */}
+                  <i
+                    class='ri-delete-bin-6-fill'
+                    color={Object.keys(rowSelection)?.length ? '#B5B8FA' : '#808080'}
+                    style={{
+                      width: 20,
+                      height: 20,
+                      ...(Object.keys(rowSelection)?.length
+                        ? {
+                            color: '#B5B8FA'
+                          }
+                        : { color: '#808080' })
+                    }}
+                  ></i>
+                  {/* </CustomTooltip> */}
+                </IconButton>
+              ) : (
+                <>
+                  <IconButton
+                    disableRipple
+                    disabled={!Object.keys(rowSelection)?.length}
+                    sx={{
+                      border: `1px solid ${Object.keys(rowSelection)?.length ? '#808080' : '#E7E7E7'}`,
+                      borderRadius: 0
+                    }}
+                    onClick={() => resetData(selectedGuids)}
+                  >
+                    {/* <CustomTooltip title='Add' arrow> */}
+                    <i
+                      class='ri-reset-left-line'
+                      color={Object.keys(rowSelection)?.length ? '#B5B8FA' : '#808080'}
+                      style={{
+                        width: 20,
+                        height: 20,
+                        ...(Object.keys(rowSelection)?.length
+                          ? {
+                              color: '#B5B8FA'
+                            }
+                          : { color: '#808080' })
+                      }}
+                    ></i>
+                    {/* </CustomTooltip> */}
+                  </IconButton>
+                  <IconButton
+                    disableRipple
+                    disabled={!Object.keys(rowSelection)?.length}
+                    sx={{
+                      border: `1px solid ${Object.keys(rowSelection)?.length ? '#808080' : '#E7E7E7'}`,
+                      borderRadius: 0
+                    }}
+                    onClick={() => setOpen(true)}
+                  >
+                    {/* <CustomTooltip title='Add' arrow> */}
+                    <i
+                      class='ri-delete-bin-6-fill'
+                      color={Object.keys(rowSelection)?.length ? '#B5B8FA' : '#808080'}
+                      style={{
+                        width: 20,
+                        height: 20,
+                        ...(Object.keys(rowSelection)?.length
+                          ? {
+                              color: '#B5B8FA'
+                            }
+                          : { color: '#808080' })
+                      }}
+                    ></i>
+                    {/* </CustomTooltip> */}
+                  </IconButton>
+                </>
+              )}
             </Box>
           </Grid>
-          <Grid container pr={8} item xs={11} spacing={3} display='flex' alignItems='center' justifyContent='flex-end'>
-            <Grid item xs={3.5}></Grid>
+          {/* <Grid container item xs={6} spacing={3} display='flex' alignItems='center' justifyContent='flex-end'> */}
+          <Grid item pr={8}>
+            <Box display='flex' alignItems='center' justifyContent='flex-end'>
+              <Typography style={{ textDecoration: 'underline', cursor: 'pointer' }} onClick={handleTrashClick}>
+                Trash
+              </Typography>
+            </Box>
           </Grid>
+          {/* </Grid> */}
         </Grid>
 
         <div className='overflow-x-auto pt-5'>
@@ -589,14 +840,16 @@ const TestListTable = ({ tableData, addCategoryData, deleteUserData }) => {
           onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
         />
       </Card>
-      <AddTestDrawer
-        open={addUserOpen}
-        handleClose={() => setAddUserOpen(!addUserOpen)}
-        userData={data}
-        setData={setData}
-        addUserData={addCategoryData}
-      />
-      {open && (
+      {data.length > 0 && (
+        <AddTestDrawer
+          open={addUserOpen}
+          handleClose={() => setAddUserOpen(!addUserOpen)}
+          userData={data}
+          setData={setData}
+          addUserData={addCategoryData}
+        />
+      )}
+      {/* {open && (
         <AlertDialogBox
           open={open}
           handleCancel={handleCancelDelete}
@@ -606,7 +859,7 @@ const TestListTable = ({ tableData, addCategoryData, deleteUserData }) => {
           acceptedButton='Delete'
           rejectedButton='Cancel'
         />
-      )}
+      )} */}
       {/* status Dialog */}
       <DialogBoxComponent
         open={openStatusDialog}
@@ -620,6 +873,36 @@ const TestListTable = ({ tableData, addCategoryData, deleteUserData }) => {
         onChangeStatus={handleChangeStatus}
         isStatusDialog={true}
       />
+      {open && (
+        <AlertDialogBox
+          open={open}
+          handleCancel={handleCancelDelete}
+          handleConfirm={!trashView ? handleConfirmDelete : handleConfirmRecover}
+          title='Delete Category'
+          textContent={
+            !trashView
+              ? 'Are you sure you want to move this category to the trash?'
+              : 'Are you sure you want to restore this category !'
+          }
+          acceptedButton={!trashView ? 'Delete' : 'Restore'}
+          rejectedButton='Cancel'
+        />
+      )}
+      {open && selectedGuids.length > 1 && (
+        <AlertDialogBox
+          open={open}
+          handleCancel={handleCancelDelete}
+          handleConfirm={!trashView ? handlemultipletrashDelete : handlemultipletrashRecover}
+          title='Delete Category'
+          textContent={
+            !trashView
+              ? 'Are you sure you want to move this category to the trash?'
+              : 'Are you sure you want to restore this category !'
+          }
+          acceptedButton={!trashView ? 'Delete' : 'Restore'}
+          rejectedButton='Cancel'
+        />
+      )}
     </>
   )
 }

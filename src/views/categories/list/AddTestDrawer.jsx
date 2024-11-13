@@ -1,6 +1,5 @@
 // React Imports
 import { useState } from 'react'
-
 // MUI Imports
 import Button from '@mui/material/Button'
 import Drawer from '@mui/material/Drawer'
@@ -10,40 +9,64 @@ import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
 import TextField from '@mui/material/TextField'
-import FormHelperText from '@mui/material/FormHelperText'
+
 import Typography from '@mui/material/Typography'
 import Divider from '@mui/material/Divider'
 
-// Third-party Imports
 import { useForm, Controller } from 'react-hook-form'
 import { Box } from '@mui/material'
 import { styled } from '@mui/material/styles'
 import moment from 'moment/moment'
 import ReactQuill from 'react-quill'
-
 import 'react-quill/dist/quill.snow.css'
-
-import { data } from 'autoprefixer'
-
-import TextEditor from '@/components/Common/TextEditor'
 import ReactQuillLimited from './ReactQuillLimited'
-
 // Vars
 const initialData = {
   company: '',
   country: '',
   contact: ''
 }
-
 const AddTestDrawer = props => {
   // Props
   const { open, handleClose, userData, addUserData } = props
-
+  const [categories, setCategories] = useState([{ parent: null, children: userData }])
   // States
   const [formData, setFormData] = useState(initialData)
   const [description, setDescription] = useState('')
   const [value, setValue] = useState('')
+  const [selectedCategories, setSelectedCategories] = useState([])
+  const findCategoryByGuid = (guid, data) => {
+    for (const category of data) {
+      if (category.guid === guid) return category
+      if (category.children?.length) {
+        const found = findCategoryByGuid(guid, category.children)
+        if (found) return found
+      }
+    }
+    return null
+  }
 
+  const handleCategoryChange = (level, selectedGuid) => {
+    const updatedSelectedCategories = [...selectedCategories]
+    updatedSelectedCategories[level] = selectedGuid
+    updatedSelectedCategories.splice(level + 1) // Remove selections for deeper levels
+    setSelectedCategories(updatedSelectedCategories)
+
+    const selectedCategory = findCategoryByGuid(selectedGuid, userData)
+
+    if (selectedCategory?.children?.length) {
+      setCategories(prev =>
+        prev.slice(0, level + 1).concat({
+          parent: selectedGuid,
+          children: selectedCategory.children
+        })
+      )
+    } else {
+      // Remove deeper levels if no children exist
+      setCategories(prev => prev.slice(0, level + 1))
+    }
+  }
+  console.log(selectedCategories[selectedCategories.length - 1], 'selectedcategories')
   // Hooks
   const {
     control,
@@ -54,9 +77,8 @@ const AddTestDrawer = props => {
     defaultValues: {
       title: '',
       description: '',
-
       // type: '',
-      category: ''
+      parent: ''
     }
   })
 
@@ -71,16 +93,15 @@ const AddTestDrawer = props => {
       border-top-right-radius: 12px !important;
     }
   `
-
   const onSubmit = data => {
     const newUser = {
       id: (userData?.length && userData?.length + 1) || 1,
 
       // avatar: `/images/avatars/${Math.floor(Math.random() * 8) + 1}.png`,
-      title: data?.title,
+      title: data.title,
       description: description,
-      type: data?.type,
-      category: data?.category,
+      type: data.type,
+      parent: selectedCategories[selectedCategories.length - 1],
       created_on: moment().format('YYYY-MM-DD HH:mm:ss'),
 
       // optional parameters
@@ -89,20 +110,16 @@ const AddTestDrawer = props => {
     }
 
     addUserData(newUser)
-
-    // return getNewUserData()
-
-    // return res.json()
-
-    // setData([...(userData ?? []), newUser])
     handleClose()
+    setDescription(null)
     setFormData(initialData)
-    resetForm({ title: '', description: '', type: '', category: '' })
+    resetForm({ title: '', description: '', type: '', parent: '' })
   }
 
   const handleReset = () => {
     handleClose()
     setFormData(initialData)
+    setDescription('')
   }
 
   return (
@@ -147,53 +164,29 @@ const AddTestDrawer = props => {
                 )}
               />
               <Box pt={9} pb={7}>
-                <ReactQuillLimited setTextValue={setDescription} />
+                <ReactQuillLimited
+                  value={description} // Pass description as value
+                  onChange={setDescription} // Pass setDescription as onChange />
+                />
               </Box>
-              {/* <FormControl
-                fullWidth
-                sx={{
-                  paddingBottom: 5
-                }}
-              >
-                <InputLabel id='country' error={Boolean(errors.type)}>
-                  Select Type *
-                </InputLabel>
-                <Controller
-                  name='type'
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <Select label='Select Type' {...field} error={Boolean(errors.type)}>
-                      <MenuItem value='evaluated'>Evaluated</MenuItem>
-                      <MenuItem value='practice'>Practice</MenuItem>
-                      <MenuItem value='quiz'>Quiz</MenuItem>
-                    </Select>
-                  )}
-                />
-                {errors.type && <FormHelperText error>This field is required.</FormHelperText>}
-              </FormControl> */}
-              <FormControl fullWidth>
-                <InputLabel id='category' error={Boolean(errors.category)}>
-                  Parent Category
-                </InputLabel>
-                <Controller
-                  name='category'
-                  control={control}
-                  // rules={{ required: true }}
-                  render={({ field }) => (
-                    <Select label='Parent Category' {...field} error={Boolean(errors.category)}>
-                      {userData
-                        ?.filter(item => !item?.parent_guid) // Filter out only the parent categories
-                        ?.map(parentCategory => (
-                          <MenuItem key={parentCategory?.guid} value={parentCategory?.guid}>
-                            {parentCategory?.title}
-                          </MenuItem>
-                        ))}
-                    </Select>
-                  )}
-                />
-                {errors.category && <FormHelperText error>This field is required.</FormHelperText>}
-              </FormControl>
+              {categories.map((category, index) => (
+                <FormControl key={index} fullWidth sx={{ marginBottom: 2 }}>
+                  <InputLabel id={`category-${index}`} error={!selectedCategories[index]} style={{ color: 'silver' }}>
+                    {index === 0 ? 'Parent Category' : `Subcategory Level ${index}`}
+                  </InputLabel>
+                  <Select
+                    labelId={`category-${index}`}
+                    value={selectedCategories[index] || ''}
+                    onChange={e => handleCategoryChange(index, e.target.value)}
+                  >
+                    {category.children.map(child => (
+                      <MenuItem key={child.guid} value={child.guid}>
+                        {child.title}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              ))}
             </Box>
             <Box>
               <div className='flex items-center gap-4'>

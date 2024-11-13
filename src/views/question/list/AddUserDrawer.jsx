@@ -1,8 +1,6 @@
 // React Imports
 import { useState } from 'react'
-
 import { Box } from '@mui/material'
-
 // MUI Imports
 import Button from '@mui/material/Button'
 import Drawer from '@mui/material/Drawer'
@@ -14,10 +12,9 @@ import TextField from '@mui/material/TextField'
 import FormHelperText from '@mui/material/FormHelperText'
 import Typography from '@mui/material/Typography'
 import Divider from '@mui/material/Divider'
-
+import { IconButton } from '@mui/material'
 // Third-party Imports
 import { useForm, Controller } from 'react-hook-form'
-
 import Reactquill from './Reactquill'
 
 // Vars
@@ -28,10 +25,23 @@ const initialData = {
 }
 
 const AddUserDrawer = props => {
-  const { open, handleClose, userData, setData, edit, updateUserData, addUserData } = props
-
+  const { open, handleClose, userData, setData, edit, updateUserData, addUserData, settings, onSaveSettings } = props
+  const [localSettings, setLocalSettings] = useState(settings)
   const [formData, setFormData] = useState(initialData)
 
+  // Handle input change
+  const handleChange = event => {
+    const { name, value } = event.target
+    setLocalSettings(prevSettings => ({
+      ...prevSettings,
+      [name]: value
+    }))
+  }
+
+  const handleSave = () => {
+    onSaveSettings(localSettings) // Call the function to update parent state
+    handleClose()
+  }
   const {
     control,
     reset: resetForm,
@@ -52,15 +62,15 @@ const AddUserDrawer = props => {
     const newUser = {
       id: (userData?.length && userData?.length + 1) || 1,
       avatar: `/images/avatars/${Math.floor(Math.random() * 8) + 1}.png`,
-      fullName: data?.fullName,
-      username: data?.username,
-      email: data?.email,
-      role: data?.role,
-      currentPlan: data?.plan,
-      status: data?.status,
-      company: formData?.company,
-      country: formData?.country,
-      contact: formData?.contact
+      fullName: data.fullName,
+      username: data.username,
+      email: data.email,
+      role: data.role,
+      currentPlan: data.plan,
+      status: data.status,
+      company: formData.company,
+      country: formData.country,
+      contact: formData.contact
     }
 
     if (edit) {
@@ -89,194 +99,88 @@ const AddUserDrawer = props => {
       sx={{ '& .MuiDrawer-paper': { width: { xs: 300, sm: 400 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>{edit ? 'Edit Section' : 'Add New Section'}</Typography>
-        {/* <IconButton size='small' onClick={handleReset}> */}
-        <i className='ri-close-line text-2xl' />
-        {/* </IconButton> */}
+        <Typography variant='h5'>{edit ? 'Edit Section' : 'Question Setting'}</Typography>
+        <IconButton size='small' onClick={handleClose}>
+          <i className='ri-close-line text-2xl' />
+        </IconButton>
       </div>
       <Divider />
       <div className='p-5'>
-        <form onSubmit={handleSubmit(data => onSubmit(data))} className='flex flex-col gap-5'>
-          <Controller
-            name='Title *'
-            control={control}
-            rules={{ required: 'The first name is invalid' }}
-            render={({ field }) => (
-              <FormControl fullWidth>
-                <InputLabel shrink error={Boolean(errors.firstname)} style={{ color: 'black' }}>
-                  {/* First Name */}
-                </InputLabel>
-                <TextField
-                  {...field}
-                  fullWidth
-                  placeholder='Title *'
-                  error={Boolean(errors.firstname)}
-
-                  //  sx={{ mt: 5 }}
-                />
-                {errors.firstname && <FormHelperText error>{errors.firstname.message}</FormHelperText>}
-              </FormControl>
-            )}
-          />
-
-          {/* <Controller
-            name='lastname'
-            control={control}
-            rules={{ required: 'The last name is invalid' }}
-            render={({ field }) => (
-              <FormControl fullWidth>
-                <InputLabel shrink error={Boolean(errors.lastname)} style={{ color: 'black' }}>
-             
-                </InputLabel>
-                <TextField
-                  {...field}
-                  fullWidth
-                  placeholder='Last Name'
-                  error={Boolean(errors.lastname)}
-        
-                />
-                {errors.lastname && <FormHelperText error>{errors.lastname.message}</FormHelperText>}
-              </FormControl>
-            )}
-          /> */}
-
-          {/* <Controller
-            name='email'
-            control={control}
-            rules={{ required: 'The email address is invalid' }}
-            render={({ field }) => (
-              <FormControl fullWidth>
-                <InputLabel shrink error={Boolean(errors.email)} style={{ color: 'black' }}>
-            
-                </InputLabel>
-                <TextField
-                  {...field}
-                  fullWidth
-                  type='email'
-                  placeholder='johndoe@gmail.com'
-                  error={Boolean(errors.email)}
-                  // sx={{ mt: 5 }}
-                />
-                {errors.email && <FormHelperText error>{errors.email.message}</FormHelperText>}
-              </FormControl>
-            )}
-          /> */}
-
-          {/* <Box sx={{ display: 'flex', gap: 2 }}>
-            <FormControl sx={{ flex: '0 0 30%' }}>
-              <InputLabel shrink error={Boolean(errors.countryCode)} style={{ color: 'black' }}>
-                Phone Number
-              </InputLabel>
-              <Controller
-                name='countryCode'
-                control={control}
-                rules={{ required: 'The phone number is invalid' }}
-                render={({ field: { value, onChange } }) => (
-                  <TextField
-                    type='text'
-                    value={value}
-                    placeholder='+91'
-                    onChange={onChange}
-                    error={Boolean(errors.countryCode)}
-                    // sx={{ mt: 5 }}
-                  />
-                )}
-              />
-              {errors.countryCode && <FormHelperText error>{errors.countryCode.message}</FormHelperText>}
-            </FormControl>
-
-            <FormControl sx={{ flex: '1 1 70%' }}>
-              {/* <InputLabel shrink error={Boolean(errors.phoneNumber)} style={{ color: 'black' }}>
-                Phone Number
-              </InputLabel> */}
-          {/* <Controller
-                name='phoneNumber'
-                control={control}
-                rules={{ required: 'The phone number is invalid' }}
-                render={({ field: { value, onChange } }) => (
-                  <TextField
-                    type='text'
-                    value={value}
-                    placeholder='1234567890'
-                    onChange={onChange}
-                    error={Boolean(errors.phoneNumber)}
-                    sx={{ mt: 5 }}
-                  />
-                )}
-              />
-              {errors.phoneNumber && <FormHelperText error>{errors.phoneNumber.message}</FormHelperText>}
-            </FormControl>
-          </Box> */}
-
-          {/* <FormControl fullWidth>
-            <InputLabel shrink error={Boolean(errors.country)} style={{ color: 'black' }}>
-              Country
-            </InputLabel>
+        {' '}
+        <FormControl fullWidth margin='dense' size='small'>
+          <InputLabel>Question Type</InputLabel>
+          <Select name='questionType' value={localSettings.questionType} onChange={handleChange}>
+            <MenuItem value='MCQ'>MCQ</MenuItem>
+            <MenuItem value='True/False'>True/False</MenuItem>
+            <MenuItem value='Short Answer'>Short Answer</MenuItem>
+          </Select>
+        </FormControl>
+        <TextField
+          label='Marks Per Question'
+          name='marksPerQuestion'
+          type='number'
+          value={localSettings.marksPerQuestion}
+          onChange={handleChange}
+          fullWidth
+          margin='dense'
+          size='small'
+          sx={{ mt: 4 }}
+        />
+        <TextField
+          sx={{ mt: 4 }}
+          label='Negative Marks Per Question'
+          name='negativeMarks'
+          type='number'
+          value={localSettings.negativeMarks}
+          onChange={handleChange}
+          fullWidth
+          margin='dense'
+          size='small'
+        />
+        <FormControl fullWidth margin='dense' size='small' sx={{ mt: 4 }}>
+          <Box display='flex' alignItems='center'>
+            <TextField
+              label='Time Allowed Per Question'
+              name='timeAllowed'
+              type='number'
+              value={localSettings.timeAllowed}
+              onChange={handleChange}
+              style={{ flex: 2, marginRight: '10px' }} // Adjusts input width
+              size='small'
+            />
             <Select
-              fullWidth
-              id='country'
-              value={formData.country}
-              placeholder='ROle'
-              onChange={e => setFormData({ ...formData, country: e.target.value })}
-              error={Boolean(errors.country)}
-              // sx={{ mt: 5 }}
+              name='timeUnit'
+              value={localSettings.timeUnit}
+              onChange={handleChange}
+              style={{ flex: 1 }} // Dropdown size
             >
-              <MenuItem disabled value=''>
-                <em>Select Country</em>
-              </MenuItem>
-              <MenuItem value='India'>India</MenuItem>
-              <MenuItem value='USA'>USA</MenuItem>
-              <MenuItem value='Australia'>Australia</MenuItem>
-              <MenuItem value='Germany'>Germany</MenuItem>
+              <MenuItem value='Second'>Second</MenuItem>
+              <MenuItem value='Minute'>Minute</MenuItem>
             </Select>
-            {errors.country && <FormHelperText error>{errors.country.message}</FormHelperText>}
-          </FormControl> */}
-
-          {/* <FormControl fullWidth>
-            <InputLabel shrink error={Boolean(errors.role)} style={{ color: 'black' }}>
-              Role
-            </InputLabel>
-            <Controller
-              name='role'
-              control={control}
-              rules={{ required: 'Please select role' }}
-              render={({ field }) => (
-                <Select fullWidth {...field} error={Boolean(errors.role)} sx={{}}>
-                  <MenuItem disabled value=''>
-                    <em>Select Role</em> 
-   
-                  </MenuItem>
-                  <MenuItem value='admin'>Admin</MenuItem>
-                  <MenuItem value='student'>Student</MenuItem>
-                  <MenuItem value='teacher'>Teacher</MenuItem>
-                </Select>
-              )}
-            />
-            {errors.role && <FormHelperText error>{errors.role.message}</FormHelperText>}
-          </FormControl> */}
-          <FormControl fullWidth style={{ overflow: 'auto' }}>
-            <Reactquill
-              // value={editedText}
-              // onChange={setEditedText}
-              style={{ backgroundColor: 'white' }}
-              onBlur={() => handleEditSave(question.id)} // Save on blur (when user clicks away)
-              // onKeyPress={e => {
-              //   if (e.key === 'Enter') handleEditSave(question.id) // Save on pressing Enter
-              // }}
-              autoFocus
-              placeholder='Details'
-              fullWidth
-            />
-          </FormControl>
-          <div className='flex items-center gap-4'>
-            <Button variant='contained' type='submit'>
-              Create
-            </Button>
-            <Button variant='outlined' color='error' type='reset' onClick={() => handleReset()}>
-              Cancel
-            </Button>
-          </div>
-        </form>
+          </Box>
+        </FormControl>
+        <FormControl fullWidth margin='dense' size='small' sx={{ mt: 4 }}>
+          <InputLabel>Select Difficulty Level</InputLabel>
+          <Select name='difficultyLevel' value={localSettings.difficultyLevel} onChange={handleChange}>
+            <MenuItem value='Low'>Low</MenuItem>
+            <MenuItem value='Medium'>Medium</MenuItem>
+            <MenuItem value='High'>High</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl fullWidth margin='dense' size='small' sx={{ mt: 4 }}>
+          <InputLabel>Select Importance</InputLabel>
+          <Select name='importance' value={localSettings.importance} onChange={handleChange}>
+            <MenuItem value='Low'>Low</MenuItem>
+            <MenuItem value='Medium'>Medium</MenuItem>
+            <MenuItem value='High'>High</MenuItem>
+          </Select>
+        </FormControl>
+        <Button onClick={handleSave} variant='contained' color='primary' sx={{ mt: 8 }}>
+          Save
+        </Button>
+        <Button onClick={handleClose} color='secondary' sx={{ mt: 8 }}>
+          Cancel
+        </Button>
       </div>
     </Drawer>
   )

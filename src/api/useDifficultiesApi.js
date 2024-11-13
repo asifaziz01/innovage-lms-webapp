@@ -32,7 +32,7 @@ export default function useDifficultiesApi() {
         )
         ?.then(res => {
           //   setData(res?.payload?.data)
-          setData(res?.data?.payload)
+          setData(res?.data?.payload?.data)
         })
     } catch (error) {
       console.error('Error fetching data:', error)
@@ -247,7 +247,7 @@ export default function useDifficultiesApi() {
           accept: 'application/json'
         })
         .then(res => {
-          setTrashedData(res?.data?.payload)
+          setTrashedData(res?.data?.payload?.data)
         })
 
       //   return response.data

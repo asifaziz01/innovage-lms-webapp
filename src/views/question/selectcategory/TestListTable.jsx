@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo } from 'react'
 
 // Next Imports
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -19,7 +19,7 @@ import Checkbox from '@mui/material/Checkbox'
 import IconButton from '@mui/material/IconButton'
 import { styled } from '@mui/material/styles'
 import TablePagination from '@mui/material/TablePagination'
-
+// import { useRouter } from 'next/router'
 // Third-party Imports
 import classnames from 'classnames'
 import { rankItem } from '@tanstack/match-sorter-utils'
@@ -37,28 +37,22 @@ import {
 } from '@tanstack/react-table'
 
 // Component Imports
-import { Box, Tooltip } from '@mui/material'
+import { Box, Radio, Tooltip } from '@mui/material'
 
+import TableFilters from './TableFilters'
 import CustomAvatar from '@core/components/mui/Avatar'
-
-import tableStyles from '@core/styles/table.module.css'
 
 // Util Imports
 // import { getInitials } from '../../../../../../Utils/getInitials'
 // import { getLocalizedUrl } from '../../../../../../Utils/i18n'
 
 // Style Imports
-
-import moment from 'moment'
-
+import tableStyles from '@core/styles/table.module.css'
 import AlertDialogBox from '@/components/Common/AlertDialogBox'
 import DialogBoxComponent from '@/components/Common/DialogBoxComponent'
 import FilterHeader from '@/components/globals/FilterHeader'
 import { getInitials } from '@/utils/getInitials'
 import useDraggableList from '@/components/globals/useDraggableList'
-import TableFilters from '../../list/TableFilters'
-import AddDifficultiesDrawer from './AddDifficultiesDrawer'
-import DifficultiesListFilter from './DifficultiesListFilter'
 
 // import DialogBoxComponent from '@/Components/Common/DialogBoxComponent'
 
@@ -67,7 +61,7 @@ const Icon = styled('i')({})
 
 const fuzzyFilter = (row, columnId, value, addMeta) => {
   // Rank the item
-  const itemRank = rankItem(row?.getValue(columnId), value)
+  const itemRank = rankItem(row.getValue(columnId), value)
 
   // Store the itemRank info
   addMeta({
@@ -75,7 +69,7 @@ const fuzzyFilter = (row, columnId, value, addMeta) => {
   })
 
   // Return if the item should be filtered in/out
-  return itemRank?.passed
+  return itemRank.passed
 }
 
 const DebouncedInput = ({ value: initialValue, onChange, debounce = 500, ...props }) => {
@@ -116,66 +110,39 @@ const userStatusObj = {
 // Column Definitions
 const columnHelper = createColumnHelper()
 
-const DifficultiesListTable = ({
-  tableData,
-  trashedData,
-  addDifficultyData,
-  deleteUserData,
-  trashDifficulties,
-  deleteDifficulties,
-  restoreTrashDifficulties,
-  getTrashedDifficultiesLevel
-}) => {
+const TestListTable = ({ tableData, addCategoryData, deleteUserData }) => {
   // States
   const [addUserOpen, setAddUserOpen] = useState(false)
   const [categoriesParent, setCategoriesparent] = useState(false)
   const [selectedParentGuid, setSelectedParentGuid] = useState(null)
   const [editUserOpen, setEditUserOpen] = useState(false)
   const [rowSelection, setRowSelection] = useState({})
-  const [selectedRows, setSelectedRows] = useState([])
-
-  const [singleId, setSingleId] = useState(null)
-
-  console.info(singleId)
-  console.log(selectedRows)
-
-  useEffect(() => {
-    const getSelectedRowIds = (rowSelection, tableData) => {
-      return Object.keys(rowSelection)
-        .filter(key => rowSelection[key]) // Filter out only selected rows
-        .map(key => tableData[key]?.guid) // Map to the row IDs or objects
-    }
-
-    // Example usage:
-    const selectedRowIds = getSelectedRowIds(rowSelection, mode === 'all' ? tableData : trashData)
-
-    setSelectedRows(selectedRowIds) // [id1, id2, id3]
-  }, [rowSelection])
-
   const [data, setData] = useState(...[tableData])
-  const [trashData, setTrashData] = useState(...[trashedData])
-  const [mode, setMode] = useState('all')
-
   const [editData, setEditData] = useState()
   const [filteredData, setFilteredData] = useState(data)
   const [globalFilter, setGlobalFilter] = useState('')
   const [type, setType] = useState('')
-
-  //Dialog states
   const [openStatusDialog, setOpenStatusDialog] = useState(false)
   const statusOptions = ['Unpublished', 'Published']
   const [selectedStatus, setSelectedStatus] = useState('')
   const [open, setOpen] = useState(false)
   const [expandedParents, setExpandedParents] = useState([])
-  const initialColumns = ['select', 'title', 'created_by', 'description', 'created_at', 'test', 'action']
-
+  const initialColumns = ['select', 'title', 'created_by', 'test', 'action']
+  const router = useRouter()
+  // const router = useRouter()
+  // const selectCategoriesPage = () => {
+  //   console.log('Navigating to categories list with category:', 'check')
+  //   router.push({
+  //     pathname: '/categories/list',
+  //     query: { category: 'check' }
+  //   })
+  // }
+  // console.log(selectedCategory, 'ssss')
   const [visibleColumns, setVisibleColumns] = useState({
     select: true,
     title: true,
     test: true,
     created_by: true,
-    description: true,
-    created_at: true,
     questions: true,
     enrolment: true,
     submission: true,
@@ -187,20 +154,11 @@ const DifficultiesListTable = ({
   const { items: columnOrder, handleDragOver, handleDrop, handleDragStart } = useDraggableList(initialColumns)
 
   const handleCancelDelete = () => {
-    setSingleId(null)
     setOpen(false)
   }
 
   const handleConfirmDelete = () => {
-    mode === 'all'
-      ? singleId
-        ? trashDifficulties(singleId)
-        : trashDifficulties(selectedRows)
-      : singleId
-        ? deleteDifficulties(singleId)
-        : deleteDifficulties(selectedRows)
     setOpen(false)
-    setSingleId(null)
   }
 
   const handleChangeStatus = event => setSelectedStatus(event.target.value)
@@ -220,41 +178,46 @@ const DifficultiesListTable = ({
     // Save status logic here
     handleCloseStatusDialog()
   }
-
+  const moveQuestion = guid => {
+    console.log(guid, 'kkkkkkk')
+    console.log('testing', 'kkkk')
+    router.push(`/question/import?guid=${guid}`)
+  }
+  const categories = Object.values(tableData)
   const transformPayloadToArray = payload => {
     const resultArray = []
 
-    Object.keys(payload ?? {}).forEach(key => {
-      const category = payload?.[key]
+    Object.keys(payload).forEach(key => {
+      const category = payload[key]
 
       // Only add the parent category if its guid is defined
-      if (category?.guid !== undefined) {
-        resultArray?.push({
-          guid: category?.guid,
-          title: category?.title,
-          created_by: category?.created_by,
-          created_on: category?.created_on,
-          updated_by: category?.updated_by,
-          updated_on: category?.updated_on,
-          parent_guid: category?.parent_guid,
-          parent_title: category?.parent_title,
-          children: category?.children
+      if (category.guid !== undefined) {
+        resultArray.push({
+          guid: category.guid,
+          title: category.title,
+          created_by: category.created_by,
+          created_on: category.created_on,
+          updated_by: category.updated_by,
+          updated_on: category.updated_on,
+          parent_guid: category.parent_guid,
+          parent_title: category.parent_title,
+          children: category.children
         })
       }
 
       // If the category has children and their guid is defined, add them to the result array
-      if (category?.children && category?.children?.length > 0) {
-        category?.children?.forEach(child => {
-          if (child?.guid !== undefined) {
-            resultArray?.push({
-              guid: child?.guid,
-              title: child?.title,
-              created_by: child?.created_by,
-              created_on: child?.created_on,
-              updated_by: child?.updated_by,
-              updated_on: child?.updated_on,
-              parent_guid: child?.parent_guid,
-              parent_title: child?.parent_title
+      if (category.children && category.children.length > 0) {
+        category.children.forEach(child => {
+          if (child.guid !== undefined) {
+            resultArray.push({
+              guid: child.guid,
+              title: child.title,
+              created_by: child.created_by,
+              created_on: child.created_on,
+              updated_by: child.updated_by,
+              updated_on: child.updated_on,
+              parent_guid: child.parent_guid,
+              parent_title: child.parent_title
             })
           }
         })
@@ -266,27 +229,23 @@ const DifficultiesListTable = ({
 
   // Apply the transformation
   const transformedPayload = transformPayloadToArray(tableData)
-
   useEffect(() => {
     setData(transformedPayload)
   }, [tableData])
 
-  useEffect(() => {
-    setTrashData(trashedData)
-  }, [trashedData])
-
   // Hooks
   const { lang: locale } = useParams()
 
+  console.log(categories, 'check')
+  console.log(transformedPayload, 'check1')
   const handleClick = () => {
     setCategoriesparent(true)
   }
-
   // Filter the displayed categories
   const handleParentClick = parentGuid => {
-    if (expandedParents?.includes(parentGuid)) {
+    if (expandedParents.includes(parentGuid)) {
       // If already expanded, collapse it
-      setExpandedParents(expandedParents?.filter(guid => guid !== parentGuid))
+      setExpandedParents(expandedParents.filter(guid => guid !== parentGuid))
     } else {
       // Otherwise, expand it
       setExpandedParents([...expandedParents, parentGuid])
@@ -297,156 +256,202 @@ const DifficultiesListTable = ({
   const filteredCategories = useMemo(() => {
     const result = []
 
-    transformedPayload?.forEach(item => {
-      if (item?.parent_guid === null) {
+    transformedPayload.forEach(item => {
+      if (item.parent_guid === null) {
         // Add parent category
         result.push(item)
 
         // If the parent is expanded, add its children
-        if (expandedParents?.includes(item?.guid)) {
-          const children = transformedPayload?.filter(child => child?.parent_guid === item?.guid)
-
-          result?.push(...children)
+        if (expandedParents.includes(item.guid)) {
+          const children = transformedPayload.filter(child => child.parent_guid === item.guid)
+          result.push(...children)
         }
       }
     })
-
+    setFilteredData(result)
     return result
-  }, [tableData, expandedParents, mode])
-
+  }, [tableData, expandedParents])
   const hasChildren = guid => {
-    return transformedPayload?.some(category => category?.parent_guid === guid)
+    return transformedPayload.some(category => category.parent_guid === guid)
+  }
+  const handleExpandCollapse = parentId => {
+    setExpandedParents(
+      prevState =>
+        prevState.includes(parentId)
+          ? prevState.filter(id => id !== parentId) // Collapse if already expanded
+          : [...prevState, parentId] // Expand if not in the list
+    )
   }
 
+  // Flatten tree data for the table
+  const flattenTreeData = (data, expandedParents) => {
+    const flatten = (items, level = 0) => {
+      return items.flatMap(item => {
+        const isExpanded = expandedParents.includes(item.id)
+        return [
+          { ...item, level }, // Include the parent item
+          ...(isExpanded && item.children ? flatten(item.children, level + 1) : []) // Include children if expanded
+        ]
+      })
+    }
+    return flatten(data)
+  }
+
+  const tableDatas = useMemo(() => flattenTreeData(tableData, expandedParents), [tableData, expandedParents, data])
+  function formatDate(inputDate) {
+    const date = new Date(inputDate)
+
+    // Options for formatting the date
+    const options = {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }
+
+    return new Intl.DateTimeFormat('en-GB', options).format(date).replace(',', '')
+  }
+  console.log(rowSelection, 'cccccc')
   const columns = useMemo(
     () =>
       columnOrder
-        ?.map(columnId => {
+        .map(columnId => {
           switch (columnId) {
             case 'select':
-              return visibleColumns?.select
+              return visibleColumns.select
                 ? {
                     id: 'select',
-                    header: ({ table }) => (
-                      <Checkbox
-                        {...{
-                          checked: table.getIsAllRowsSelected(),
-                          indeterminate: table.getIsSomeRowsSelected(),
-                          onChange: table.getToggleAllRowsSelectedHandler()
-                        }}
-                      />
-                    ),
+                    // header: ({ table }) => (
+                    //   <Checkbox
+                    //     {...{
+                    //       checked: table.getIsAllRowsSelected(),
+                    //       indeterminate: table.getIsSomeRowsSelected(),
+                    //       onChange: table.getToggleAllRowsSelectedHandler()
+                    //     }}
+                    //   />
+                    // ),
                     cell: ({ row }) => (
-                      <Checkbox
+                      <Radio
                         {...{
                           checked: row.getIsSelected(),
                           disabled: !row.getCanSelect(),
-                          indeterminate: row.getIsSomeSelected(),
-                          onChange: row.getToggleSelectedHandler()
+                          onChange: () => {
+                            // Update row selection to allow only one selected row at a time
+                            const newSelection = { [row.id]: !row.getIsSelected() }
+                            setRowSelection(newSelection)
+                          }
                         }}
                         onClick={e => e.stopPropagation()}
                       />
                     )
                   }
                 : null
+
             case 'title':
-              return visibleColumns?.title
+              return visibleColumns.title
                 ? columnHelper.accessor('title', {
                     header: 'Title',
                     cell: ({ row }) => {
-                      return <Typography>{row?.original?.title}</Typography>
-                    }
-                  })
-                : null
-            case 'description':
-              return visibleColumns?.description
-                ? columnHelper.accessor('description', {
-                    header: 'Description',
-                    cell: ({ row }) => {
-                      // return <Typography>{row?.original?.description ? row?.original?.description : 'N/A'}</Typography>
-
-                      return row?.original?.description ? (
-                        <div dangerouslySetInnerHTML={{ __html: row.original.description }} />
-                      ) : (
-                        'N/A'
+                      const isParent = row.original.parent_guid === null
+                      const hasChildCategories = isParent && hasChildren(row.original.parent_guid)
+                      // const isExpanded = expandedParents.includes(row.original.id)
+                      const hasChildren = row.original.children && row.original.children.length > 0
+                      const isExpanded = expandedParents.includes(row.original.id)
+                      console.log(row.original.title, 'cccc')
+                      // console.log(hasChildren(row.original.parent_guid), 'hassss')
+                      return (
+                        <div className='flex items-center gap-3'>
+                          <Typography
+                            color='text.primary'
+                            className='font-medium'
+                            style={{
+                              marginLeft: `${row.original.level * 20}px`,
+                              cursor: hasChildren ? 'pointer' : 'default'
+                            }}
+                          >
+                            {row.original.title}
+                          </Typography>
+                          {hasChildren && (
+                            <button
+                              className='expand-collapse-button'
+                              style={{ background: 'none' }}
+                              onClick={e => {
+                                e.stopPropagation() // Prevent row click events
+                                handleExpandCollapse(row.original.id)
+                              }}
+                            >
+                              {isExpanded ? (
+                                <i className='ri-arrow-down-s-line' />
+                              ) : (
+                                <i className='ri-arrow-right-s-line' />
+                              )}
+                            </button>
+                          )}
+                        </div>
                       )
                     }
                   })
                 : null
-            case 'created_at':
-              return visibleColumns?.created_at
-                ? columnHelper.accessor('created_at', {
-                    header: (
-                      <Typography fontWeight='bold' fontSize={13}>
-                        Created On
-                      </Typography>
-                    ),
+            case 'created_by':
+              return visibleColumns.created_by
+                ? columnHelper.accessor('parent_guid', {
+                    header: 'Creation Date',
+                    cell: ({ row }) => {
+                      const parentCategory = data.find(item => item.guid === row.original.parent_guid)
+                      const formattedDate = formatDate(row?.original?.created_at)
+                      return <Typography>{formattedDate}</Typography>
+                    }
+                  })
+                : null
+            case 'test':
+              return visibleColumns.test
+                ? columnHelper.accessor('test', {
+                    header: ' number of Questions',
                     cell: ({ row }) => (
-                      <Typography>{moment(row.original?.created_at).format('DD-MM-YYYY hh:mm:ss')}</Typography>
+                      <Typography>
+                        <a href='#' style={{ textDecoration: 'underline', color: '#5C61E6', cursor: 'pointer' }}>
+                          10
+                        </a>
+                      </Typography>
                     )
                   })
                 : null
 
-            case 'action':
-              return columnHelper.accessor('action', {
-                header: 'Action',
-                cell: ({ row }) => (
-                  <div className='flex items-center gap-0.5'>
-                    <IconButton
-                      size='small'
-                      onClick={() => {
-                        setSingleId(Array(row?.original?.guid))
+              // case 'action':
+              //   return columnHelper.accessor('action', {
+              //     header: 'Action',
+              //     cell: ({ row }) => (
+              //       <div className='flex items-center gap-0.5'>
+              //         <IconButton
+              //           size='small'
+              //           onClick={() => {
+              //             deleteUserData(row?.original?.guid)
+              //           }}
+              //         >
+              //           <i className='ri-delete-bin-7-line text-textSecondary' />
+              //         </IconButton>
 
-                        if (mode === 'all') {
-                          setOpen(true)
-                        }
+              //         <IconButton size='small'>
+              //           <Link href={`/categories/edit?guid=${row?.original?.guid}`} className='flex'>
+              //             <i className='ri-edit-box-line text-textSecondary' />
+              //           </Link>
+              //         </IconButton>
+              //       </div>
+              //     ),
+              //     enableSorting: false
+              //   })
 
-                        mode === 'trash' &&
-                          // ? trashDifficulties(Array(row?.original?.guid))
-                          restoreTrashDifficulties(row?.original?.guid)
-                      }}
-                    >
-                      {mode === 'all' ? (
-                        <i className='ri-delete-bin-7-line text-textSecondary' />
-                      ) : (
-                        <i className='ri-reset-left-line' />
-                      )}
-                    </IconButton>
-
-                    <IconButton
-                      size='small'
-                      onClick={() => {
-                        setSingleId(Array(row?.original?.guid))
-
-                        if (mode === 'trash') {
-                          setOpen(true)
-                        }
-
-                        // mode === 'trash' && deleteDifficulties(Array(row?.original?.guid))
-                      }}
-                    >
-                      {mode === 'all' ? (
-                        <Link href={`/difficulty/edit?guid=${row?.original?.guid}`} className='flex'>
-                          <i className='ri-edit-box-line text-textSecondary' />
-                        </Link>
-                      ) : (
-                        <i className='ri-delete-bin-7-line text-textSecondary' />
-                      )}
-                    </IconButton>
-                  </div>
-                ),
-                enableSorting: false
-              })
-            default:
               return null
           }
         })
         .filter(Boolean),
-    [columnOrder, visibleColumns, data, expandedParents, mode]
+    [columnOrder, visibleColumns, data, expandedParents, tableDatas]
   )
 
   const table = useReactTable({
-    data: mode === 'all' ? tableData : trashData,
+    data: tableDatas,
     columns,
     filterFns: {
       fuzzy: fuzzyFilter
@@ -474,33 +479,27 @@ const DifficultiesListTable = ({
     getFacetedMinMaxValues: getFacetedMinMaxValues()
   })
 
+  console.info(Object.keys(rowSelection)?.length, 'mnnbvcx')
+
   return (
     <>
-      <Box display='flex' justifyContent='flex-end' my={5}>
-        <Button
-          // fullWidth
-          variant='contained'
-          onClick={() => setAddUserOpen(!addUserOpen)}
-          className='max-sm:is-full'
-          startIcon={
-            <i
-              class='ri-add-fill'
-              style={{
-                width: 21.6,
-                height: 21.6
-              }}
-            />
-          }
-        >
-          Add Difficulty Level
-        </Button>
-      </Box>
+      <FilterHeader title='Select Categories' subtitle='Step 1' link='/test/list'>
+        <Grid
+          item
+          xs={8}
+          md={3}
+          display='flex'
+          alignItems='end'
+          justifyContent='flex-end'
+          /* Aligns the button to the right */ pb={3}
+        ></Grid>
+      </FilterHeader>
       <Card>
         <Grid container item xs={12} display='flex' alignItems='center'>
           <Grid item xs={12}>
-            <DifficultiesListFilter
+            <TableFilters
               setData={setFilteredData}
-              tableData={data}
+              tableData={filteredCategories}
               globalFilter={globalFilter}
               setGlobalFilter={setGlobalFilter}
               type={type}
@@ -509,57 +508,11 @@ const DifficultiesListTable = ({
           </Grid>
         </Grid>
         <Grid container item xs={12} pl={5}>
-          <Grid item xs={11.5}>
+          <Grid item xs={3}>
             <Box display='flex' justifyContent='space-between' alignItems='center'>
-              <IconButton
-                disableRipple
-                disabled={!Object.keys(rowSelection)?.length}
-                sx={{
-                  border: `1px solid ${Object.keys(rowSelection)?.length ? '#808080' : '#E7E7E7'}`,
-                  borderRadius: 0
-                }}
-                onClick={() => setOpen(true)}
-              >
-                {/* <CustomTooltip title='Add' arrow> */}
-                <i
-                  class='ri-delete-bin-6-fill'
-                  color={Object.keys(rowSelection)?.length ? '#B5B8FA' : '#808080'}
-                  style={{
-                    width: 20,
-                    height: 20,
-                    ...(Object.keys(rowSelection)?.length
-                      ? {
-                          color: '#B5B8FA'
-                        }
-                      : { color: '#808080' })
-                  }}
-                ></i>
-                {/* </CustomTooltip> */}
-              </IconButton>
-              <Box display='flex' justifyContent='space-between' alignItems='center'>
-                <IconButton
-                  disableRipple
-                  disabled={!data?.length}
-                  onClick={() => {
-                    setMode('all')
-                    setSingleId(null)
-                    setSelectedRows(null)
-                  }}
-                >
-                  <Typography>{`Active (${data?.length})`}</Typography>
-                </IconButton>
-                <IconButton
-                  disableRipple
-                  disabled={!trashData?.length}
-                  onClick={() => {
-                    setMode('trash')
-                    setSingleId(null)
-                    setSelectedRows(null)
-                  }}
-                >
-                  <Typography>{`Trash (${trashData?.length})`}</Typography>
-                </IconButton>
-              </Box>
+              <Typography color='#262B43E5' style={{ fontWeight: '500' }}>
+                Select Category fron this?{' '}
+              </Typography>
             </Box>
           </Grid>
           <Grid container pr={8} item xs={11} spacing={3} display='flex' alignItems='center' justifyContent='flex-end'>
@@ -645,39 +598,26 @@ const DifficultiesListTable = ({
           onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
         />
       </Card>
-      <AddDifficultiesDrawer
-        open={addUserOpen}
-        handleClose={() => setAddUserOpen(!addUserOpen)}
-        difficultiesData={data}
-        setDifficultiesData={setData}
-        addDifficultyData={addDifficultyData}
-      />
-      {open && (
-        <AlertDialogBox
-          open={open}
-          handleCancel={handleCancelDelete}
-          handleConfirm={handleConfirmDelete}
-          title={`${mode === 'all' ? 'Trash' : 'Delete'} Difficulty`}
-          textContent={`Are you sure you want to ${mode === 'all' ? 'trash' : 'delete'} this difficulty?`}
-          acceptedButton={mode === 'all' ? 'Trash' : 'Delete'}
-          rejectedButton='Cancel'
-        />
+      {Object.keys(rowSelection)?.length > 0 && (
+        <Button
+          variant='contained'
+          onClick={() => {
+            const selectedIndex = parseInt(Object.keys(rowSelection)[0], 10) // Get selected row's index
+            const selectedRowData = tableDatas[selectedIndex] // Access row data by index
+            console.log(selectedRowData, 'select')
+            if (selectedRowData) {
+              moveQuestion(selectedRowData.guid) // Pass the selected row's guid to moveQuestion
+            }
+          }}
+          sx={{ mt: 4 }}
+        >
+          Import Questions
+        </Button>
       )}
+
       {/* status Dialog */}
-      <DialogBoxComponent
-        open={openStatusDialog}
-        onClose={handleCloseStatusDialog}
-        title='Change Status'
-        description='Are you sure you want to change status?'
-        confirmText='Save'
-        onConfirm={handleSaveStatus}
-        statusOptions={statusOptions}
-        selectedStatus={selectedStatus}
-        onChangeStatus={handleChangeStatus}
-        isStatusDialog={true}
-      />
     </>
   )
 }
 
-export default DifficultiesListTable
+export default TestListTable

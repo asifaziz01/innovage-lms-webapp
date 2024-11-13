@@ -19,9 +19,8 @@ const useDraggableList = initialItems => {
     if (draggingIndex === null) return
 
     const reorderedItems = [...items]
-    const [movedItem] = reorderedItems?.splice(draggingIndex, 1)
-
-    reorderedItems?.splice(index, 0, movedItem)
+    const [movedItem] = reorderedItems.splice(draggingIndex, 1)
+    reorderedItems.splice(index, 0, movedItem)
 
     setItems(reorderedItems) // Update the state with reordered items
     setDraggingIndex(null) // Reset dragging index
