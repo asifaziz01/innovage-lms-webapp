@@ -25,10 +25,13 @@ import useQuestionModuleApi from '@/api/useQuestionModuleApi'
 // import QuestionCardBankModule from '../list/QuestionCardBankModule'
 import PaginationCard from '@/api/Pagination'
 import Sortingquestion from '../list/Sortingquestion'
+// import Topcard from '../list/Topcard
 import Topcard from '../list/Topcard'
 import FilterHeader from '@/Components/globals/FilterHeader'
 import { useSearchParams } from 'next/navigation'
 import QuestionCardBankModule from '../list/QuestionCardBankModule'
+import useCategoryApi from '@/api/useCategoryApi'
+import { useRouter } from 'next/navigation'
 const debounce = (func, delay) => {
   let timeoutId
   return (...args) => {
@@ -47,10 +50,14 @@ const AllQuestionList = () => {
     searchKeyword,
     setSearchKeyword,
     BulkDelete,
-    deleteSingleQuestion
+    deleteSingleQuestion,
+    trashData,
+    trashDifficultyData,
+    resetQuestionData
   } = useQuestionModuleApi()
-
+  const { fetchImportanceData } = useImportanceApi
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
+  const [selectAll, setSelectAll] = useState('')
   // const [showCorrectAnswer, setShowCorrectAnswer] = useState(false)
   // const [showCategory, setShowCategory] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
@@ -62,6 +69,8 @@ const AllQuestionList = () => {
   const [sortOption, setSortOption] = useState(null)
   const [selectedType, setSelectedType] = useState('')
   const [order, setOrder] = useState('')
+  const [checkStatus, setCheckStatus] = useState('Active')
+  const [categoryGuid, setCategoryGuid] = useState('')
   // const [debouncedSearchKeyword, setDebouncedSearchKeyword] = useState(searchKeyword)
   const [localSearch, setLocalSearch] = useState('') // local state for search input
   const [isExpandedAll, setIsExpandedAll] = useState(false) // Tracks if all are expanded
@@ -71,14 +80,20 @@ const AllQuestionList = () => {
     const savedValue = localStorage.getItem('showCorrectAnswer')
     return savedValue !== null ? JSON.parse(savedValue) : false
   })
+  console.log(trashData, 'trash')
   const [showCategory, setShowCategory] = useState(() => {
     return JSON.parse(localStorage.getItem('showCategory')) || false // Initialize from localStorage
   })
   const [showFields, setShowFields] = useState(() => {
     return JSON.parse(localStorage.getItem('showFields')) || false // Initialize from localStorage
   })
+  const [categories, setCategories] = useState([])
+  const [selectedCategory, setSelectedCategory] = useState('Categories')
+  const { data } = useCategoryApi()
   const param = useSearchParams()
   const guid = param.get('guid')
+  const router = useRouter()
+  const [isTrash, setIsTrash] = useState(false)
   // Effect to update localStorage whenever showCorrectAnswer changes
   useEffect(() => {
     localStorage.setItem('showCorrectAnswer', JSON.stringify(showCorrectAnswer))
@@ -93,22 +108,47 @@ const AllQuestionList = () => {
 
     return () => clearTimeout(delayDebounceFn) // Cleanup the timeout
   }, [localSearch, setSearchKeyword])
+  const handleCategoryTitle = category => {
+    console.log('1234')
+    console.log(category, 'selected category')
+    setSelectedCategory(category.title)
+    setCategoryGuid(category.guid)
+    // Update the selected category based on whether it's a parent or subcategory
+    // if (isSubcategory) {
+    //   console.log(selectedCategory, 'sssss')
+    //   setSelectedCategory(category.title)
+    // } else {
+    //   // Only set the parent category if it's explicitly clicked
+    //   setSelectedCategory(category.title)
+    // }
+
+    setIsDropdownOpen(false)
+  }
+  const handleCategoryChange = event => {
+    const value = event.target.value
+    setSelectedCategory(value)
+    console.log('Selected Category ID:', value)
+  }
+  console.log(categoryGuid, 'selectedcategory')
   useEffect(() => {
     fetchDataallquestion({
       searchKeyword: searchKeyword,
       page: currentPage,
       results_per_page: rowsPerPage,
       type: selectedType,
-      order: order
+      order: order,
+      category: categoryGuid
     })
-  }, [currentPage, rowsPerPage, selectedType, order, searchKeyword])
+  }, [currentPage, rowsPerPage, selectedType, order, searchKeyword, selectedCategory])
 
   useEffect(() => {
-    if (allquestionData && allquestionData.meta) {
-      setTotalPages(Math.ceil(allquestionData.meta.total_results / rowsPerPage))
+    const dataSource = isTrash ? trashData : allquestionData
+    if (dataSource && dataSource.meta) {
+      setTotalPages(Math.ceil(dataSource.meta.total_results / rowsPerPage))
     }
-  }, [allquestionData, rowsPerPage])
-  console.log(allquestionData && allquestionData.pagination, 'kkkk')
+  }, [allquestionData, trashData, rowsPerPage, isTrash])
+
+  console.log(allquestionData?.meta?.total_results, 'kkkk')
   const handlePageChange = page => {
     setCurrentPage(page)
   }
@@ -117,6 +157,9 @@ const AllQuestionList = () => {
     setRowsPerPage(rows)
     setCurrentPage(1) // Reset to the first page when changing rows per page
   }
+  useEffect(() => {
+    trashDifficultyData()
+  }, [])
   console.log('1234')
   // Handle search input
   const handleSearch = debounce(event => {
@@ -174,6 +217,21 @@ const AllQuestionList = () => {
       setOpenDeleteDialog(true)
     }
   }
+  // const parseCategories = (categories, level = 0) => {
+  //   return categories.flatMap(category => [
+  //     { id: category.id, title: category.title, level },
+  //     ...parseCategories(category.children || [], level + 1)
+  //   ])
+  // }
+  // useEffect(() => {
+  //   if (data) {
+  //     console.log(data, 'data12334')
+  //     const parsedCategories = parseCategories(data)
+  //     setCategories(parsedCategories)
+  //   }
+  // }, [data])
+  console.log(categories, 'categorydata')
+  // Handle category selection
 
   const handleConfirmDelete = async () => {
     try {
@@ -182,7 +240,19 @@ const AllQuestionList = () => {
       console.log('Deleted questions:', selectedQuestions)
       setSelectedQuestions([]) // Clear the selected questions
       setOpenDeleteDialog(false) // Close the dialog
-      fetchDataallquestion(currentPage, rowsPerPage) // Refresh the questions list after deletion
+      fetchDataallquestion({ page: currentPage, results_per_page: rowsPerPage }) // Refresh the questions list after deletion
+    } catch (error) {
+      console.error('Error deleting questions:', error)
+    }
+  }
+  const handleResetData = async () => {
+    try {
+      // Call the delete function from your API hook
+      await resetQuestionData(selectedQuestions) // Assuming deleteQuestions accepts an array of IDs
+      console.log('Deleted questions:', selectedQuestions)
+      setSelectedQuestions([]) // Clear the selected questions
+      setOpenDeleteDialog(false) // Close the dialog
+      fetchDataallquestion({ page: currentPage, results_per_page: rowsPerPage }) // Refresh the questions list after deletion
     } catch (error) {
       console.error('Error deleting questions:', error)
     }
@@ -217,22 +287,28 @@ const AllQuestionList = () => {
   const handleCancelDelete = () => {
     setOpenDeleteDialog(false)
   }
+  // State for toggling between active and trash data
+
   const questions =
-    allquestionData &&
-    allquestionData.data
-      ?.filter(item => item.question !== null) // Filter out items with a null question
+    (isTrash ? trashData : allquestionData) &&
+    (isTrash ? trashData : allquestionData).data
+      ?.filter(item => {
+        console.log(item, 'itemcheck')
+        return item.question !== null
+      }) // Filter based on status if isTrash is true
       .map((item, index) => ({
-        guid: item.guid,
+        guid: item?.guid,
         id: (currentPage - 1) * rowsPerPage + index + 1,
-        text: item.question, // No need for null check here since it's already filtered
-        options: item.choices.map(choice => choice.choice), // Map the options
-        correctanswer: item.choices.map(choice => choice.correct_answer), // Map correct answers
-        marks: item.marks,
-        creationDate: item.created_on,
-        question_type: item.question_type,
-        neg_marks: item.neg_marks,
-        time: item.time
+        text: item?.question, // No need for null check here since it's already filtered
+        options: Array.isArray(item?.choices) ? item.choices.map(choice => choice.choice) : [], // Map the options only if choices is an array
+        correctanswer: Array.isArray(item?.choices) ? item.choices.map(choice => choice.is_correct_answer) : [], // Map correct answers only iap correct answers
+        marks: item?.marks,
+        creationDate: item?.created_on,
+        question_type: item?.question_type,
+        neg_marks: item?.neg_marks,
+        time: item?.time
       }))
+  console.log(questions, 'questionsss')
   const filteredQuestions = questions?.filter(question =>
     question.text.toLowerCase().includes(searchKeyword.toLowerCase())
   )
@@ -244,7 +320,9 @@ const AllQuestionList = () => {
   const handleSortChange = sortType => {
     setSortOption(sortType)
   }
-
+  const handleStatusToggle = status => {
+    setIsTrash(status === 'trash')
+  }
   // Sorting logic
   const applySort = questions => {
     const stripHtmlTags = text => {
@@ -296,8 +374,73 @@ const AllQuestionList = () => {
     // }
     return questions
   }
-
+  const categoryPage = () => {
+    router.push('/categories/list')
+  }
+  const addQuestion = () => {
+    router.push('/test/questions')
+  }
   const sortedQuestions = applySort(filteredQuestions)
+  const parseCategories = (categories, level = 0) => {
+    return categories.flatMap(category => [
+      { id: category.id, title: category.title, level },
+      ...parseCategories(category.children || [], level + 1)
+    ])
+  }
+  useEffect(() => {
+    if (data) {
+      console.log(data, 'data12334')
+      const parsedCategories = parseCategories(data)
+      setCategories(parsedCategories)
+    }
+  }, [data])
+  console.log(categories, 'categorydata')
+  const [hoveredCategory, setHoveredCategory] = useState(null)
+
+  const handleMouseEnter = categoryId => {
+    setHoveredCategory(categoryId)
+  }
+
+  const handleMouseLeave = categoryId => {
+    // Prevent resetting the hover state if hovering over a subcategory
+    if (hoveredCategory === categoryId) {
+      setHoveredCategory(null)
+    }
+  }
+  const [clickedCategories, setClickedCategories] = useState([]) // Track which category is clicked
+
+  const handleCategoryClick = categoryId => {
+    setClickedCategories(prevClickedCategories => {
+      if (prevClickedCategories.includes(categoryId)) {
+        // If the category is already clicked, remove it (collapse it)
+        return prevClickedCategories.filter(id => id !== categoryId)
+      } else {
+        // If not clicked, add it to the list of clicked categories
+        return [...prevClickedCategories, categoryId]
+      }
+    })
+  }
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
+  // Handle the toggle of the category dropdown
+  const handleDropdownToggle = () => {
+    setIsDropdownOpen(!isDropdownOpen)
+  }
+  // const handleCategoryTitle = category => {
+  //   console.log('1234')
+  //   console.log(category, 'selected category')
+  //   setSelectedCategory(category.title)
+  //   // Update the selected category based on whether it's a parent or subcategory
+  //   // if (isSubcategory) {
+  //   //   console.log(selectedCategory, 'sssss')
+  //   //   setSelectedCategory(category.title)
+  //   // } else {
+  //   //   // Only set the parent category if it's explicitly clicked
+  //   //   setSelectedCategory(category.title)
+  //   // }
+
+  //   setIsDropdownOpen(false)
+  // }
   return (
     <>
       {/* <TableFilters
@@ -311,8 +454,64 @@ const AllQuestionList = () => {
         deleteIconActive={deleteIconActive}
         onDeleteClick={handleDeleteClick}
       /> */}
-      <FilterHeader title='All Questions' subtitle='Orders placed across your store' link='/test/list'></FilterHeader>
-
+      <FilterHeader title='All Questions' subtitle='Orders placed across your store' link='/test/questions'>
+        <Grid
+          item
+          xs={6}
+          // gap={2}
+          md={2}
+          display='flex'
+          alignItems='end'
+          justifyContent='flex-end'
+          /* Aligns the button to the right */ pb={3}
+        >
+          <Button
+            fullWidth
+            variant='contained'
+            // onClick={categoryPage}
+            onClick={addQuestion}
+            className='max-sm:is-full'
+            startIcon={
+              <i
+                class='ri-add-fill'
+                style={{
+                  width: 21.6,
+                  height: 21.6
+                }}
+              />
+            }
+          >
+            Add Question
+          </Button>
+        </Grid>
+        <Grid
+          item
+          xs={6}
+          md={2}
+          display='flex'
+          alignItems='end'
+          justifyContent='flex-end'
+          /* Aligns the button to the right */ pb={3}
+        >
+          <Button
+            fullWidth
+            variant='contained'
+            onClick={categoryPage}
+            className='max-sm:is-full'
+            // startIcon={
+            //   <i
+            //     class='ri-add-fill'
+            //     style={{
+            //       width: 21.6,
+            //       height: 21.6
+            //     }}
+            //   />
+            // }
+          >
+            Categories
+          </Button>
+        </Grid>
+      </FilterHeader>
       <Card
         sx={{
           padding: '20px',
@@ -325,18 +524,37 @@ const AllQuestionList = () => {
         }}
       >
         <Topcard
-          handleSortChange={handleSortChange}
+          handleCategoryChange={handleCategoryChange}
+          // handleSortChange={handleSortChange}
           onDeleteClick={handleDeleteClick}
           deleteIconActive={deleteIconActive}
-          // searchKeyword={searchKeyword}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          handleCategoryClick={handleCategoryClick}
+          categories={categories}
+          setCategories={setCategories}
+          handleDropdownToggle={handleDropdownToggle}
+          isDropdownOpen={isDropdownOpen}
+          setIsDropdownOpen={setIsDropdownOpen}
+          trashDatalength={trashData && trashData.meta && trashData.meta.total_results}
+          allquestionlength={allquestionData && allquestionData.meta && allquestionData.meta.total_results}
+          // // handleCategoryChange={handleCategoryChange}
+          searchKeyword={searchKeyword}
           handleSearch={e => setLocalSearch(e.target.value)}
-          searchKeyword={localSearch}
+          // searchKeyword={localSearch}
           showCorrectAnswer={showCorrectAnswer} // Pass state to Topcard
           setShowCorrectAnswer={setShowCorrectAnswer}
           showCategory={showCategory}
           setShowCategory={setShowCategory}
-          setShowFields={setShowFields}
-          showFields={showFields}
+          // setShowFields={setShowFields}
+          // showFields={showFields}
+          clickedCategories={clickedCategories}
+          setClickedCategories={setClickedCategories}
+          handleCategoryTitle={handleCategoryTitle}
+          handleStatusToggle={handleStatusToggle}
+          trash={isTrash}
+          // isDropdownOpen={isDropdownOpen}
+          // setIsDropdownOpen={setIsDropdownOpen}
         />
         {/* <Sortingquestion onSortChange={handleSortChange} /> */}
         {/* <Card> */}
@@ -389,6 +607,7 @@ const AllQuestionList = () => {
                 showCorrectAnswer={showCorrectAnswer}
                 showCategory={showCategory}
                 showFields={showFields}
+                trash={isTrash}
                 deleteSingleQuestion={deleteSingleQuestion}
               />
             ) : (
@@ -428,7 +647,11 @@ const AllQuestionList = () => {
       >
         <DialogTitle id='alert-dialog-title'>{'Delete Questions'}</DialogTitle>
         <DialogContent>
-          <DialogContentText id='alert-dialog-description'>Are you sure you want to delete ?</DialogContentText>
+          {isTrash ? (
+            <DialogContentText id='alert-dialog-description'>Are you sure you want to Recover ?</DialogContentText>
+          ) : (
+            <DialogContentText id='alert-dialog-description'>Are you sure you want to Delete ?</DialogContentText>
+          )}
         </DialogContent>
         <DialogActions>
           <Button
@@ -437,8 +660,13 @@ const AllQuestionList = () => {
           >
             Cancel
           </Button>
-          <Button onClick={handleConfirmDelete} variant='contained' style={{ height: '38px', width: '94px' }} autoFocus>
-            Delete
+          <Button
+            onClick={isTrash ? handleResetData : handleConfirmDelete}
+            variant='contained'
+            style={{ height: '38px', width: '94px' }}
+            autoFocus
+          >
+            {isTrash ? 'Restore' : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>

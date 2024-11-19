@@ -3,9 +3,11 @@ import { useEffect, useState } from 'react'
 import { ApiRequestHandle } from '@/libs/axios'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
+// import 'react-toastify/ReactToastify.min.css'
 import { file } from 'valibot'
 // import { USER_MODULE_ENDPOINTS } from '../Const/ApiEndpoints'
-
+import { alertMessages } from '@/components/globals/AlertMessages'
+import { useTheme } from '@mui/material/styles'
 export default function useQuestionModuleApi() {
   const [data, setData] = useState([])
   const [file, setFiles] = useState([])
@@ -15,6 +17,8 @@ export default function useQuestionModuleApi() {
   const [uploadData, setUploadData] = useState([]) // Fix typo here
   const [allquestionData, setallquestionData] = useState([])
   const [searchKeyword, setSearchKeyword] = useState('')
+  const [trashData, setTrashData] = useState([])
+  const theme = useTheme
   const fetchData = async () => {
     try {
       const endpoint = `${process.env.NEXT_PUBLIC_LMS_API_URL}tests/questions/eng2` // Construct the full URL
@@ -32,26 +36,28 @@ export default function useQuestionModuleApi() {
       console.error('Error fetching data:', error)
     }
   }
-  console.log(data, 'check123')
+  // console.log(data, 'check123')
   const uploadFiles = async files => {
     const formData = new FormData()
     files.forEach(file => {
       formData.append('userfile', file)
-      console.log(file, 'eeeee')
+      // formData.appned('guid', 'SCI5')
+      // console.log(file, 'eeeee')
     })
     setFiles(files)
     try {
       setUploading(true)
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_LMS_API_URL}qb/questions/import`, formData, {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/questions/import`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${process.env.NEXT_PUBLIC_LMS_TOKEN}`,
           Network: process.env.NEXT_PUBLIC_LMS_TOKEN
         }
       })
-      setUploadData(response.data.payload.questions) // Make sure this works
-      console.log(response.data.payload.questions, 'uuu')
-      console.log(uploadData, 'uuu2')
+      setUploadData(response?.data?.payload) // Make sure this works
+      // console.log(response.data.payload.questions, 'uuu')
+      // console.log(uploadData, 'uuu2')
+      alertMessages(theme, 'success', response?.data?.message)
     } catch (error) {
       console.error('Error uploading files:', error)
       alert('Failed to upload files. Please try again.')
@@ -59,17 +65,23 @@ export default function useQuestionModuleApi() {
       setUploading(false)
     }
   }
-  const fetchDataallquestion = async ({ page, results_per_page, type, order, searchKeyword }) => {
+  const fetchDataallquestion = async ({ page, results_per_page, type, order, searchKeyword, category }) => {
     try {
       const endpoint = `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/questions/all` // Construct the full URL
       const formData = new FormData()
-      console.log(searchKeyword, 'searchinggg1234')
+      // console.log(searchKeyword, 'searchinggg1234')
+      console.log(category, 'checkcategory')
       if (searchKeyword) {
         formData.append('search', searchKeyword) // Add the search term to the formData
       }
       formData.append('page', page) // Add pagination: current page
       formData.append('results_per_page', results_per_page) // Add pagination: results per page
+      if (category && category !== 'Categories') {
+        formData.append('category', category)
+      }
+      // formData.append('category', selectedCategory)
       // formData.append('type', type)
+
       if (type) {
         formData.append('question_type', type)
       }
@@ -84,7 +96,10 @@ export default function useQuestionModuleApi() {
         }
       })
       setLoader(false)
-      setallquestionData(response.data?.payload) // Update the state with the fetched data
+      setallquestionData(response.data?.payload)
+      // console.log(uploadData, 'uuu2')
+      alertMessages(theme, 'success', response?.data?.message)
+      // Update the state with the fetched data
     } catch (error) {
       console.error('Error fetching data:', error)
     }
@@ -118,12 +133,12 @@ export default function useQuestionModuleApi() {
 
       // Append each question ID with the same key
       questionIds.forEach(id => {
-        formData.append('questions[]', id)
+        formData.append('guid[]', id)
       })
 
       // Send the DELETE request
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_LMS_API_URL}qb/questions/delete`,
+        `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/questions/trash`,
         {
           method: 'POST',
           body: formData
@@ -162,15 +177,19 @@ export default function useQuestionModuleApi() {
         formData.append('userfile', uploadedFile)
       }
 
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_LMS_API_URL}qb/questions/${guid}/update`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_LMS_TOKEN}`,
-          Network: process.env.NEXT_PUBLIC_LMS_TOKEN
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/questions/${guid}/update`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_LMS_TOKEN}`,
+            Network: process.env.NEXT_PUBLIC_LMS_TOKEN
+          }
         }
-      })
+      )
 
-      console.log('Update response:', response.data)
+      // console.log('Update response:', response.data)
       return response.data // Return response for further processing
     } catch (error) {
       console.error('Error updating question:', error)
@@ -188,7 +207,7 @@ export default function useQuestionModuleApi() {
   }
 
   useEffect(() => {
-    console.log(uploadData, 'updated uploadData')
+    // console.log(uploadData, 'updated uploadData')
   }, [uploadData, file])
   // Optional: Use useEffect to watch for changes in uploadData
   // useEffect(() => {
@@ -209,7 +228,96 @@ export default function useQuestionModuleApi() {
   //     console.log('UploadData:', uploadData)
   //   }
   // }, [uploadData])
+  const trashDifficultyData = () => {
+    try {
+      axios
+        .post(
+          `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/questions/trashed`,
+          {},
+          {
+            Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
+            Network: 'dev369',
+            accept: 'application/json'
+          }
+        )
+        ?.then(res => {
+          //   setData(res?.payload?.data)
+          setTrashData(res?.data?.payload)
+        })
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    }
+  }
+  const resetQuestionData = Data => {
+    const guids = Array.isArray(Data) ? Data : [Data]
 
+    // Create the form data object
+    const formData = new FormData()
+
+    // Append each GUID
+    guids.forEach(id => {
+      formData.append('guid[]', id)
+    })
+
+    // Append additional data if needed
+    Object.entries(data).forEach(([key, value]) => {
+      formData.append(key, value)
+    })
+
+    // Only append parent_guid if userData.category has a value
+    // if (userData?.category) {
+    //   formData.append('parent_guid', userData.category)
+    // }
+
+    try {
+      axios
+        .post(
+          `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/questions/restore`,
+
+          // userData
+          formData,
+          {
+            Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
+            Network: 'dev369',
+            accept: 'application/json'
+          }
+        )
+        .then(() => trashDifficultyData())
+
+      //   return response.data
+    } catch (error) {
+      console.error('Error:', error)
+    }
+  }
+  const BulkDeleteQuestion = async questionIds => {
+    try {
+      const formData = new FormData()
+
+      // Append each question ID with the same key
+      questionIds.forEach(id => {
+        formData.append('questions[]', id)
+      })
+
+      // Send the DELETE request
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/questions/trash`,
+        {
+          method: 'POST',
+          body: formData
+        },
+        {
+          Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
+          Network: 'dev369',
+          accept: 'application/json'
+        }
+      )
+
+      return response.data // Return the response data for further processing if needed
+    } catch (error) {
+      console.error('Error deleting questions in bulk:', error)
+      throw error // Rethrow error to be handled in the component if necessary
+    }
+  }
   return {
     data,
     setData,
@@ -220,6 +328,9 @@ export default function useQuestionModuleApi() {
     uploading,
     uploadData,
     setUploadData,
+    trashDifficultyData,
+    trashData,
+    setTrashData,
     file,
     setFiles,
     fetchDataallquestion,
@@ -230,6 +341,8 @@ export default function useQuestionModuleApi() {
     viewQuestion,
     BulkDelete,
     updateQuestion,
-    deleteSingleQuestion
+    deleteSingleQuestion,
+    trashDifficultyData,
+    resetQuestionData
   }
 }

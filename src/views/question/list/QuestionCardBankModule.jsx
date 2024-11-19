@@ -27,6 +27,7 @@ import { toast } from 'react-toastify'
 // import TableFilters from '../../../user/components/list/TableFilters'
 import Tablefor from '../import/view/Tablefor'
 import PaginationCard from '@/api/Pagination'
+import useCategoryApi from '@/api/useCategoryApi'
 
 const QuestionCardBankModule = ({
   marginLeft,
@@ -55,12 +56,16 @@ const QuestionCardBankModule = ({
   check,
   showCategory,
   showFields,
-  deleteSingleQuestion
+  deleteSingleQuestion,
+  trash
 }) => {
   const [editingQuestionId, setEditingQuestionId] = useState(null) // To track which question is being edited
   const [editedText, setEditedText] = useState('') // To store the edited text for a question
   const [editingAnswerId, setEditingAnswerId] = useState(null) // To track which answer is being edited
   const [editedAnswer, setEditedAnswer] = useState('') // To store the edited text for
+  const [categories, setCategories] = useState([])
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const { data } = useCategoryApi()
   // Using a custom hook for drag-and-drop
   const { items: questionList, handleDragStart, handleDragOver, handleDrop } = useDraggableList(questions)
   const [questionData, setQuestionData] = useState(questions)
@@ -189,7 +194,7 @@ const QuestionCardBankModule = ({
     txt.innerHTML = html
     return txt.value.replace(/<[^>]*>/g, '') // Remove HTML tags
   }
-  console.log(showCorrectAnswer, 'showcorrectsss')
+
   return (
     <>
       {/* <Card style={{ marginTop: '50px', padding: '20px', width: width }}> */}
@@ -239,7 +244,7 @@ const QuestionCardBankModule = ({
                   : question?.text
 
               return (
-                <Accordion
+                <div
                   key={question.id}
                   expanded={showAnswers.includes(question.id)} // Check if this question is expanded
                   // onChange={() => toggleAnswer(question.id)} // Toggle the answer on accordion change
@@ -248,20 +253,19 @@ const QuestionCardBankModule = ({
                   onDragOver={handleDragOver}
                   onDrop={() => handleDrop(index)}
                   draggable
-                  style={
-                    {
-                      // padding: '10px',
-                      // margin: '5px 0',
-                      // borderBottom: '1px solid #ddd',
-                      // borderRadius: '4px',
-                      // borderTop: 'none',
-                      // // backgroundColor: '#fff',
-                      // cursor: 'pointer'
-                    }
-                  }
+                  style={{
+                    // padding: '10px',
+                    // margin: '5px 0',
+                    // borderBottom: '1px solid #ddd',
+                    borderRadius: 'none',
+                    borderTop: 'none',
+                    border: 'none'
+                    // // backgroundColor: '#fff',
+                    // cursor: 'pointer'
+                  }}
                   sx={{ '& .MuiAccordionSummary-expandIconWrapper': { display: 'none' } }} // Hide the expand icon
                 >
-                  <AccordionSummary aria-controls={`panel${question.id}-content`} id={`panel${question.id}-header`}>
+                  <div aria-controls={`panel${question.id}-content`} id={`panel${question.id}-header`}>
                     <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                       <FormControlLabel
                         aria-label='Select'
@@ -282,7 +286,8 @@ const QuestionCardBankModule = ({
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
-                          textTransform: 'capitalize'
+                          textTransform: 'capitalize',
+                          color: 'black'
                         }}
                         onClick={() => handleViewPage(question.guid)}
                         dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(`${question.id}. ${question.text}`) }}
@@ -311,20 +316,21 @@ const QuestionCardBankModule = ({
                           <i className='ri-edit-box-line' style={{ color: 'rgba(38, 43, 67, 0.898)' }}></i>
                         </Button> */}
                     </div>
-                  </AccordionSummary>
+                  </div>
                   {showAnswers.includes(question.id) && (
-                    <AccordionDetails style={{ marginLeft: '40px' }}>
+                    <div style={{ marginLeft: '40px' }}>
                       {question.options ? (
                         <ul style={{ listStyleType: 'none', paddingLeft: '0' }}>
                           {question.options.map((option, index) => {
                             const letter = String.fromCharCode(97 + index) // Convert index to letter (A=65, B=66, ...)
                             const labeledOption = `${letter}. ${decodeHtmlEntities(option)}`
+                            console.log(question.correctanswer[index] === 1, 'correctanswer')
                             return (
                               <li key={index} style={{ display: 'flex', alignItems: 'center' }}>
                                 <Typography
                                   style={{
                                     color:
-                                      showCorrectAnswer && question.correctanswer[index] === '1' ? '#34C759' : 'black',
+                                      showCorrectAnswer && question.correctanswer[index] === 1 ? '#34C759' : 'black',
                                     flexGrow: 1,
                                     cursor: 'pointer'
                                   }}
@@ -419,9 +425,9 @@ const QuestionCardBankModule = ({
                           </Box>
                         )}
                       </Box>
-                    </AccordionDetails>
+                    </div>
                   )}
-                  <Button
+                  {/* <Button
                     style={{ color: 'rgba(38, 43, 67, 0.898)', marginTop: '10px' }}
                     // onClick={() => handleAccordionClick(question.guid)}
                   >
@@ -432,14 +438,17 @@ const QuestionCardBankModule = ({
                         deleteSingleQuestion(question.guid)
                       }}
                     ></i>
-                  </Button>
-                  <Button
-                    style={{ color: 'rgba(38, 43, 67, 0.898)', marginTop: '10px' }}
-                    onClick={() => handleAccordionClick(question.guid)}
-                  >
-                    <i className='ri-edit-box-line' style={{ color: 'rgba(38, 43, 67, 0.898)' }}></i>
-                  </Button>
-                </Accordion>
+                  </Button> */}
+                  {!trash && (
+                    <Button
+                      style={{ color: 'rgba(38, 43, 67, 0.898)', marginTop: '10px' }}
+                      onClick={() => handleAccordionClick(question.guid)}
+                    >
+                      <i className='ri-edit-box-line' style={{ color: 'rgba(38, 43, 67, 0.898)' }}></i>
+                    </Button>
+                  )}
+                  <hr style={{ width: '100%', border: '0.5px solid #ddd', margin: '10px 0' }} />
+                </div>
               )
             })}
           {/* // </CardContent> */}

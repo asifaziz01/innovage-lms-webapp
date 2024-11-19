@@ -54,23 +54,23 @@ const ImportView = () => {
         .filter(key => uploadData[key].question !== null)
         .map((key, index) => {
           const item = uploadData[key]
-          const { choice, correct_answer, question, parent_id, created_by, order, question_type, guid } = item
+          const { choice, is_correct_answer, question, parent_id, created_by, order, type, guid } = item
           return {
             guid: guid,
             id: index + 1,
             text: question,
             options: choice || [],
-            correctanswer: correct_answer,
+            correctanswer: is_correct_answer,
             order,
             created_by,
             parent_id,
-            question_type
+            type
           }
         })
       setQuestions(formattedQuestions)
     }
   }, [uploadData])
-
+  console.log(questions, 'questionscheck')
   const filesArray = createFileArray(fileList)
   console.log(createFileArray(fileList), 'hhhh')
 
@@ -178,6 +178,7 @@ const ImportView = () => {
         question_type
       }
     })
+  console.log(questions, 'questioncheck')
   // console.log(questionss, 'questionss')
   const [selectedQuestions, setSelectedQuestions] = useState([]) // Track selected checkboxes in QuestionCard
   // console.log(questions, 'questions')

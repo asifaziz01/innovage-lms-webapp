@@ -19,9 +19,55 @@ import SortingType from './SortingType'
 // import Router, { withRouter } from 'next/router'
 // import { useRouter } from 'next/router'
 import { useRouter } from 'next/navigation'
+import useCategoryApi from '@/api/useCategoryApi'
 // import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
+const CategoryItem = ({ category, handleCategoryClick, clickedCategories, handleCategoryTitle }) => {
+  // Check if the category is clicked and should display subcategories
+  const isCategoryClicked = clickedCategories.includes(category.id)
+  console.log(category.title, 'categorytitle')
+  return (
+    <li
+      className='category-item'
+
+      // onClick={() => handleCategoryTitle(category.id)}
+    >
+      <button
+        className='category-button'
+        onClick={e => {
+          // e.stopPropagation() // Prevents the event from bubbling up unnecessarily
+          handleCategoryTitle(category) // Call the function to update the selected category
+          // handleCategoryClick(category.id) // Expand/collapse subcategories
+        }}
+      >
+        {category.title}
+        {/* Render the icon only if the category has children */}
+        {category.children && category.children.length > 0 && (
+          <span className='icon' onMouseOver={() => handleCategoryClick(category.id)}>
+            &#9656;
+          </span>
+        )}
+      </button>
+
+      {/* Render the subcategory dropdown if the category is clicked */}
+      {isCategoryClicked && category.children && category.children.length > 0 && (
+        <ul className='subcategory-dropdown'>
+          {category.children.map(subCategory => (
+            <CategoryItem
+              key={subCategory.id}
+              category={subCategory}
+              handleCategoryClick={handleCategoryClick}
+              clickedCategories={clickedCategories} // Pass the updated clicked categories
+              handleCategoryTitle={handleCategoryTitle} // Pass as subcategory
+            />
+          ))}
+        </ul>
+      )}
+    </li>
+  )
+}
 
 const Topcard = ({
+  handleStatusToggle,
   handleSortChange,
   onDeleteClick,
   deleteIconActive,
@@ -32,7 +78,23 @@ const Topcard = ({
   showCategory,
   setShowCategory,
   showFields,
-  setShowFields
+  setShowFields,
+  categories,
+  setCategories,
+  selectedCategory,
+  setSelectedCategory,
+  handleCategoryTitle,
+  handleCategoryChange,
+  isDropdownOpen,
+  trashDatalength,
+  // Sortingquestion,
+  setIsDropdownOpen,
+  handleDropdownToggle,
+  handleCategoryClick,
+  clickedCategories,
+  allquestionlength,
+  trash
+  // handleCategoryClick
 }) => {
   const [anchorElOptions, setAnchorElOptions] = React.useState(null)
   const [anchorElSort, setAnchorElSort] = React.useState(null)
@@ -46,6 +108,11 @@ const Topcard = ({
     trueFalse: false
   })
   const [isFilterActive, setIsFilterActive] = useState(false)
+
+  // const [categories, setCategories] = useState([])
+  // const [selectedCategory, setSelectedCategory] = useState('')
+  // const [selectedCategory, setSelectedCategory] = useState('Category')
+  const { data } = useCategoryApi()
   // const router = useRouter()
   useEffect(() => {
     const hasActiveFilter = searchKeyword || Object.values(sortOptions).some(option => option)
@@ -74,6 +141,26 @@ const Topcard = ({
     setAnchorElOptions(null)
     setAnchorElSort(null)
   }
+  // const parseCategories = (categories, level = 0) => {
+  //   return categories.flatMap(category => [
+  //     { id: category.id, title: category.title, level },
+  //     ...parseCategories(category.children || [], level + 1)
+  //   ])
+  // }
+  // useEffect(() => {
+  //   if (data) {
+  //     console.log(data, 'data12334')
+  //     const parsedCategories = parseCategories(data)
+  //     setCategories(parsedCategories)
+  //   }
+  // }, [data])
+  console.log(categories, 'categorydata')
+  // Handle category selection
+  // const handleCategoryChange = event => {
+  //   const value = event.target.value
+  //   setSelectedCategory(value)
+  //   console.log('Selected Category ID:', value)
+  // }
   const handleCheckboxChange = event => {
     const { name, checked } = event.target
     setSortOptions(prevOptions => ({
@@ -130,6 +217,53 @@ const Topcard = ({
   const handleImport = () => {
     router.push('/question/selectcategory')
   }
+  // const [hoveredCategory, setHoveredCategory] = useState(null)
+
+  // const handleMouseEnter = categoryId => {
+  //   setHoveredCategory(categoryId)
+  // }
+
+  // const handleMouseLeave = categoryId => {
+  //   // Prevent resetting the hover state if hovering over a subcategory
+  //   if (hoveredCategory === categoryId) {
+  //     setHoveredCategory(null)
+  //   }
+  // }
+  // const [clickedCategories, setClickedCategories] = useState([]) // Track which category is clicked
+
+  // Handle category click to toggle the visibility of its subcategories
+  // const handleCategoryClick = categoryId => {
+  //   setClickedCategories(prevClickedCategories => {
+  //     if (prevClickedCategories.includes(categoryId)) {
+  //       // If the category is already clicked, remove it (collapse it)
+  //       return prevClickedCategories.filter(id => id !== categoryId)
+  //     } else {
+  //       // If not clicked, add it to the list of clicked categories
+  //       return [...prevClickedCategories, categoryId]
+  //     }
+  //   })
+  // }
+  // const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
+  // // Handle the toggle of the category dropdown
+  // const handleDropdownToggle = () => {
+  //   setIsDropdownOpen(!isDropdownOpen)
+  // }
+  // const handleCategoryTitle = category => {
+  //   console.log('1234')
+  //   console.log(category, 'selected category')
+  //   setSelectedCategory(category.title)
+  //   // Update the selected category based on whether it's a parent or subcategory
+  //   // if (isSubcategory) {
+  //   //   console.log(selectedCategory, 'sssss')
+  //   //   setSelectedCategory(category.title)
+  //   // } else {
+  //   //   // Only set the parent category if it's explicitly clicked
+  //   //   setSelectedCategory(category.title)
+  //   // }
+
+  //   setIsDropdownOpen(false)
+  // }
   return (
     // <Card
     //   sx={{
@@ -150,6 +284,27 @@ const Topcard = ({
       </Grid>
       <Grid container spacing={2} sx={{ mt: 3 }}>
         {/* Row 1: Search Input */}
+        <div className='dropdown-container' style={{ marginTop: '8px' }}>
+          <div className='dropdown-toggle' onClick={handleDropdownToggle}>
+            {selectedCategory}
+          </div>
+          {isDropdownOpen && (
+            <ul className='category-dropdown'>
+              {data.map(category => (
+                <CategoryItem
+                  key={category.id}
+                  category={category}
+                  // handleMouseEnter={handleMouseEnter}
+                  // handleMouseLeave={handleMouseLeave}
+                  // hoveredCategory={hoveredCategory}
+                  handleCategoryClick={handleCategoryClick}
+                  clickedCategories={clickedCategories}
+                  handleCategoryTitle={handleCategoryTitle}
+                />
+              ))}
+            </ul>
+          )}
+        </div>
         <Grid item xs={12} md={3}>
           <TextField
             sx={{
@@ -180,7 +335,7 @@ const Topcard = ({
         <Grid
           item
           xs={12}
-          md={9}
+          md={7}
           sx={{
             '& .MuiInputBase-root': {
               height: '40px',
@@ -209,7 +364,11 @@ const Topcard = ({
                 </MenuItem>
               </Select>
             </FormControl> */}
-            <SortingType onSortChange={handleSortChange} />
+            <Grid sx={{ ml: 4 }}>
+              <Box sx={{ ml: 4 }}>
+                <SortingType onSortChange={handleSortChange} />
+              </Box>
+            </Grid>
             {/* <Button variant='contained' color='primary'> */}
             <FormControl variant='outlined' sx={{ minWidth: 90 }}>
               <InputLabel>Test</InputLabel>
@@ -264,41 +423,74 @@ const Topcard = ({
                   // onClick={e => handleDeleteClick(e, 1)}
                 />
               </Button>
-              <Box
-                display='flex'
-                alignItems='center'
-                justifyContent='center'
-                className='hover-container'
-                style={{ position: 'relative', width: '40px', height: '40px' }}
-              >
-                <i className='ri-menu-add-line' style={{ fontSize: '24px' }} />
-                <span className='hover-text'>Add in Test</span>
-              </Box>
+              {trash && (
+                <Button
+                  color='secondary'
+                  // variant='outlined'
+                  // className='max-sm:is-full'
+                  // onClick={e => handleDeleteClick(e, 1)}
+                  style={{ color: '#FFFFFF', border: '1px solid #E7E7E7', minWidth: '40px' }}
+                  onClick={onDeleteClick}
+                >
+                  <i
+                    className='ri-reset-left-line'
+                    // style={{ color: '#8080808C' }}
+                    style={{ color: deleteIconActive ? '#007AFF' : '#8080808C' }}
+                    // onClick={e => handleDeleteClick(e, 1)}
+                  />
+                </Button>
+              )}
+              {!trash && (
+                <>
+                  <Box
+                    display='flex'
+                    alignItems='center'
+                    justifyContent='center'
+                    className='hover-container'
+                    style={{ position: 'relative', width: '40px', height: '40px' }}
+                  >
+                    {/* <i className='ri-menu-add-line' style={{ fontSize: '24px' }} /> */}
+                    <i class='ri-checkbox-multiple-line' style={{ fontSize: '24px' }} />
+                    <span className='hover-text'>Select All</span>
+                  </Box>
+                  <Box
+                    display='flex'
+                    alignItems='center'
+                    justifyContent='center'
+                    className='hover-container'
+                    style={{ position: 'relative', width: '40px', height: '40px' }}
+                  >
+                    <i className='ri-menu-add-line' style={{ fontSize: '24px' }} />
+                    <span className='hover-text'>Add in Test</span>
+                  </Box>
 
-              {/* Import */}
-              <Box
-                display='flex'
-                alignItems='center'
-                justifyContent='center'
-                className='hover-container'
-                style={{ position: 'relative', width: '40px', height: '40px' }}
-              >
-                <i className='ri-download-2-line' style={{ fontSize: '24px' }} onClick={handleImport} />
-                <span className='hover-text'>Import</span>
-              </Box>
+                  {/* Import */}
+                  <Box
+                    display='flex'
+                    alignItems='center'
+                    justifyContent='center'
+                    className='hover-container'
+                    style={{ position: 'relative', width: '40px', height: '40px' }}
+                  >
+                    <i className='ri-download-2-line' style={{ fontSize: '24px' }} onClick={handleImport} />
+                    <span className='hover-text'>Import</span>
+                  </Box>
 
-              {/* Export */}
-              <Box
-                display='flex'
-                alignItems='center'
-                justifyContent='center'
-                className='hover-container'
-                style={{ position: 'relative', width: '40px', height: '40px' }}
-              >
-                <i className='ri-upload-2-line' style={{ fontSize: '24px' }} />
-                <span className='hover-text'>Export</span>
-              </Box>
+                  {/* Export */}
+                  <Box
+                    display='flex'
+                    alignItems='center'
+                    justifyContent='center'
+                    className='hover-container'
+                    style={{ position: 'relative', width: '40px', height: '40px' }}
+                  >
+                    <i className='ri-upload-2-line' style={{ fontSize: '24px' }} />
+                    <span className='hover-text'>Export</span>
+                  </Box>
+                </>
+              )}
             </Box>
+
             <Box display='flex' alignItems='center' flexWrap='wrap' gap={2}>
               {/* Options Dropdown */}
               <Button
@@ -353,6 +545,23 @@ const Topcard = ({
               <Sortingquestion onSortChange={handleSortChange} />
               {/* Reset Filter Button */}
             </Box>
+          </Box>
+        </Grid>
+        <Grid item xs={12}>
+          <Box
+            display='flex'
+            alignItems='center'
+            justifyContent='flex-end'
+            className='hover-container'
+            style={{ position: 'relative' }}
+          >
+            <Typography
+              onClick={() => handleStatusToggle('active')}
+              style={{ marginRight: '20px' }} // Add spacing between the elements
+            >
+              Active {allquestionlength}
+            </Typography>
+            <Typography onClick={() => handleStatusToggle('trash')}>Trash {trashDatalength}</Typography>
           </Box>
         </Grid>
       </Grid>

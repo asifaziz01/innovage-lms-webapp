@@ -7,14 +7,20 @@ import { useTheme } from '@mui/material/styles'
 import { toast } from 'react-toastify'
 import { IconButton, Typography } from '@mui/material'
 
-import {
-  CATEGORY_DATA,
-  CATEGORY_MODULE_ENDPOINTS,
-  CATEGORY_MODULE_ENDPOINTS_CHILDREN,
-  CATEGORY_DATA_V2
-} from '@/Const/test/ApiEndpoints'
+// import {
+//   CATEGORY_DATA,
+//   CATEGORY_MODULE_ENDPOINTS,
+//   CATEGORY_MODULE_ENDPOINTS_CHILDREN,
+//   CATEGORY_DATA_V2
+// } from '@/Const/ApiEndpoints'
 
 import { alertMessages } from '@/components/globals/AlertMessages'
+import {
+  CATEGORY_DATA_V2,
+  CATEGORY_DATA,
+  CATEGORY_MODULE_ENDPOINTS_CHILDREN,
+  CATEGORY_MODULE_ENDPOINTS
+} from '@/Const/test/ApiEndpoints'
 
 export default function useCategoryApi() {
   const [data, setData] = useState([])
@@ -43,7 +49,7 @@ export default function useCategoryApi() {
     }
   }
   const addCategoryData = userData => {
-    console.log(userData, 'categoryapi')
+    // console.log(userData, 'categoryapi')
 
     // Create the data object
     const data = {
@@ -131,7 +137,7 @@ export default function useCategoryApi() {
   }
 
   const trashCategoryData = Data => {
-    console.log(data, 'pptesting')
+    // console.log(data, 'pptesting')
     // Create the data object
     const guids = Array.isArray(Data) ? Data : [Data]
 

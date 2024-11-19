@@ -109,7 +109,7 @@ const ViewQuestion = () => {
                         <Card variant='outlined'>
                           <CardContent>
                             <Typography
-                              style={{ color: choice.correct_answer === '1' ? 'lightgreen' : 'inherit' }}
+                              style={{ color: choice.is_correct_answer === 1 ? 'lightgreen' : 'inherit' }}
                               variant='body1'
                               align='center'
                               dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(choice.choice || '') }}

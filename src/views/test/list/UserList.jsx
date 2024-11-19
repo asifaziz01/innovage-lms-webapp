@@ -5,7 +5,7 @@ import Grid from '@mui/material/Grid'
 
 // Component Imports
 import TestListTable from './TestListTable'
-import useTestApi from '@/api/test/useTestApi'
+import useTestApi from '@/api/useTestApi'
 
 const UserList = () => {
   const { addTestData, updateTestData, deleteTestData, data, testData, viewTest, getCategories, categories } =

@@ -164,7 +164,7 @@ const QuestionCard = ({
       // Append question settings for each question
       formData.append(`questions[${index}][difficulty]`, settings.difficultyLevel)
       formData.append(`questions[${index}][test_name]`, settings.testName)
-      formData.append(`questions[${index}][question_type]`, settings.questionType)
+      formData.append(`questions[${index}][type]`, settings.questionType)
       formData.append(`questions[${index}][importance]`, settings.importance)
       formData.append(`questions[${index}][marks]`, settings.marksPerQuestion)
       formData.append(`questions[${index}][category]`, guid)
@@ -180,13 +180,13 @@ const QuestionCard = ({
         formData.append(`questions[${index}][correct_answer][${correctAnswerIndex}]`, correctanswer)
       })
 
-      question.order.forEach((order, orderIndex) => {
-        formData.append(`questions[${index}][order][${orderIndex}]`, order)
-      })
+      // question.order.forEach((order, orderIndex) => {
+      //   formData.append(`questions[${index}][order][${orderIndex}]`, order)
+      // })
     })
 
     try {
-      const endpoint = `${process.env.NEXT_PUBLIC_LMS_API_URL}tests/save_uploaded_questions/MAT3`
+      const endpoint = `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/questions/save_import`
 
       const response = await axios.post(
         endpoint,

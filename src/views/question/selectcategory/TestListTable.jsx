@@ -169,7 +169,7 @@ const TestListTable = ({ tableData, addCategoryData, deleteUserData }) => {
     setOpenStatusDialog(true)
   }
 
-  // Function to close the dialog
+  // Function to close the dialogro
   const handleCloseStatusDialog = () => {
     setOpenStatusDialog(false)
   }
@@ -182,6 +182,10 @@ const TestListTable = ({ tableData, addCategoryData, deleteUserData }) => {
     console.log(guid, 'kkkkkkk')
     console.log('testing', 'kkkk')
     router.push(`/question/import?guid=${guid}`)
+  }
+  const handleImport = () => {
+    console.log('testing', 'kkkk')
+    router.push(`/question/import`)
   }
   const categories = Object.values(tableData)
   const transformPayloadToArray = payload => {
@@ -614,7 +618,9 @@ const TestListTable = ({ tableData, addCategoryData, deleteUserData }) => {
           Import Questions
         </Button>
       )}
-
+      <Button variant='contained' onClick={handleImport} sx={{ mt: 4, ml: 3 }}>
+        Skip Step
+      </Button>
       {/* status Dialog */}
     </>
   )

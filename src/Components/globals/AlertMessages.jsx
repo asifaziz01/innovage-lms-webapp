@@ -1,6 +1,7 @@
 import { IconButton, Typography } from '@mui/material'
 import { toast } from 'react-toastify'
-
+import 'react-toastify/ReactToastify.min.css'
+// import { alertMessages } from '@/components/globals/AlertMessages'
 export const alertMessages = (theme, type, title = '', subtitle = '') => {
   // Define a unique toast ID based on the type of message
   const toastId = `${type}-alert-toast`
