@@ -127,35 +127,7 @@ export default function useQuestionModuleApi() {
     // console.error('Error fetching data:', error)
     // }
   }
-  const BulkDelete = async questionIds => {
-    try {
-      const formData = new FormData()
 
-      // Append each question ID with the same key
-      questionIds.forEach(id => {
-        formData.append('guid[]', id)
-      })
-
-      // Send the DELETE request
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/questions/trash`,
-        {
-          method: 'POST',
-          body: formData
-        },
-        {
-          Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
-          Network: 'dev369',
-          accept: 'application/json'
-        }
-      )
-
-      return response.data // Return the response data for further processing if needed
-    } catch (error) {
-      console.error('Error deleting questions in bulk:', error)
-      throw error // Rethrow error to be handled in the component if necessary
-    }
-  }
   const updateQuestion = async (guid, questionData, uploadedFile) => {
     try {
       const formData = new FormData()
@@ -246,6 +218,37 @@ export default function useQuestionModuleApi() {
         })
     } catch (error) {
       console.error('Error fetching data:', error)
+    }
+  }
+  const BulkDelete = async questionIds => {
+    try {
+      const formData = new FormData()
+
+      // Append each question ID with the same key
+      questionIds.forEach(id => {
+        formData.append('guid[]', id)
+      })
+
+      // Send the DELETE request
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/questions/trash`,
+        {
+          method: 'POST',
+          body: formData
+        },
+        {
+          Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
+          Network: 'dev369',
+          accept: 'application/json'
+        }
+      )
+
+      // return response.data // Return the response data for further processing if needed
+      alertMessages(theme, 'success', response?.data?.message)
+      trashDifficultyData()
+    } catch (error) {
+      console.error('Error deleting questions in bulk:', error)
+      throw error // Rethrow error to be handled in the component if necessary
     }
   }
   const resetQuestionData = Data => {
