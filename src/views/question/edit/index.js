@@ -1,8 +1,8 @@
 'use client'
-import useQuestionModuleApi from '@/api/useQuestionModuleApi'
 import React, { useEffect, useState } from 'react'
+
 import { useSearchParams, useRouter } from 'next/navigation'
-import Reactquill from '../list/Reactquill'
+
 import {
   Box,
   TextField,
@@ -18,12 +18,23 @@ import {
   FormControlLabel,
   Checkbox,
   FormControl,
-  InputLabel
+  InputLabel,
+  OutlinedInput,
+  InputAdornment,
+  IconButton
 } from '@mui/material'
 import { Controller } from 'react-hook-form'
+
+import { getUniqueDomId } from '@fullcalendar/core/internal'
+
+import Reactquill from '../list/Reactquill'
+import useQuestionModuleApi from '@/api/useQuestionModuleApi'
 import FilterHeader from '@/Components/globals/FilterHeader'
 import QuestionUpload from '@/views/test/questions/QuestionUpload'
 import PaginationCard from '@/api/Pagination'
+import useDifficultiesApi from '@/api/useDifficultiesApi'
+import useImportanceApi from '@/api/useImportanceApi'
+
 const questionTypeMapping = {
   mcmc: 'Multiple Choice Question',
   fib: 'Fill in the Blanks',
@@ -32,10 +43,25 @@ const questionTypeMapping = {
 }
 
 const EditQuestion = () => {
+  const { data, addDifficultyLevelToQuestion, removeDifficultyLevelToQuestion } = useDifficultiesApi()
+
+  const {
+    data: importanceData,
+    addImportanceLevelToQuestion,
+    removeImportanceLevelToQuestion,
+    fetchImportanceData,
+    fetchData
+  } = useImportanceApi()
+
+  const { data: difficultiesData, fetchData: fetchDifficultiesData } = useDifficultiesApi()
+
   const { viewQuestion, updateQuestion, fetchDataallquestion } = useQuestionModuleApi()
   const searchParams = useSearchParams()
   const guid = searchParams.get('guid')
   const router = useRouter()
+  const [diffId, setDiffId] = useState(null)
+  const [impId, setImpId] = useState(null)
+
   const [questionData, setQuestionData] = useState({
     question: '',
     type: '',
@@ -43,13 +69,17 @@ const EditQuestion = () => {
     marksPerQuestion: '',
     negativeMarks: '',
     timeAllowed: '',
+    difficulty: '',
+    importance: '',
     timeUnit: 'Second',
     choices: [] // Initialize choices
   })
+
   useEffect(() => {
     if (guid) {
       viewQuestion(guid).then(res => {
         const payload = res?.data?.payload
+
         setQuestionData({
           question: payload?.question || '', // Update the question value
           type: payload?.question_type || '',
@@ -57,12 +87,20 @@ const EditQuestion = () => {
           marksPerQuestion: payload?.marks || '',
           negativeMarks: payload?.neg_marks || '',
           timeAllowed: payload?.time || '',
+          difficulty: payload?.difficulty || '',
+          importance: payload?.difficulty || '',
           timeUnit: 'Second',
           choices: payload?.choices || []
         })
       })
     }
   }, [guid])
+
+  useEffect(() => {
+    fetchData()
+    fetchDifficultiesData()
+  }, [])
+
   //quill changes updates
   const handleQuillChange = value => {
     setQuestionData(prevState => ({
@@ -70,20 +108,47 @@ const EditQuestion = () => {
       question: value
     }))
   }
+
+  console.info(data, 'importance')
+
   //handle input changes for the form data
   const handleInputChange = e => {
     const { name, value } = e.target
+
     setQuestionData(prevState => ({
       ...prevState,
       [name]: value
     }))
   }
+
+  // function for removing difficulty level to question
+
+  const removeDifficultyLevel = (guid, Id) => {
+    removeDifficultyLevelToQuestion(guid, Array(Id))
+    setQuestionData(prevState => ({
+      ...prevState,
+      difficulty: null
+    }))
+    setDiffId(null)
+  }
+
+  // function for removing importance level to question
+  const removeImportanceLevel = (guid, Id) => {
+    removeImportanceLevelToQuestion(guid, Array(Id))
+    setQuestionData(prevState => ({
+      ...prevState,
+      importance: null
+    }))
+    setImpId(null)
+  }
+
   //handle choice change
   const handleChoiceChange = (value, index) => {
     const updatedChoices = questionData.choices.map((choice, idx) => ({
       ...choice,
       choice: idx === index ? value : choice.choice
     }))
+
     setQuestionData(prevState => ({
       ...prevState,
       choices: updatedChoices
@@ -96,14 +161,17 @@ const EditQuestion = () => {
       ...choice,
       correct_answer: idx === index ? '1' : '0'
     }))
+
     setQuestionData(prevState => ({
       ...prevState,
       choices: updatedChoices
     }))
   }
+
   const handleUpdate = async () => {
     try {
       const updatedData = { ...questionData }
+
       await updateQuestion(guid, updatedData)
       alert('Question updated successfully')
       router.push('/question/allquestion') // Navigate back to the list after successful update
@@ -113,6 +181,7 @@ const EditQuestion = () => {
       alert('Failed to update the question. Please try again.')
     }
   }
+
   // console.log(questionData, 'questionData')
   return (
     <>
@@ -235,10 +304,45 @@ const EditQuestion = () => {
                     // control={control}
                     rules={{ required: true }}
                     render={({ field }) => ( */}
-                    <Select label='Select difficulty level *'>
-                      <MenuItem value='low'>Low</MenuItem>
-                      <MenuItem value='medium'>Medium</MenuItem>
-                      <MenuItem value='high'>High</MenuItem>
+                    <Select
+                      label='Select difficulty level *'
+                      value={questionData.difficulty} // Dynamic time unit
+                      name='difficulty'
+                      onChange={handleInputChange}
+                      endAdornment={
+                        diffId && (
+                          <InputAdornment
+                            position='end'
+                            sx={{
+                              paddingRight: 6
+                            }}
+                          >
+                            <IconButton
+                              edge='end'
+                              aria-label='clear selection'
+                              name='difficulty'
+                              onClick={() => diffId && removeDifficultyLevel(diffId, Array(guid))}
+                            >
+                              <i class='ri-close-fill'></i>
+                            </IconButton>
+                          </InputAdornment>
+                        )
+                      }
+                    >
+                      {difficultiesData?.map(item => (
+                        <MenuItem
+                          value={item?.guid}
+                          key={item?.guid}
+                          onClick={() =>
+                            (() => {
+                              addDifficultyLevelToQuestion(item?.guid, Array(guid))
+                              setDiffId(item?.guid)
+                            })()
+                          }
+                        >
+                          {item?.title}
+                        </MenuItem>
+                      ))}
                     </Select>
                     {/* // )} */}
                     {/* /> */}
@@ -264,10 +368,45 @@ const EditQuestion = () => {
                 control={control}
                 rules={{ required: true }}
                 render={({ field }) => ( */}
-                    <Select label='Select importance *'>
-                      <MenuItem value='high'>High</MenuItem>
-                      <MenuItem value='medium'>Medium</MenuItem>
-                      <MenuItem value='low'>Low</MenuItem>
+                    <Select
+                      label='Select importance *'
+                      value={questionData.importance} // Dynamic time unit
+                      name='importance'
+                      onChange={handleInputChange}
+                      endAdornment={
+                        impId && (
+                          <InputAdornment
+                            position='end'
+                            sx={{
+                              paddingRight: 6
+                            }}
+                          >
+                            <IconButton
+                              edge='end'
+                              aria-label='clear selection'
+                              name='importance'
+                              onClick={() => impId && removeImportanceLevel(impId, Array(guid))}
+                            >
+                              <i class='ri-close-fill'></i>
+                            </IconButton>
+                          </InputAdornment>
+                        )
+                      }
+                    >
+                      {importanceData?.map(item => (
+                        <MenuItem
+                          value={item?.guid}
+                          key={item?.guid}
+                          onClick={() =>
+                            (() => {
+                              addImportanceLevelToQuestion(item?.guid, Array(guid))
+                              setImpId(item?.guid)
+                            })()
+                          }
+                        >
+                          {item?.title}
+                        </MenuItem>
+                      ))}
                     </Select>
                     {/* )}
               /> */}
@@ -316,6 +455,7 @@ const EditQuestion = () => {
                   </Grid>
                   <Grid item xs={12}>
                     <Reactquill
+
                     // setTextValue={setFeedback}
                     />
                   </Grid>
@@ -328,6 +468,7 @@ const EditQuestion = () => {
                   </Grid>
                   <Grid item xs={12}>
                     <Reactquill
+
                     // setTextValue={setAnswerFeedback}
                     />
                   </Grid>

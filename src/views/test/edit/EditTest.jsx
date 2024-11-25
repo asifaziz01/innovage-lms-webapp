@@ -168,30 +168,19 @@ const EditTest = ({ isLoading = false }) => {
                               <Controller
                                 name='details'
                                 control={control}
-                                render={({ field }) => (
-                                  <TextField
-                                    {...field}
-                                    multiline
-                                    rows={4}
-                                    error={Boolean(errors.details)}
-                                    helperText={errors.details ? errors.details.message : ''}
-                                  />
-                                )}
+                                render={({ field }) => <TextField {...field} multiline rows={4} />}
                               />
                             </FormControl>
                           </Grid>
 
                           <Grid item xs={12} py={1}>
                             <FormControl fullWidth>
-                              <InputLabel id='category' error={Boolean(errors.category)}>
-                                Select Category *
-                              </InputLabel>
+                              <InputLabel id='category'>Select Category *</InputLabel>
                               <Controller
                                 name='category'
                                 control={control}
-                                rules={{ required: true }}
                                 render={({ field }) => (
-                                  <Select label='Select Category' {...field} error={Boolean(errors.category)}>
+                                  <Select label='Select Category' {...field}>
                                     {categories?.map(item => (
                                       <MenuItem value={item?.title} key={item?.guid}>
                                         {item?.title}
@@ -200,11 +189,6 @@ const EditTest = ({ isLoading = false }) => {
                                   </Select>
                                 )}
                               />
-                              {errors.type && (
-                                <FormHelperText sx={{ color: 'error.main' }} id='validation-test-type'>
-                                  {errors.type.message}
-                                </FormHelperText>
-                              )}
                             </FormControl>
                           </Grid>
                         </CardContent>

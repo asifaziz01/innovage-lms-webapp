@@ -1,4 +1,5 @@
 import React from 'react'
+
 import { Card, CardContent, Typography, Pagination, IconButton, Select, MenuItem, Box } from '@mui/material'
 
 const PaginationCard = ({ rowsPerPage, currentPage, totalPages, onPageChange, onRowsPerPageChange }) => {
@@ -9,6 +10,7 @@ const PaginationCard = ({ rowsPerPage, currentPage, totalPages, onPageChange, on
   const handlePageChange = (event, value) => {
     onPageChange(value) // Call the parent handler
   }
+
   // const handleRowsPerPageChange = event => {
   //   onRowsPerPageChange(event.target.value) // Ensure event is passed correctly
   // }
@@ -20,6 +22,7 @@ const PaginationCard = ({ rowsPerPage, currentPage, totalPages, onPageChange, on
       console.error('Event or event.target is undefined')
     }
   }
+
   return (
     <Card>
       <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

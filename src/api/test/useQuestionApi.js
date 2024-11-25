@@ -22,6 +22,8 @@ export default function useQuestionApi() {
   const createQuestion = (data, mode) => {
     const formData = new FormData()
 
+    formData.append(`category`, 'SCI38')
+
     if (typeof data === 'object') {
       Object.entries(data).forEach(([key, value]) => {
         if (key === 'choices') {
@@ -79,7 +81,10 @@ export default function useQuestionApi() {
   }
 
   const editQuestion = (data, mode) => {
+    console.info(data)
     const formData = new FormData()
+
+    formData.append(`category`, 'SCI38')
 
     if (typeof data === 'object') {
       Object.entries(data).forEach(([key, value]) => {
@@ -101,14 +106,16 @@ export default function useQuestionApi() {
               console.log(file, 'eeeee')
             })
         } else {
-          formData.append(key, value)
+          if (value !== undefined) {
+            formData.append(key, value)
+          }
         }
       })
     }
 
     try {
       axios
-        .post(`${process.env.NEXT_PUBLIC_BASEPATH}tests/create_question/${data?.guid}/${data?.qId}`, formData, {
+        .post(`${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/questions/${data?.guid}/edit`, formData, {
           Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
           Network: 'dev369',
           accept: 'application/json'

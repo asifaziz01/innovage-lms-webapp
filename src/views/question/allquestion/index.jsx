@@ -1,8 +1,11 @@
 'use client'
 import React, { useEffect, useState, useCallback } from 'react'
+
 import '../../style/styles.css'
+
 // import useQuestionApi from '../../Api/useQuestionApi'
-import QuestionCard from '../list/QuestionCard'
+import { useSearchParams, useRouter } from 'next/navigation'
+
 import {
   Grid,
   Box,
@@ -18,23 +21,28 @@ import {
   Button,
   Card
 } from '@mui/material'
+
+import QuestionCard from '../list/QuestionCard'
 import TableFilters from '../list/TableFilters'
 import TestCard from '../list/TestCard'
 import QuickLinksCard from '../list/QuickLinkCards'
 import useQuestionModuleApi from '@/api/useQuestionModuleApi'
 import useImportanceApi from '@/api/useImportanceApi'
+
 // import QuestionCardBankModule from '../list/QuestionCardBankModule'
 import PaginationCard from '@/api/Pagination'
 import Sortingquestion from '../list/Sortingquestion'
+
 // import Topcard from '../list/Topcard
 import Topcard from '../list/Topcard'
 import FilterHeader from '@/Components/globals/FilterHeader'
-import { useSearchParams } from 'next/navigation'
+
 import QuestionCardBankModule from '../list/QuestionCardBankModule'
 import useCategoryApi from '@/api/useCategoryApi'
-import { useRouter } from 'next/navigation'
+
 const debounce = (func, delay) => {
   let timeoutId
+
   return (...args) => {
     clearTimeout(timeoutId)
     timeoutId = setTimeout(() => {
@@ -42,6 +50,7 @@ const debounce = (func, delay) => {
     }, delay)
   }
 }
+
 const AllQuestionList = () => {
   const {
     allquestionData,
@@ -56,9 +65,11 @@ const AllQuestionList = () => {
     trashDifficultyData,
     resetQuestionData
   } = useQuestionModuleApi()
+
   const { fetchImportanceData } = useImportanceApi
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
   const [selectAll, setSelectAll] = useState('')
+
   // const [showCorrectAnswer, setShowCorrectAnswer] = useState(false)
   // const [showCategory, setShowCategory] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
@@ -72,22 +83,29 @@ const AllQuestionList = () => {
   const [order, setOrder] = useState('')
   const [checkStatus, setCheckStatus] = useState('Active')
   const [categoryGuid, setCategoryGuid] = useState('')
+
   // const [debouncedSearchKeyword, setDebouncedSearchKeyword] = useState(searchKeyword)
   const [localSearch, setLocalSearch] = useState('') // local state for search input
   const [isExpandedAll, setIsExpandedAll] = useState(false) // Tracks if all are expanded
   const [selectedQuestions, setSelectedQuestions] = useState([])
+
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(() => {
     // Initialize state from localStorage or default to false
     const savedValue = localStorage.getItem('showCorrectAnswer')
+
     return savedValue !== null ? JSON.parse(savedValue) : false
   })
+
   console.log(trashData, 'trash')
+
   const [showCategory, setShowCategory] = useState(() => {
     return JSON.parse(localStorage.getItem('showCategory')) || false // Initialize from localStorage
   })
+
   const [showFields, setShowFields] = useState(() => {
     return JSON.parse(localStorage.getItem('showFields')) || false // Initialize from localStorage
   })
+
   const [categories, setCategories] = useState([])
   const [selectedCategory, setSelectedCategory] = useState('Categories')
   const { data } = useCategoryApi()
@@ -95,12 +113,14 @@ const AllQuestionList = () => {
   const guid = param.get('guid')
   const router = useRouter()
   const [isTrash, setIsTrash] = useState(false)
+
   // Effect to update localStorage whenever showCorrectAnswer changes
   useEffect(() => {
     localStorage.setItem('showCorrectAnswer', JSON.stringify(showCorrectAnswer))
     localStorage.setItem('showCategory', JSON.stringify(showCategory))
     localStorage.setItem('showFields', JSON.stringify(showFields))
   }, [showCorrectAnswer, showCategory, showFields])
+
   // Debounce effect to delay the API call until the user stops typing
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -109,11 +129,13 @@ const AllQuestionList = () => {
 
     return () => clearTimeout(delayDebounceFn) // Cleanup the timeout
   }, [localSearch, setSearchKeyword])
+
   const handleCategoryTitle = category => {
     console.log('1234')
     console.log(category, 'selected category')
     setSelectedCategory(category.title)
     setCategoryGuid(category.guid)
+
     // Update the selected category based on whether it's a parent or subcategory
     // if (isSubcategory) {
     //   console.log(selectedCategory, 'sssss')
@@ -125,11 +147,14 @@ const AllQuestionList = () => {
 
     setIsDropdownOpen(false)
   }
+
   const handleCategoryChange = event => {
     const value = event.target.value
+
     setSelectedCategory(value)
     console.log('Selected Category ID:', value)
   }
+
   console.log(categoryGuid, 'selectedcategory')
   useEffect(() => {
     fetchDataallquestion({
@@ -144,12 +169,14 @@ const AllQuestionList = () => {
 
   useEffect(() => {
     const dataSource = isTrash ? trashData : allquestionData
+
     if (dataSource && dataSource.meta) {
       setTotalPages(Math.ceil(dataSource.meta.total_results / rowsPerPage))
     }
   }, [allquestionData, trashData, rowsPerPage, isTrash])
 
   console.log(allquestionData?.meta?.total_results, 'kkkk')
+
   const handlePageChange = page => {
     setCurrentPage(page)
   }
@@ -158,10 +185,12 @@ const AllQuestionList = () => {
     setRowsPerPage(rows)
     setCurrentPage(1) // Reset to the first page when changing rows per page
   }
+
   useEffect(() => {
     trashDifficultyData()
   }, [])
   console.log('1234')
+
   // Handle search input
   const handleSearch = debounce(event => {
     setSearchKeyword(event.target.value) // Update the search keyword
@@ -173,12 +202,14 @@ const AllQuestionList = () => {
     // setShowAnswers([]) // Reset showing answers (no answers shown)
     // setIsExpandedAll(true) // Set the expanded state
   }
+
   const handleExpandAllButton = () => {
     setIsVisible(true) // Show the questions
     setExpandedPanels(questions.map(q => q.id)) // Expand all panels
     setShowAnswers(questions.map(q => q.id)) // Reset showing answers (no answers shown)
     // setIsExpandedAll(true) // Set the expanded state
   }
+
   // Function to collapse all accordions and hide everything
   const handleCollapseAll = () => {
     // setExpandedPanels([]) // Collapse all panels
@@ -186,7 +217,9 @@ const AllQuestionList = () => {
     // setShowAnswers([]) // Reset answers visibility
     // setIsExpandedAll(false) // Reset the expanded state
   }
+
   console.log(order, 'sssssssssssss')
+
   // Function to toggle the answer visibility of a specific question
   const toggleAnswer = questionId => {
     setShowAnswers(prev => {
@@ -203,12 +236,14 @@ const AllQuestionList = () => {
   // Pass this to QuestionCard to manage checkbox selections
   const handleCheckboxChange = (questionId, isChecked) => {
     console.log(questionId)
+
     if (isChecked) {
       setSelectedQuestions([...selectedQuestions, questionId]) // Add question to selected list
     } else {
       setSelectedQuestions(selectedQuestions.filter(id => id !== questionId)) // Remove from list
     }
   }
+
   // To track which questions have correct answers shown
 
   // Function to toggle showing the correct answer
@@ -218,6 +253,7 @@ const AllQuestionList = () => {
       setOpenDeleteDialog(true)
     }
   }
+
   // const parseCategories = (categories, level = 0) => {
   //   return categories.flatMap(category => [
   //     { id: category.id, title: category.title, level },
@@ -232,6 +268,7 @@ const AllQuestionList = () => {
   //   }
   // }, [data])
   console.log(categories, 'categorydata')
+
   // Handle category selection
 
   const handleConfirmDelete = async () => {
@@ -246,6 +283,7 @@ const AllQuestionList = () => {
       console.error('Error deleting questions:', error)
     }
   }
+
   const handleResetData = async () => {
     try {
       // Call the delete function from your API hook
@@ -258,36 +296,46 @@ const AllQuestionList = () => {
       console.error('Error deleting questions:', error)
     }
   }
+
   useEffect(() => {
     if (!sortOption) {
       // If no option is selected (unchecking), reset filters
       setSelectedType(null)
       setOrder(null)
     }
+
     if (sortOption === 'multiple_choice_question') {
       setSelectedType('mcmc')
     }
+
     if (sortOption === 'true_false') {
       setSelectedType('tf')
     }
+
     if (sortOption === 'question_asc') setOrder('title_asc')
+
     if (sortOption === 'question_desc') {
       setOrder('title_desc')
     }
+
     if (sortOption === 'creation_date_asc') {
       setOrder('newest_first')
     }
+
     if (sortOption === 'creation_date_desc') {
       setOrder('newest_last')
     }
+
     // else {
     //   setSelectedType(null)
     //   setOrder(null)
     // }
   }, [sortOption, selectedType])
+
   const handleCancelDelete = () => {
     setOpenDeleteDialog(false)
   }
+
   // State for toggling between active and trash data
 
   const questions =
@@ -295,6 +343,7 @@ const AllQuestionList = () => {
     (isTrash ? trashData : allquestionData).data
       ?.filter(item => {
         console.log(item, 'itemcheck')
+
         return item.question !== null
       }) // Filter based on status if isTrash is true
       .map((item, index) => ({
@@ -309,26 +358,33 @@ const AllQuestionList = () => {
         neg_marks: item?.neg_marks,
         time: item?.time
       }))
+
   console.log(questions, 'questionsss')
+
   const filteredQuestions = questions?.filter(question =>
     question.text.toLowerCase().includes(searchKeyword.toLowerCase())
   )
+
   const width = 'auto'
   const deleteIconActive = selectedQuestions.length > 0
+
   console.log(filteredQuestions, 'questions')
 
   // Function to handle sort change
   const handleSortChange = sortType => {
     setSortOption(sortType)
   }
+
   const handleStatusToggle = status => {
     setIsTrash(status === 'trash')
   }
+
   // Sorting logic
   const applySort = questions => {
     const stripHtmlTags = text => {
       const parser = new DOMParser()
       const parsedHtml = parser.parseFromString(text, 'text/html')
+
       return parsedHtml.body.textContent || ''
     }
 
@@ -341,6 +397,7 @@ const AllQuestionList = () => {
       // Step 3: Trim spaces from start and end
       return strippedText.trim()
     }
+
     // if (sortOption === 'creation_date_asc') {
     //   return questions.sort((a, b) => new Date(a.creationDate) - new Date(b.creationDate))
     // } else if (sortOption === 'creation_date_desc') {
@@ -375,23 +432,29 @@ const AllQuestionList = () => {
     // }
     return questions
   }
+
   const categoryPage = () => {
     router.push('/categories/list')
   }
+
   const addQuestion = () => {
     router.push('/test/questions')
   }
+
   const sortedQuestions = applySort(filteredQuestions)
+
   const parseCategories = (categories, level = 0) => {
     return categories.flatMap(category => [
       { id: category.id, title: category.title, level },
       ...parseCategories(category.children || [], level + 1)
     ])
   }
+
   useEffect(() => {
     if (data) {
       console.log(data, 'data12334')
       const parsedCategories = parseCategories(data)
+
       setCategories(parsedCategories)
     }
   }, [data])
@@ -408,6 +471,7 @@ const AllQuestionList = () => {
       setHoveredCategory(null)
     }
   }
+
   const [clickedCategories, setClickedCategories] = useState([]) // Track which category is clicked
 
   const handleCategoryClick = categoryId => {
@@ -421,12 +485,14 @@ const AllQuestionList = () => {
       }
     })
   }
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
   // Handle the toggle of the category dropdown
   const handleDropdownToggle = () => {
     setIsDropdownOpen(!isDropdownOpen)
   }
+
   // const handleCategoryTitle = category => {
   //   console.log('1234')
   //   console.log(category, 'selected category')
@@ -499,6 +565,7 @@ const AllQuestionList = () => {
             variant='contained'
             onClick={categoryPage}
             className='max-sm:is-full'
+
             // startIcon={
             //   <i
             //     class='ri-add-fill'
@@ -554,6 +621,7 @@ const AllQuestionList = () => {
           handleCategoryTitle={handleCategoryTitle}
           handleStatusToggle={handleStatusToggle}
           trash={isTrash}
+
           // isDropdownOpen={isDropdownOpen}
           // setIsDropdownOpen={setIsDropdownOpen}
         />

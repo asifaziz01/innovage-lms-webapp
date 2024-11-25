@@ -14,25 +14,44 @@ import { alertMessages } from '@/components/globals/AlertMessages'
 export default function useDifficultiesApi() {
   const [data, setData] = useState([])
   const [trashedData, setTrashedData] = useState([])
+  const [diffId, setDiffId] = useState(null)
+  const [metaData, setMetaData] = useState([])
+
+  //trash states
+  const [trashMetaData, setTrashMetaData] = useState([])
+
+  //
+  const [searchKeyword, setSearchKeyword] = useState('')
+  const [searchTrashKeyword, setSearchTrashKeyword] = useState('')
   const theme = useTheme()
 
   console.info(process.env.NEXT_PUBLIC_DOCS_URL)
 
-  const fetchData = () => {
+  const fetchData = (page = '', results_per_page = '', searchKeyword = '') => {
+    const formData = new FormData()
+
+    if (page) {
+      formData.append('page', page) // Add pagination: current page
+    }
+
+    if (results_per_page) {
+      formData.append('results_per_page', results_per_page)
+    }
+
+    if (searchKeyword) {
+      formData.append('search', searchKeyword) // Add the search term to the formData
+    }
+
     try {
       axios
-        .post(
-          `${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/difficulty/all`,
-          {},
-          {
-            Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
-            Network: 'dev369',
-            accept: 'application/json'
-          }
-        )
+        .post(`${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/difficulty/all`, formData, {
+          Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
+          Network: 'dev369',
+          accept: 'application/json'
+        })
         ?.then(res => {
-          //   setData(res?.payload?.data)
           setData(res?.data?.payload?.data)
+          setMetaData(res?.data?.payload?.meta)
         })
     } catch (error) {
       console.error('Error fetching data:', error)
@@ -95,6 +114,36 @@ export default function useDifficultiesApi() {
       axios
         .post(
           `${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/difficulty/${guid}/add_to_questions`,
+
+          // userData
+          formData,
+          {
+            Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
+            Network: 'dev369',
+            accept: 'application/json'
+          }
+        )
+        .then(res => {
+          alertMessages(theme, 'success', res?.data?.message)
+        })
+
+      //   return response.data
+    } catch (error) {
+      console.error('Error:', error)
+    }
+  }
+
+  const removeDifficultyLevelToQuestion = (guid, QId) => {
+    const formData = new FormData()
+
+    QId.map((qId, i) => {
+      formData.append(`questions[${i}]`, qId)
+    })
+
+    try {
+      axios
+        .post(
+          `${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/difficulty/${guid}/remove_from_questions`,
 
           // userData
           formData,
@@ -209,7 +258,7 @@ export default function useDifficultiesApi() {
   const restoreTrashDifficulties = guId => {
     const formData = new FormData()
 
-    Array(guId).map((choice, i) => {
+    guId.map((choice, i) => {
       formData.append(`guid[${i}]`, choice)
     })
 
@@ -238,16 +287,33 @@ export default function useDifficultiesApi() {
     }
   }
 
-  const getTrashedDifficultiesLevel = () => {
+  const getTrashedDifficultiesLevel = (page = '', results_per_page = '', searchKeyword = '') => {
+    const formData = new FormData()
+
+    console.info(searchKeyword)
+
+    if (page) {
+      formData.append('page', page) // Add pagination: current page
+    }
+
+    if (results_per_page) {
+      formData.append('results_per_page', results_per_page)
+    }
+
+    if (searchKeyword) {
+      formData.append('search', searchKeyword) // Add the search term to the formData
+    }
+
     try {
       axios
-        .post(`${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/difficulty/trashed`, {
+        .post(`${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/difficulty/trashed`, formData, {
           Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
           Network: 'dev369',
           accept: 'application/json'
         })
         .then(res => {
           setTrashedData(res?.data?.payload?.data)
+          setTrashMetaData(res?.data?.payload?.meta)
         })
 
       //   return response.data
@@ -257,8 +323,8 @@ export default function useDifficultiesApi() {
   }
 
   useEffect(() => {
-    fetchData()
-    getTrashedDifficultiesLevel()
+    // fetchData()
+    // getTrashedDifficultiesLevel()
   }, [])
 
   return {
@@ -273,6 +339,14 @@ export default function useDifficultiesApi() {
     deleteDifficulties,
     restoreTrashDifficulties,
     getTrashedDifficultiesLevel,
-    addDifficultyLevelToQuestion
+    addDifficultyLevelToQuestion,
+    removeDifficultyLevelToQuestion,
+    searchKeyword,
+    setSearchKeyword,
+    searchTrashKeyword,
+    setSearchTrashKeyword,
+    fetchData,
+    metaData,
+    trashMetaData
   }
 }

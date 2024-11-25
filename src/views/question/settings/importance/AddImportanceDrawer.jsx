@@ -35,9 +35,9 @@ const initialData = {
   contact: ''
 }
 
-const AddDifficultiesDrawer = props => {
+const AddImportanceDrawer = props => {
   // Props
-  const { open, handleClose, difficultiesData, addDifficultyData } = props
+  const { open, handleClose, difficultiesData, addImportanceData } = props
 
   // States
   const [formData, setFormData] = useState(initialData)
@@ -89,7 +89,7 @@ const AddDifficultiesDrawer = props => {
       status: '0'
     }
 
-    addDifficultyData(newUser)
+    addImportanceData(newUser)
 
     // return getNewUserData()
 
@@ -116,7 +116,7 @@ const AddDifficultiesDrawer = props => {
       sx={{ '& .MuiDrawer-paper': { width: { xs: 300, sm: 400 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Add Difficulty</Typography>
+        <Typography variant='h5'>Add Importance</Typography>
         <IconButton size='small' onClick={handleReset}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -205,4 +205,4 @@ const AddDifficultiesDrawer = props => {
   )
 }
 
-export default AddDifficultiesDrawer
+export default AddImportanceDrawer

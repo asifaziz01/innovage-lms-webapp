@@ -11,7 +11,16 @@ import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
 import { Checkbox, InputAdornment, ListItemText, TextField, Typography } from '@mui/material'
 
-const TableFilters = ({ setData, tableData, globalFilter, setGlobalFilter, type }) => {
+const TableFilters = ({
+  setData,
+  tableData,
+  globalFilter,
+  setGlobalFilter,
+  type,
+  searchKeyword,
+  localSearch,
+  setLocalSearch
+}) => {
   // States
   const [types, setTypes] = useState([])
   const [status, setStatus] = useState([])
@@ -118,11 +127,28 @@ const TableFilters = ({ setData, tableData, globalFilter, setGlobalFilter, type 
 
         <Grid item xs={12} sm={4}>
           <FormControl fullWidth>
-            <DebouncedInput
-              value={globalFilter ?? ''}
-              onChange={value => setGlobalFilter(String(value))}
-              placeholder='Search Test'
-              className='max-sm:is-full'
+            <TextField
+              sx={{
+                '& .MuiInputBase-root': {
+                  height: '40px',
+                  minHeight: 'auto'
+                },
+                '& .MuiInputLabel-root': {
+                  top: '-7px'
+                }
+              }}
+              // variant='outlined'
+              placeholder='Search'
+              fullWidth
+              value={localSearch}
+              onChange={e => setLocalSearch(e.target.value)}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position='end'>
+                    <i className='ri-search-line' style={{ color: '#262B4366' }} />
+                  </InputAdornment>
+                )
+              }}
             />
           </FormControl>
         </Grid>

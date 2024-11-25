@@ -26,7 +26,7 @@ export default function useTestApi() {
     try {
       axios
         .post(
-          `${USER_MODULE_ENDPOINTS}/list`,
+          `${NEXT_PUBLIC_LOCAL_BASEPATH_V2}/test/all`,
           {},
           {
             Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',

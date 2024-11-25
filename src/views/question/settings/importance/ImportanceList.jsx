@@ -5,41 +5,37 @@ import Grid from '@mui/material/Grid'
 
 // Component Imports
 
-import useCategoryApi from '@/api/useCategoryApi'
-import DifficultiesListTable from './DifficultiesListTable'
-import useDifficultiesApi from '@/api/useDifficultiesApi'
+import ImportanceListTable from './ImportanceListTable'
+import useImportanceApi from '@/api/useImportanceApi'
 
-const DifficultiesList = () => {
+const ImportanceList = () => {
   const {
     data,
     trashedData,
-    addDifficultyData,
-    trashDifficulties,
-    deleteDifficulties,
-    restoreTrashDifficulties,
-    getTrashedDifficultiesLevel,
+    addImportanceData,
+    trashImportance,
+    deleteImportance,
+    restoreTrashImportance,
     searchKeyword,
     setSearchKeyword,
     fetchData,
     metaData,
+    getTrashedImportanceLevel,
     trashMetaData,
     searchTrashKeyword,
     setSearchTrashKeyword
-  } = useDifficultiesApi()
-
-  console.info(trashedData?.length)
+  } = useImportanceApi()
 
   return (
     <Grid container spacing={6}>
       <Grid item xs={12}>
-        <DifficultiesListTable
+        <ImportanceListTable
           tableData={data}
           trashedData={trashedData}
-          deleteDifficulties={deleteDifficulties}
-          addDifficultyData={addDifficultyData}
-          trashDifficulties={trashDifficulties}
-          restoreTrashDifficulties={restoreTrashDifficulties}
-          getTrashedDifficultiesLevel={getTrashedDifficultiesLevel}
+          deleteImportance={deleteImportance}
+          addImportanceData={addImportanceData}
+          trashImportance={trashImportance}
+          restoreTrashImportance={restoreTrashImportance}
           searchKeyword={searchKeyword}
           setSearchKeyword={setSearchKeyword}
           fetchData={fetchData}
@@ -47,10 +43,11 @@ const DifficultiesList = () => {
           trashMetaData={trashMetaData}
           searchTrashKeyword={searchTrashKeyword}
           setSearchTrashKeyword={setSearchTrashKeyword}
+          getTrashedImportanceLevel={getTrashedImportanceLevel}
         />
       </Grid>
     </Grid>
   )
 }
 
-export default DifficultiesList
+export default ImportanceList

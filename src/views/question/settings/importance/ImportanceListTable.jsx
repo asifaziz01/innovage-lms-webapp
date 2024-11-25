@@ -9,7 +9,6 @@ import { useParams } from 'next/navigation'
 
 // MUI Imports
 import Card from '@mui/material/Card'
-
 import CardHeader from '@mui/material/CardHeader'
 import Button from '@mui/material/Button'
 import Grid from '@mui/material/Grid'
@@ -56,12 +55,9 @@ import PaginationCard from '@/api/Pagination'
 
 import AlertDialogBox from '@/components/Common/AlertDialogBox'
 import DialogBoxComponent from '@/components/Common/DialogBoxComponent'
-import FilterHeader from '@/components/globals/FilterHeader'
-import { getInitials } from '@/utils/getInitials'
 import useDraggableList from '@/components/globals/useDraggableList'
-import TableFilters from '../../list/TableFilters'
-import AddDifficultiesDrawer from './AddDifficultiesDrawer'
-import DifficultiesListFilter from './DifficultiesListFilter'
+import AddImportanceDrawer from './AddImportanceDrawer'
+import ImportanceListFilter from './ImportanceListFilter'
 
 // import DialogBoxComponent from '@/Components/Common/DialogBoxComponent'
 
@@ -119,23 +115,21 @@ const userStatusObj = {
 // Column Definitions
 const columnHelper = createColumnHelper()
 
-const DifficultiesListTable = ({
+const ImportanceListTable = ({
   tableData,
   trashedData,
-
-  addDifficultyData,
-  deleteUserData,
-  trashDifficulties,
-  deleteDifficulties,
-  restoreTrashDifficulties,
-  getTrashedDifficultiesLevel,
+  deleteImportance,
+  addImportanceData,
+  trashImportance,
+  restoreTrashImportance,
   searchKeyword,
   setSearchKeyword,
-  searchTrashKeyword,
-  setSearchTrashKeyword,
   fetchData,
   metaData,
-  trashMetaData
+  trashMetaData,
+  getTrashedImportanceLevel,
+  searchTrashKeyword,
+  setSearchTrashKeyword
 }) => {
   // States
   const [addUserOpen, setAddUserOpen] = useState(false)
@@ -143,21 +137,33 @@ const DifficultiesListTable = ({
   const [selectedParentGuid, setSelectedParentGuid] = useState(null)
   const [editUserOpen, setEditUserOpen] = useState(false)
   const [localSearch, setLocalSearch] = useState('')
+  const [rowSelection, setRowSelection] = useState({})
+  const [selectedRows, setSelectedRows] = useState([])
+  const [restore, setRestore] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
+
   const [rowsPerPage, setRowsPerPage] = useState(5)
   const [totalPages, setTotalPages] = useState(1)
+  const [singleId, setSingleId] = useState(null)
 
   //trash p[pagination states
   const [currentTrashPage, setCurrentTrashPage] = useState(1)
   const [trashRowsPerPage, setTrashRowsPerPage] = useState(5)
   const [totalTrashPages, setTotalTrashPages] = useState(1)
-
-  const [rowSelection, setRowSelection] = useState({})
-  const [selectedRows, setSelectedRows] = useState([])
-  const [restore, setRestore] = useState(null)
-
-  const [singleId, setSingleId] = useState(null)
   const [mode, setMode] = useState('all')
+
+  useEffect(() => {
+    const getSelectedRowIds = (rowSelection, tableData) => {
+      return Object.keys(rowSelection)
+        .filter(key => rowSelection[key]) // Filter out only selected rows
+        .map(key => tableData[key]?.guid) // Map to the row IDs or objects
+    }
+
+    // Example usage:
+    const selectedRowIds = getSelectedRowIds(rowSelection, mode === 'all' ? tableData : trashData)
+
+    setSelectedRows(selectedRowIds) // [id1, id2, id3]
+  }, [rowSelection])
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -187,16 +193,9 @@ const DifficultiesListTable = ({
     setCurrentTrashPage(1) // Reset to the first page when changing rows per page
   }
 
-  //
-
   useEffect(() => {
-    // if (mode === 'all') {
     fetchData(currentPage, rowsPerPage, searchKeyword)
-
-    // } else {
-    getTrashedDifficultiesLevel(currentTrashPage, trashRowsPerPage, searchTrashKeyword)
-
-    // }
+    getTrashedImportanceLevel(currentTrashPage, trashRowsPerPage, searchTrashKeyword)
   }, [currentPage, rowsPerPage, searchKeyword, searchTrashKeyword, mode, currentTrashPage, trashRowsPerPage])
 
   useEffect(() => {
@@ -209,7 +208,6 @@ const DifficultiesListTable = ({
     }
   }, [metaData, rowsPerPage])
 
-  //trash useEffect
   useEffect(() => {
     const dataSource = trashMetaData
 
@@ -217,21 +215,6 @@ const DifficultiesListTable = ({
       setTotalTrashPages(Math.ceil(dataSource.total_results / trashRowsPerPage))
     }
   }, [trashMetaData, trashRowsPerPage])
-
-  //
-
-  useEffect(() => {
-    const getSelectedRowIds = (rowSelection, tableData) => {
-      return Object.keys(rowSelection)
-        .filter(key => rowSelection[key]) // Filter out only selected rows
-        .map(key => tableData[key]?.guid) // Map to the row IDs or objects
-    }
-
-    // Example usage:
-    const selectedRowIds = getSelectedRowIds(rowSelection, mode === 'all' ? tableData : trashData)
-
-    setSelectedRows(selectedRowIds) // [id1, id2, id3]
-  }, [rowSelection])
 
   const [data, setData] = useState(...[tableData])
   const [trashData, setTrashData] = useState(...[trashedData])
@@ -274,15 +257,15 @@ const DifficultiesListTable = ({
   const handleConfirmDelete = () => {
     mode === 'all'
       ? singleId
-        ? trashDifficulties(singleId)
-        : trashDifficulties(selectedRows)
+        ? trashImportance(singleId)
+        : trashImportance(selectedRows)
       : restore
         ? singleId
-          ? restoreTrashDifficulties(singleId)
-          : restoreTrashDifficulties(selectedRows)
+          ? restoreTrashImportance(singleId)
+          : restoreTrashImportance(selectedRows)
         : singleId
-          ? deleteDifficulties(singleId)
-          : deleteDifficulties(selectedRows)
+          ? deleteImportance(singleId)
+          : deleteImportance(selectedRows)
     setOpen(false)
     setSingleId(null)
     setRowSelection({})
@@ -309,7 +292,7 @@ const DifficultiesListTable = ({
   const transformPayloadToArray = payload => {
     const resultArray = []
 
-    Object.keys(payload ?? {}).forEach(key => {
+    Object.keys(payload).forEach(key => {
       const category = payload?.[key]
 
       // Only add the parent category if its guid is defined
@@ -509,11 +492,11 @@ const DifficultiesListTable = ({
                           setRestore(false)
                         }
 
-                        // mode === 'trash' && deleteDifficulties(Array(row?.original?.guid))
+                        // mode === 'trash' && deleteImportance(Array(row?.original?.guid))
                       }}
                     >
                       {mode === 'all' ? (
-                        <Link href={`/difficulty/edit?guid=${row?.original?.guid}`} className='flex'>
+                        <Link href={`/importance/edit?guid=${row?.original?.guid}`} className='flex'>
                           <i className='ri-edit-box-line text-textSecondary' />
                         </Link>
                       ) : (
@@ -579,13 +562,13 @@ const DifficultiesListTable = ({
             />
           }
         >
-          Add Difficulty Level
+          Add Importance Level
         </Button>
       </Box>
       <Card>
         <Grid container item xs={12} display='flex' alignItems='center'>
           <Grid item xs={12}>
-            <DifficultiesListFilter
+            <ImportanceListFilter
               setData={setFilteredData}
               tableData={data}
               globalFilter={globalFilter}
@@ -594,11 +577,11 @@ const DifficultiesListTable = ({
               setType={setType}
               searchKeyword={searchKeyword}
               setSearchKeyword={setSearchKeyword}
-              searchTrashKeyword={searchTrashKeyword}
-              setSearchTrashKeyword={setSearchTrashKeyword}
               fetchData={fetchData}
               localSearch={localSearch}
               setLocalSearch={setLocalSearch}
+              searchTrashKeyword={searchTrashKeyword}
+              setSearchTrashKeyword={setSearchTrashKeyword}
               mode={mode}
             />
           </Grid>
@@ -761,20 +744,20 @@ const DifficultiesListTable = ({
           </table>
         </div>
       </Card>
-      <AddDifficultiesDrawer
+      <AddImportanceDrawer
         open={addUserOpen}
         handleClose={() => setAddUserOpen(!addUserOpen)}
         difficultiesData={data}
         setDifficultiesData={setData}
-        addDifficultyData={addDifficultyData}
+        addImportanceData={addImportanceData}
       />
       {open && (
         <AlertDialogBox
           open={open}
           handleCancel={handleCancelDelete}
           handleConfirm={handleConfirmDelete}
-          title={`${mode === 'all' ? 'Trash' : restore ? 'Restore' : 'Delete'} Difficulty`}
-          textContent={`Are you sure you want to ${mode === 'all' ? 'trash' : restore ? 'restore' : 'delete'} this difficulty?`}
+          title={`${mode === 'all' ? 'Trash' : restore ? 'Restore' : 'Delete'} Importance`}
+          textContent={`Are you sure you want to ${mode === 'all' ? 'trash' : restore ? 'restore' : 'delete'} this Importance?`}
           acceptedButton={mode === 'all' ? 'Trash' : restore ? 'Restore' : 'Delete'}
           rejectedButton='Cancel'
         />
@@ -807,7 +790,7 @@ const DifficultiesListTable = ({
             currentPage={currentTrashPage} // e.g., 1
             totalPages={totalTrashPages} // e.g., 5
             onPageChange={handleTrashPageChange} // Your function to handle page changes
-            onRowsPerPageChange={handleTrashRowsPerPageChange} // Your function to handle rows per page change
+            onRowsPerPageChange={handleTrashRowsPerPageChange} // Your// Your function to handle rows per page change
           />
         )}
       </Grid>
@@ -815,4 +798,4 @@ const DifficultiesListTable = ({
   )
 }
 
-export default DifficultiesListTable
+export default ImportanceListTable

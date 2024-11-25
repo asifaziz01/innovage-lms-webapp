@@ -1,6 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
 
+import { useRouter } from 'next/navigation'
+
 import axios from 'axios'
 import { useTheme } from '@mui/material/styles'
 
@@ -15,27 +17,41 @@ import { alertMessages } from '@/components/globals/AlertMessages'
 
 export default function useTestApi() {
   const [data, setData] = useState([])
+  const [metaData, setMetaData] = useState([])
   const [submissionsData, setSubmissionsData] = useState([])
   const [categories, setCategories] = useState([])
   const [testData, setTestData] = useState({})
   const theme = useTheme()
+  const router = useRouter()
+  const [searchKeyword, setSearchKeyword] = useState('')
 
   console.info(process.env.NEXT_PUBLIC_DOCS_URL)
 
-  const fetchData = () => {
+  const fetchData = async (page, results_per_page, searchKeyword) => {
+    const formData = new FormData()
+
+    if (page) {
+      formData.append('page', page) // Add pagination: current page
+    }
+
+    if (results_per_page) {
+      formData.append('results_per_page', results_per_page)
+    }
+
+    if (searchKeyword) {
+      formData.append('search', searchKeyword) // Add the search term to the formData
+    }
+
     try {
       axios
-        .post(
-          `${USER_MODULE_ENDPOINTS}/list`,
-          {},
-          {
-            Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
-            Network: 'dev369',
-            accept: 'application/json'
-          }
-        )
+        .post(`${process.env.NEXT_PUBLIC_LOCAL_BASEPATH_V2}test/all`, formData, {
+          Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
+          Network: 'dev369',
+          accept: 'application/json'
+        })
         ?.then(res => {
           setData(res?.data?.payload?.data)
+          setMetaData(res?.data?.payload?.meta)
         })
     } catch (error) {
       console.error('Error fetching data:', error)
@@ -64,8 +80,8 @@ export default function useTestApi() {
 
   const viewTest = guid => {
     // try {
-    return axios.get(
-      `${USER_MODULE_ENDPOINTS}/view/${guid}`,
+    return axios.post(
+      `${process.env.NEXT_PUBLIC_LOCAL_BASEPATH_V2}test/${guid}/view`,
       {},
       {
         Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
@@ -86,9 +102,9 @@ export default function useTestApi() {
     // }
   }
 
-  useEffect(() => {
-    fetchData()
-  }, [])
+  // useEffect(() => {
+  //   fetchData()
+  // }, [])
 
   const addTestData = userData => {
     //userData example
@@ -110,7 +126,7 @@ export default function useTestApi() {
     try {
       axios
         .post(
-          `${USER_MODULE_ENDPOINTS}/add`,
+          `${process.env.NEXT_PUBLIC_LOCAL_BASEPATH_V2}test/create`,
 
           // userData
           formData,
@@ -121,6 +137,7 @@ export default function useTestApi() {
           }
         )
         .then(res => {
+          alertMessages(theme, 'success', res?.data?.message)
           fetchData()
         })
 
@@ -240,7 +257,10 @@ export default function useTestApi() {
     }
 
     try {
-      axios.post(`${USER_MODULE_ENDPOINTS}/add/${guId}`, formData).then(res => {})
+      axios.post(`${process.env.NEXT_PUBLIC_LOCAL_BASEPATH_V2}test/${guId}/edit`, formData).then(res => {
+        alertMessages(theme, 'success', res?.data?.message)
+        router.push('/test/list')
+      })
 
       //   return response.data
     } catch (error) {
@@ -297,6 +317,10 @@ export default function useTestApi() {
     handleTestPublish,
     testSettings,
     testSubmissions,
-    submissionsData
+    submissionsData,
+    fetchData,
+    metaData,
+    searchKeyword,
+    setSearchKeyword
   }
 }

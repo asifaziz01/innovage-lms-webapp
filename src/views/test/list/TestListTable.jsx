@@ -58,6 +58,8 @@ import FilterHeader from '@/components/globals/FilterHeader'
 import { getInitials } from '@/utils/getInitials'
 import useDraggableList from '@/components/globals/useDraggableList'
 import ColumnVisibility from '@/components/Common/ColumnVisibility'
+import PaginationCard from '@/api/Pagination'
+import OptionMenu from '@/@core/components/option-menu'
 
 // import DialogBoxComponent from '@/Components/Common/DialogBoxComponent'
 
@@ -115,17 +117,33 @@ const userStatusObj = {
 // Column Definitions
 const columnHelper = createColumnHelper()
 
-const TestListTable = ({ tableData, addUserData, deleteUserData, categories, getCategories }) => {
+const TestListTable = ({
+  tableData,
+  metaData,
+  addUserData,
+  deleteUserData,
+  fetchData,
+  categories,
+  getCategories,
+  searchKeyword,
+  setSearchKeyword
+}) => {
   // States
   const [addUserOpen, setAddUserOpen] = useState(false)
 
   const [editUserOpen, setEditUserOpen] = useState(false)
   const [rowSelection, setRowSelection] = useState({})
   const [data, setData] = useState(...[tableData])
+  const [localSearch, setLocalSearch] = useState('')
+
   const [editData, setEditData] = useState()
   const [filteredData, setFilteredData] = useState(data)
   const [globalFilter, setGlobalFilter] = useState('')
   const [type, setType] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+
+  const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [totalPages, setTotalPages] = useState(1)
 
   //Dialog states
   const [openStatusDialog, setOpenStatusDialog] = useState(false)
@@ -163,9 +181,40 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
     setOpen(false)
   }
 
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      setSearchKeyword(localSearch) // Only set search keyword after delay
+    }, 500) // 500ms delay
+
+    return () => clearTimeout(delayDebounceFn) // Cleanup the timeout
+  }, [localSearch, setSearchKeyword])
+
   const handleConfirmDelete = () => {
     setOpen(false)
   }
+
+  const handlePageChange = page => {
+    setCurrentPage(page)
+  }
+
+  const handleRowsPerPageChange = rows => {
+    setRowsPerPage(rows)
+    setCurrentPage(1) // Reset to the first page when changing rows per page
+  }
+
+  useEffect(() => {
+    fetchData(currentPage, rowsPerPage, searchKeyword)
+  }, [currentPage, rowsPerPage, searchKeyword])
+
+  useEffect(() => {
+    const dataSource = metaData
+
+    console.warn(dataSource.total_results, 'tin')
+
+    if (dataSource) {
+      setTotalPages(Math.ceil(dataSource.total_results / rowsPerPage))
+    }
+  }, [metaData, rowsPerPage])
 
   const handleChangeStatus = event => setSelectedStatus(event.target.value)
 
@@ -433,44 +482,60 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
               return columnHelper.accessor('action', {
                 header: 'Action',
                 cell: ({ row }) => (
+                  // <div className='flex items-center gap-0.5'>
+                  //   <IconButton
+                  //     size='small'
+                  //     onClick={() => {
+                  //       deleteUserData(row?.original?.guid)
+                  //     }}
+                  //   >
+                  //     <i className='ri-delete-bin-7-line text-textSecondary' />
+                  //   </IconButton>
+                  //   <IconButton size='small'>
+                  //     <Link href={`/test/questions/?guid=${row?.original?.guid}`} className='flex'>
+                  //       <i className='ri-eye-line text-textSecondary' />
+                  //     </Link>
+                  //   </IconButton>
+                  //   <IconButton size='small'>
+                  //     <Link href={`/test/edit?guid=${row?.original?.guid}`} className='flex'>
+                  //       <i className='ri-edit-box-line text-textSecondary' />
+                  //     </Link>
+                  //   </IconButton>
+                  //   <IconButton size='small'>
+                  //     <Link href={`/test/manage?guid=${row?.original?.guid}`} className='flex'>
+                  //       <i class='ri-tools-line'></i>
+                  //     </Link>
+                  //   </IconButton>
+                  // </div>
                   <div className='flex items-center gap-0.5'>
-                    <IconButton
-                      size='small'
-                      onClick={() => {
-                        deleteUserData(row?.original?.guid)
-                      }}
-                    >
-                      <i className='ri-delete-bin-7-line text-textSecondary' />
-                    </IconButton>
-                    <IconButton size='small'>
-                      <Link href={`/test/questions/?guid=${row?.original?.guid}`} className='flex'>
-                        <i className='ri-eye-line text-textSecondary' />
-                      </Link>
-                    </IconButton>
-                    <IconButton size='small'>
-                      <Link href={`/test/edit?guid=${row?.original?.guid}`} className='flex'>
-                        <i className='ri-edit-box-line text-textSecondary' />
-                      </Link>
-                    </IconButton>
-                    <IconButton size='small'>
-                      <Link href={`/test/manage?guid=${row?.original?.guid}`} className='flex'>
-                        <i class='ri-tools-line'></i>
-                      </Link>
-                    </IconButton>
-                    {/* <OptionMenu
+                    <OptionMenu
                       iconClassName='text-textSecondary'
                       data={row}
                       options={[
                         {
-                          text: 'Download',
-                          icon: 'ri-download-line'
+                          text: <Typography>Delete</Typography>,
+                          icon: 'ri-delete-bin-7-line text-textSecondary',
+                          onClick: () => {
+                            deleteUserData(row?.original?.guid)
+                          }
                         },
                         {
-                          text: 'Edit',
-                          icon: 'ri-edit-box-line'
+                          text: <Typography ml={2}>View</Typography>,
+                          icon: 'ri-eye-line text-textSecondary',
+                          href: `/test/questions/?guid=${row?.original?.guid}`
+                        },
+                        {
+                          text: <Typography ml={2}>Edit</Typography>,
+                          icon: 'ri-edit-box-line text-textSecondary',
+                          href: `/test/edit?guid=${row?.original?.guid}`
+                        },
+                        {
+                          text: <Typography ml={2}>Manage</Typography>,
+                          icon: 'ri-tools-line',
+                          href: `/test/manage?guid=${row?.original?.guid}`
                         }
                       ]}
-                    /> */}
+                    />
                   </div>
                 ),
                 enableSorting: false
@@ -493,9 +558,10 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
       rowSelection,
       globalFilter
     },
+
     initialState: {
       pagination: {
-        pageSize: 10
+        pageSize: 50
       }
     },
     enableRowSelection: true, //enable row selection for all rows
@@ -561,6 +627,9 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
               setGlobalFilter={setGlobalFilter}
               type={type}
               setType={setType}
+              searchKeyword={searchKeyword}
+              localSearch={localSearch}
+              setLocalSearch={setLocalSearch}
             />
           </Grid>
         </Grid>
@@ -615,30 +684,6 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
                   }}
                 ></i>
               </IconButton>
-              {/* <TestOptionMenu
-                iconClassName='text-textSecondary'
-                // setEditFilterOpen={setEditFilterOpen}
-                // data={row}
-                // setEditData={setEditData}
-                rowSelection={rowSelection}
-                options={[
-                  {
-                    text: 'Test Name'
-                  },
-                  {
-                    text: 'Start Date'
-                  },
-                  {
-                    text: 'End Date'
-                  },
-                  {
-                    text: 'Type'
-                  },
-                  {
-                    text: 'Status'
-                  }
-                ]}
-              /> */}
             </Box>
           </Grid>
           <Grid
@@ -715,7 +760,7 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
             )}
           </table>
         </div>
-        <TablePagination
+        {/* <TablePagination
           rowsPerPageOptions={[10, 25, 50]}
           component='div'
           className='border-bs'
@@ -729,7 +774,7 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
             table.setPageIndex(page)
           }}
           onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
-        />
+        /> */}
       </Card>
       <AddTestDrawer
         open={addUserOpen}
@@ -764,6 +809,15 @@ const TestListTable = ({ tableData, addUserData, deleteUserData, categories, get
         onChangeStatus={handleChangeStatus}
         isStatusDialog={true}
       />
+      <Grid item xs={12} md={12}>
+        <PaginationCard
+          rowsPerPage={rowsPerPage} // e.g., 10
+          currentPage={currentPage} // e.g., 1
+          totalPages={totalPages} // e.g., 5
+          onPageChange={handlePageChange} // Your function to handle page changes
+          onRowsPerPageChange={handleRowsPerPageChange} // Your function to handle rows per page change
+        />
+      </Grid>
     </>
   )
 }

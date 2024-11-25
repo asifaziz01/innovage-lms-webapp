@@ -11,7 +11,7 @@ import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
 import { Checkbox, InputAdornment, ListItemText, TextField, Typography } from '@mui/material'
 
-const DifficultiesListFilter = ({
+const ImportanceListFilter = ({
   setData,
   tableData,
   globalFilter,
@@ -28,8 +28,18 @@ const DifficultiesListFilter = ({
   const [types, setTypes] = useState([])
   const [status, setStatus] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
-  const [localSearch, setLocalSearch] = useState('')
+  const [localSearch, setLocalSearch] = useState('') // local state for search input
   const [localTrashSearch, setLocalTrashSearch] = useState('')
+
+  const handleSearch = event => {
+    const value = event.target.value
+
+    setSearchTerm(value)
+
+    const filtered = tableData?.filter(item => item?.title?.toLowerCase()?.includes(value?.toLowerCase()))
+
+    // setData(filtered)
+  }
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -48,8 +58,11 @@ const DifficultiesListFilter = ({
   }, [localTrashSearch, setSearchTrashKeyword])
 
   // useEffect(() => {
-  //   fetchData(searchKeyword)
+  //   fetchData({
+  //     searchKeyword: searchKeyword
+  //   })
   // }, [searchKeyword])
+
   useEffect(() => {
     const filteredData = tableData?.filter(user => {
       // Filter for parent categories where parent_guid is null
@@ -170,7 +183,7 @@ const DifficultiesListFilter = ({
                     top: '-7px'
                   }
                 }}
-                placeholder='Search Difficulty'
+                placeholder='Search Importance'
                 fullWidth
                 value={localSearch}
                 onChange={e => setLocalSearch(e.target.value)}
@@ -197,7 +210,7 @@ const DifficultiesListFilter = ({
                     top: '-7px'
                   }
                 }}
-                placeholder='Search Difficulty'
+                placeholder='Search Importance'
                 fullWidth
                 value={localTrashSearch}
                 onChange={e => setLocalTrashSearch(e.target.value)}
@@ -260,4 +273,4 @@ const DifficultiesListFilter = ({
   )
 }
 
-export default DifficultiesListFilter
+export default ImportanceListFilter

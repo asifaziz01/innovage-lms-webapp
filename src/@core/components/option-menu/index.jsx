@@ -34,7 +34,7 @@ const IconButtonWrapper = props => {
 const MenuItemWrapper = ({ children, option }) => {
   if (option.href) {
     return (
-      <Box component={Link} href={option.href} {...option.linkProps}>
+      <Box component={Link} href={option.href} display='flex' alignItems='center' flexGrow={1} px={5} py={1}>
         {children}
       </Box>
     )
@@ -64,6 +64,7 @@ const OptionMenu = props => {
     if (anchorRef.current && anchorRef.current.contains(event.target)) {
       return
     }
+
     setOpen(false)
   }
 
@@ -109,11 +110,13 @@ const OptionMenu = props => {
                           {...option.menuItemProps}
                           {...(option.href && { className: 'p-0' })}
                           onClick={e => {
-                            console.log(`MenuItem ${option.text} clicked`);
+                            console.log(`MenuItem ${option.text} clicked`)
                             handleClose(e)
+
                             if (option.onClick) {
-                              option.onClick(e);
+                              option.onClick(e)
                             }
+
                             if (option.menuItemProps && option.menuItemProps.onClick) {
                               option.menuItemProps.onClick(e)
                             }
