@@ -121,12 +121,20 @@ const TestListTable = ({
   tableData,
   metaData,
   addUserData,
-  deleteUserData,
+  deleteTest,
   fetchData,
   categories,
   getCategories,
   searchKeyword,
-  setSearchKeyword
+  setSearchKeyword,
+  trashedData,
+  trashTest,
+  restoreTest,
+  trashMetaData,
+  searchTrashKeyword,
+  setSearchTrashKeyword,
+  getTrashedTests,
+  categoriesTableData
 }) => {
   // States
   const [addUserOpen, setAddUserOpen] = useState(false)
@@ -134,7 +142,13 @@ const TestListTable = ({
   const [editUserOpen, setEditUserOpen] = useState(false)
   const [rowSelection, setRowSelection] = useState({})
   const [data, setData] = useState(...[tableData])
+  const [categoriesData, setCategoriesData] = useState(...[categoriesTableData])
+
+  console.info(categoriesData, 'uuu')
+  const [trashData, setTrashData] = useState(...[trashedData])
   const [localSearch, setLocalSearch] = useState('')
+  const [localTrashSearch, setLocalTrashSearch] = useState('')
+  const [selectedRows, setSelectedRows] = useState([])
 
   const [editData, setEditData] = useState()
   const [filteredData, setFilteredData] = useState(data)
@@ -150,6 +164,14 @@ const TestListTable = ({
   const statusOptions = ['Unpublished', 'Published']
   const [selectedStatus, setSelectedStatus] = useState('')
   const [open, setOpen] = useState(false)
+
+  //trash functionality changes
+  const [currentTrashPage, setCurrentTrashPage] = useState(1)
+  const [trashRowsPerPage, setTrashRowsPerPage] = useState(5)
+  const [totalTrashPages, setTotalTrashPages] = useState(1)
+  const [mode, setMode] = useState('all')
+  const [restore, setRestore] = useState(null)
+  const [singleId, setSingleId] = useState(null)
 
   const initialColumns = [
     'select',
@@ -178,6 +200,7 @@ const TestListTable = ({
   const { items: columnOrder, handleDragOver, handleDrop, handleDragStart } = useDraggableList(initialColumns)
 
   const handleCancelDelete = () => {
+    setSingleId(null)
     setOpen(false)
   }
 
@@ -189,8 +212,45 @@ const TestListTable = ({
     return () => clearTimeout(delayDebounceFn) // Cleanup the timeout
   }, [localSearch, setSearchKeyword])
 
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      setSearchTrashKeyword(localTrashSearch) // Only set search keyword after delay
+    }, 500) // 500ms delay
+
+    return () => clearTimeout(delayDebounceFn) // Cleanup the timeout
+  }, [localTrashSearch, setSearchTrashKeyword])
+
+  useEffect(() => {
+    setTrashData(trashedData)
+  }, [trashedData])
+  useEffect(() => {
+    const getSelectedRowIds = (rowSelection, tableData) => {
+      return Object.keys(rowSelection)
+        .filter(key => rowSelection[key]) // Filter out only selected rows
+        .map(key => tableData[key]?.guid) // Map to the row IDs or objects
+    }
+
+    // Example usage:
+    const selectedRowIds = getSelectedRowIds(rowSelection, mode === 'all' ? tableData : trashData)
+
+    setSelectedRows(selectedRowIds) // [id1, id2, id3]
+  }, [rowSelection])
+
   const handleConfirmDelete = () => {
+    mode === 'all'
+      ? singleId
+        ? trashTest(singleId)
+        : trashTest(selectedRows)
+      : restore
+        ? singleId
+          ? restoreTest(singleId)
+          : restoreTest(selectedRows)
+        : singleId
+          ? deleteTest(singleId)
+          : deleteTest(selectedRows)
     setOpen(false)
+    setSingleId(null)
+    setRowSelection({})
   }
 
   const handlePageChange = page => {
@@ -202,9 +262,21 @@ const TestListTable = ({
     setCurrentPage(1) // Reset to the first page when changing rows per page
   }
 
+  // trashed pagination functions
+
+  const handleTrashPageChange = page => {
+    setCurrentTrashPage(page)
+  }
+
+  const handleTrashRowsPerPageChange = rows => {
+    setTrashRowsPerPage(rows)
+    setCurrentTrashPage(1) // Reset to the first page when changing rows per page
+  }
+
   useEffect(() => {
     fetchData(currentPage, rowsPerPage, searchKeyword)
-  }, [currentPage, rowsPerPage, searchKeyword])
+    getTrashedTests(currentTrashPage, trashRowsPerPage, searchTrashKeyword)
+  }, [currentPage, rowsPerPage, searchKeyword, searchTrashKeyword, mode, currentTrashPage, trashRowsPerPage])
 
   useEffect(() => {
     const dataSource = metaData
@@ -215,6 +287,14 @@ const TestListTable = ({
       setTotalPages(Math.ceil(dataSource.total_results / rowsPerPage))
     }
   }, [metaData, rowsPerPage])
+
+  useEffect(() => {
+    const dataSource = trashMetaData
+
+    if (dataSource) {
+      setTotalTrashPages(Math.ceil(dataSource.total_results / trashRowsPerPage))
+    }
+  }, [trashMetaData, trashRowsPerPage])
 
   const handleChangeStatus = event => setSelectedStatus(event.target.value)
 
@@ -237,6 +317,10 @@ const TestListTable = ({
   useEffect(() => {
     setData(tableData)
   }, [tableData])
+
+  useEffect(() => {
+    setCategoriesData(categoriesTableData)
+  }, [categoriesTableData])
 
   // Hooks
   const { lang: locale } = useParams()
@@ -334,7 +418,7 @@ const TestListTable = ({
   //           <IconButton
   //             size='small'
   //             onClick={() => {
-  //               deleteUserData(row?.original?.guid)
+  //               deleteTest(row?.original?.guid)
   //             }}
   //           >
   //             <i className='ri-delete-bin-7-line text-textSecondary' />
@@ -482,41 +566,25 @@ const TestListTable = ({
               return columnHelper.accessor('action', {
                 header: 'Action',
                 cell: ({ row }) => (
-                  // <div className='flex items-center gap-0.5'>
-                  //   <IconButton
-                  //     size='small'
-                  //     onClick={() => {
-                  //       deleteUserData(row?.original?.guid)
-                  //     }}
-                  //   >
-                  //     <i className='ri-delete-bin-7-line text-textSecondary' />
-                  //   </IconButton>
-                  //   <IconButton size='small'>
-                  //     <Link href={`/test/questions/?guid=${row?.original?.guid}`} className='flex'>
-                  //       <i className='ri-eye-line text-textSecondary' />
-                  //     </Link>
-                  //   </IconButton>
-                  //   <IconButton size='small'>
-                  //     <Link href={`/test/edit?guid=${row?.original?.guid}`} className='flex'>
-                  //       <i className='ri-edit-box-line text-textSecondary' />
-                  //     </Link>
-                  //   </IconButton>
-                  //   <IconButton size='small'>
-                  //     <Link href={`/test/manage?guid=${row?.original?.guid}`} className='flex'>
-                  //       <i class='ri-tools-line'></i>
-                  //     </Link>
-                  //   </IconButton>
-                  // </div>
                   <div className='flex items-center gap-0.5'>
                     <OptionMenu
                       iconClassName='text-textSecondary'
                       data={row}
                       options={[
                         {
-                          text: <Typography>Delete</Typography>,
-                          icon: 'ri-delete-bin-7-line text-textSecondary',
+                          text: <Typography>{mode === 'all' ? 'Trash' : 'Restore'}</Typography>,
+                          icon: mode === 'all' ? 'ri-delete-bin-7-line text-textSecondary' : 'ri-reset-left-line',
                           onClick: () => {
-                            deleteUserData(row?.original?.guid)
+                            setSingleId(Array(row?.original?.guid))
+
+                            if (mode === 'all') {
+                              setOpen(true)
+                            }
+
+                            if (mode === 'trash') {
+                              setOpen(true)
+                              setRestore(true)
+                            }
                           }
                         },
                         {
@@ -524,16 +592,36 @@ const TestListTable = ({
                           icon: 'ri-eye-line text-textSecondary',
                           href: `/test/questions/?guid=${row?.original?.guid}`
                         },
-                        {
-                          text: <Typography ml={2}>Edit</Typography>,
-                          icon: 'ri-edit-box-line text-textSecondary',
-                          href: `/test/edit?guid=${row?.original?.guid}`
-                        },
-                        {
-                          text: <Typography ml={2}>Manage</Typography>,
-                          icon: 'ri-tools-line',
-                          href: `/test/manage?guid=${row?.original?.guid}`
-                        }
+                        ...(mode === 'all'
+                          ? [
+                              {
+                                text: <Typography ml={2}>Edit</Typography>,
+                                icon: 'ri-edit-box-line text-textSecondary',
+                                href: `/test/edit?guid=${row?.original?.guid}`
+                              },
+                              {
+                                text: <Typography ml={2}>Manage</Typography>,
+                                icon: 'ri-tools-line',
+                                href: `/test/manage?guid=${row?.original?.guid}`
+                              }
+                            ]
+                          : []),
+                        ...(mode === 'trash'
+                          ? [
+                              {
+                                text: <Typography ml={2}>Delete</Typography>,
+                                icon: 'ri-delete-bin-7-line text-textSecondary',
+                                onClick: () => {
+                                  setSingleId(Array(row?.original?.guid))
+
+                                  if (mode === 'trash') {
+                                    setOpen(true)
+                                    setRestore(false)
+                                  }
+                                }
+                              }
+                            ]
+                          : [])
                       ]}
                     />
                   </div>
@@ -549,7 +637,7 @@ const TestListTable = ({
   )
 
   const table = useReactTable({
-    data: filteredData,
+    data: mode === 'all' ? filteredData : trashData,
     columns,
     filterFns: {
       fuzzy: fuzzyFilter
@@ -630,60 +718,128 @@ const TestListTable = ({
               searchKeyword={searchKeyword}
               localSearch={localSearch}
               setLocalSearch={setLocalSearch}
+              localTrashSearch={localTrashSearch}
+              setLocalTrashSearch={setLocalTrashSearch}
+              mode={mode}
+              searchTrashKeyword={searchTrashKeyword}
+              setSearchTrashKeyword={setSearchTrashKeyword}
             />
           </Grid>
         </Grid>
         <Grid container item xs={12} pl={5}>
-          <Grid item xs={0.9}>
+          <Grid item xs={11.5}>
             <Box display='flex' justifyContent='space-between' alignItems='center'>
-              <IconButton
-                disableRipple
-                disabled={!Object.keys(rowSelection)?.length}
-                sx={{
-                  border: `1px solid ${Object.keys(rowSelection)?.length ? '#808080' : '#E7E7E7'}`,
-                  borderRadius: 0
-                }}
-                onClick={() => setOpen(true)}
-              >
-                {/* <CustomTooltip title='Add' arrow> */}
-                <i
-                  class='ri-delete-bin-6-fill'
-                  color={Object.keys(rowSelection)?.length ? '#B5B8FA' : '#808080'}
-                  style={{
-                    width: 20,
-                    height: 20,
-                    ...(Object.keys(rowSelection)?.length
-                      ? {
-                          color: '#B5B8FA'
-                        }
-                      : { color: '#808080' })
+              <Box display='flex' justifyContent='space-between' alignItems='center'>
+                <IconButton
+                  disableRipple
+                  disabled={!Object.keys(rowSelection)?.length}
+                  sx={{
+                    border: `1px solid ${Object.keys(rowSelection)?.length ? '#808080' : '#E7E7E7'}`,
+                    borderRadius: 0
                   }}
-                ></i>
-                {/* </CustomTooltip> */}
-              </IconButton>
-              <IconButton
-                disableRipple
-                disabled={!Object.keys(rowSelection)?.length}
-                sx={{
-                  border: `1px solid ${Object.keys(rowSelection)?.length ? '#808080' : '#E7E7E7'}`,
-                  borderRadius: 0
-                }}
-                onClick={() => handleOpenStatusDialog('Published')}
-              >
-                <i
-                  class='ri-checkbox-circle-line'
-                  color={Object.keys(rowSelection)?.length ? '#B5B8FA' : '#808080'}
-                  style={{
-                    width: 20,
-                    height: 20,
-                    ...(Object.keys(rowSelection)?.length
-                      ? {
-                          color: '#B5B8FA'
-                        }
-                      : { color: '#808080' })
+                  onClick={() => {
+                    setRestore(false)
+                    setOpen(true)
                   }}
-                ></i>
-              </IconButton>
+                >
+                  {/* <CustomTooltip title='Add' arrow> */}
+                  <i
+                    class='ri-delete-bin-6-fill'
+                    color={Object.keys(rowSelection)?.length ? '#B5B8FA' : '#808080'}
+                    style={{
+                      width: 20,
+                      height: 20,
+                      ...(Object.keys(rowSelection)?.length
+                        ? {
+                            color: '#B5B8FA'
+                          }
+                        : { color: '#808080' })
+                    }}
+                  ></i>
+                  {/* </CustomTooltip> */}
+                </IconButton>
+                {mode === 'all' && (
+                  <IconButton
+                    disableRipple
+                    disabled={!Object.keys(rowSelection)?.length}
+                    sx={{
+                      border: `1px solid ${Object.keys(rowSelection)?.length ? '#808080' : '#E7E7E7'}`,
+                      borderRadius: 0,
+                      ml: 2
+                    }}
+                    onClick={() => handleOpenStatusDialog('Published')}
+                  >
+                    <i
+                      class='ri-checkbox-circle-line'
+                      color={Object.keys(rowSelection)?.length ? '#B5B8FA' : '#808080'}
+                      style={{
+                        width: 20,
+                        height: 20,
+                        ...(Object.keys(rowSelection)?.length
+                          ? {
+                              color: '#B5B8FA'
+                            }
+                          : { color: '#808080' })
+                      }}
+                    ></i>
+                  </IconButton>
+                )}
+                {mode === 'trash' && (
+                  <IconButton
+                    disableRipple
+                    disabled={!Object.keys(rowSelection)?.length}
+                    sx={{
+                      border: `1px solid ${Object.keys(rowSelection)?.length ? '#808080' : '#E7E7E7'}`,
+                      borderRadius: 0,
+                      ml: 2
+                    }}
+                    onClick={() =>
+                      (() => {
+                        setRestore(true)
+                        setOpen(true)
+                      })()
+                    }
+                  >
+                    <i
+                      className='ri-reset-left-line'
+                      color={Object.keys(rowSelection)?.length ? '#B5B8FA' : '#808080'}
+                      style={{
+                        width: 20,
+                        height: 20,
+                        ...(Object.keys(rowSelection)?.length
+                          ? {
+                              color: '#B5B8FA'
+                            }
+                          : { color: '#808080' })
+                      }}
+                    ></i>
+                  </IconButton>
+                )}
+              </Box>
+              <Box display='flex' justifyContent='space-between' alignItems='center'>
+                <IconButton
+                  disableRipple
+                  disabled={!data?.length}
+                  onClick={() => {
+                    setMode('all')
+                    setSingleId(null)
+                    setSelectedRows(null)
+                  }}
+                >
+                  <Typography>{`Active (${metaData.total_results})`}</Typography>
+                </IconButton>
+                <IconButton
+                  disableRipple
+                  disabled={!trashData?.length}
+                  onClick={() => {
+                    setMode('trash')
+                    setSingleId(null)
+                    setSelectedRows(null)
+                  }}
+                >
+                  <Typography>{`Trash (${trashMetaData?.total_results})`}</Typography>
+                </IconButton>
+              </Box>
             </Box>
           </Grid>
           <Grid
@@ -776,23 +932,26 @@ const TestListTable = ({
           onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
         /> */}
       </Card>
-      <AddTestDrawer
-        open={addUserOpen}
-        handleClose={() => setAddUserOpen(!addUserOpen)}
-        userData={data}
-        setData={setData}
-        addUserData={addUserData}
-        categories={categories}
-        getCategories={getCategories}
-      />
+      {categoriesData.length > 0 && (
+        <AddTestDrawer
+          open={addUserOpen}
+          handleClose={() => setAddUserOpen(!addUserOpen)}
+          userData={data}
+          categoriesTableData={categoriesData}
+          setData={setData}
+          addUserData={addUserData}
+          categories={categories}
+          getCategories={getCategories}
+        />
+      )}
       {open && (
         <AlertDialogBox
           open={open}
           handleCancel={handleCancelDelete}
           handleConfirm={handleConfirmDelete}
-          title='Delete Test'
-          textContent='Are you sure you want to delete this test?'
-          acceptedButton='Delete'
+          title={`${mode === 'all' ? 'Trash' : restore ? 'Restore' : 'Delete'} Test`}
+          textContent={`Are you sure you want to ${mode === 'all' ? 'trash' : restore ? 'restore' : 'delete'} this test?`}
+          acceptedButton={mode === 'all' ? 'Trash' : restore ? 'Restore' : 'Delete'}
           rejectedButton='Cancel'
         />
       )}
@@ -810,13 +969,23 @@ const TestListTable = ({
         isStatusDialog={true}
       />
       <Grid item xs={12} md={12}>
-        <PaginationCard
-          rowsPerPage={rowsPerPage} // e.g., 10
-          currentPage={currentPage} // e.g., 1
-          totalPages={totalPages} // e.g., 5
-          onPageChange={handlePageChange} // Your function to handle page changes
-          onRowsPerPageChange={handleRowsPerPageChange} // Your function to handle rows per page change
-        />
+        {mode === 'all' ? (
+          <PaginationCard
+            rowsPerPage={rowsPerPage} // e.g., 10
+            currentPage={currentPage} // e.g., 1
+            totalPages={totalPages} // e.g., 5
+            onPageChange={handlePageChange} // Your function to handle page changes
+            onRowsPerPageChange={handleRowsPerPageChange} // Your function to handle rows per page change
+          />
+        ) : (
+          <PaginationCard
+            rowsPerPage={trashRowsPerPage} // e.g., 10
+            currentPage={currentTrashPage} // e.g., 1
+            totalPages={totalTrashPages} // e.g., 5
+            onPageChange={handleTrashPageChange} // Your function to handle page changes
+            onRowsPerPageChange={handleTrashRowsPerPageChange} // Your// Your function to handle rows per page change
+          />
+        )}
       </Grid>
     </>
   )

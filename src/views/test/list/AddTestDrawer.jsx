@@ -1,5 +1,5 @@
 // React Imports
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 
 // eslint-disable-next-line import/no-unresolved
 // import * as yup from 'yup'
@@ -39,12 +39,27 @@ const initialData = {
 
 const AddTestDrawer = props => {
   // Props
-  const { open, handleClose, userData, addUserData, categories, getCategories } = props
+  const { open, handleClose, userData, addUserData, categoriesTableData } = props
 
   // States
   const [formData, setFormData] = useState(initialData)
+  const [categories, setCategories] = useState([{ parent: null, children: categoriesTableData }])
+
+  console.info(categoriesTableData, 'tableData')
   const [description, setDescription] = useState('')
+  const [selectedCategories, setSelectedCategories] = useState([])
+
+  console.info(selectedCategories, 'selected_new')
   const [value, setValue] = useState('')
+
+  // useEffect(() => {
+  //   setCategories([
+  //     {
+  //       parent: null,
+  //       children: categoriesTableData
+  //     }
+  //   ])
+  // }, [categoriesTableData])
 
   // const schema = yup.object().shape({
   //   title: yup.string().required().min(3),
@@ -81,6 +96,7 @@ const AddTestDrawer = props => {
       type: data?.type,
       category: data?.category,
       created_on: moment().format('YYYY-MM-DD HH:mm:ss'),
+      category: selectedCategories[selectedCategories.length - 1],
 
       // optional parameters
       created_by: 'ADJ20',
@@ -104,9 +120,42 @@ const AddTestDrawer = props => {
     setFormData(initialData)
   }
 
-  useEffect(() => {
-    getCategories()
-  }, [])
+  const findCategoryByGuid = (guid, data) => {
+    for (const category of data) {
+      if (category.guid === guid) return category
+
+      if (category.children?.length) {
+        const found = findCategoryByGuid(guid, category.children)
+
+        if (found) return found
+      }
+    }
+
+    return null
+  }
+
+  const handleCategoryChange = (level, selectedGuid) => {
+    console.info(level, 'level')
+    const updatedSelectedCategories = [...selectedCategories]
+
+    updatedSelectedCategories[level] = selectedGuid
+    updatedSelectedCategories.splice(level + 1) // Remove selections for deeper levels
+    setSelectedCategories(updatedSelectedCategories)
+
+    const selectedCategory = findCategoryByGuid(selectedGuid, categoriesTableData)
+
+    if (selectedCategory?.children?.length) {
+      setCategories(prev =>
+        prev.slice(0, level + 1).concat({
+          parent: selectedGuid,
+          children: selectedCategory.children
+        })
+      )
+    } else {
+      // Remove deeper levels if no children exist
+      setCategories(prev => prev.slice(0, level + 1))
+    }
+  }
 
   return (
     <Drawer
@@ -168,7 +217,30 @@ const AddTestDrawer = props => {
                   )}
                 />
               </Box>
-              <FormControl
+              {categories.map((category, index) => (
+                <FormControl key={index} fullWidth sx={{ marginBottom: 5 }}>
+                  <InputLabel
+                    id={`category-label-${index}`}
+                    error={!selectedCategories[index]}
+                    style={{ color: 'silver' }}
+                  >
+                    {index === 0 ? 'Parent Category' : `Subcategory Level ${index}`}
+                  </InputLabel>
+                  <Select
+                    labelId={`category-label-${index}`}
+                    value={selectedCategories[index] || ''}
+                    onChange={e => handleCategoryChange(index, e.target.value)}
+                    label={index === 0 ? 'Parent Category' : `Subcategory Level ${index}`} // Add the label prop
+                  >
+                    {category.children.map(child => (
+                      <MenuItem key={child.guid} value={child.guid}>
+                        {child.title}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              ))}
+              {/* <FormControl
                 fullWidth
                 sx={{
                   paddingBottom: 5
@@ -190,27 +262,7 @@ const AddTestDrawer = props => {
                   )}
                 />
                 {errors.type && <FormHelperText error>This field is required.</FormHelperText>}
-              </FormControl>
-              <FormControl fullWidth>
-                <InputLabel id='category' error={Boolean(errors.category)}>
-                  Select Category *
-                </InputLabel>
-                <Controller
-                  name='category'
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <Select label='Select Category' {...field} error={Boolean(errors.category)}>
-                      {categories?.map(item => (
-                        <MenuItem value={item?.title} key={item?.guid}>
-                          {item?.title}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  )}
-                />
-                {errors.category && <FormHelperText error>This field is required.</FormHelperText>}
-              </FormControl>
+              </FormControl> */}
             </Box>
             <Box>
               <div className='flex items-center gap-4'>

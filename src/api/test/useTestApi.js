@@ -18,12 +18,15 @@ import { alertMessages } from '@/components/globals/AlertMessages'
 export default function useTestApi() {
   const [data, setData] = useState([])
   const [metaData, setMetaData] = useState([])
+  const [trashedData, setTrashedData] = useState([])
+  const [trashMetaData, setTrashMetaData] = useState([])
   const [submissionsData, setSubmissionsData] = useState([])
   const [categories, setCategories] = useState([])
   const [testData, setTestData] = useState({})
   const theme = useTheme()
   const router = useRouter()
   const [searchKeyword, setSearchKeyword] = useState('')
+  const [searchTrashKeyword, setSearchTrashKeyword] = useState('')
 
   console.info(process.env.NEXT_PUBLIC_DOCS_URL)
 
@@ -55,6 +58,130 @@ export default function useTestApi() {
         })
     } catch (error) {
       console.error('Error fetching data:', error)
+    }
+  }
+
+  const getTrashedTests = (page = '', results_per_page = '', searchKeyword = '') => {
+    const formData = new FormData()
+
+    if (page) {
+      formData.append('page', page) // Add pagination: current page
+    }
+
+    if (results_per_page) {
+      formData.append('results_per_page', results_per_page)
+    }
+
+    if (searchKeyword) {
+      formData.append('search', searchKeyword) // Add the search term to the formData
+    }
+
+    try {
+      axios
+        .post(`${process.env.NEXT_PUBLIC_LOCAL_BASEPATH_V2}test/trashed`, formData, {
+          Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
+          Network: 'dev369',
+          accept: 'application/json'
+        })
+        .then(res => {
+          setTrashedData(res?.data?.payload?.data)
+          setTrashMetaData(res?.data?.payload?.meta)
+        })
+
+      //   return response.data
+    } catch (error) {
+      console.error('Error:', error)
+    }
+  }
+
+  const trashTest = guId => {
+    console.info(guId)
+    const formData = new FormData()
+
+    guId.map((choice, i) => {
+      formData.append(`guid[${i}]`, choice)
+    })
+
+    try {
+      axios
+        .post(
+          `${process.env.NEXT_PUBLIC_LOCAL_BASEPATH_V2}test/trash`,
+
+          // userData
+          formData,
+          {
+            Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
+            Network: 'dev369',
+            accept: 'application/json'
+          }
+        )
+        .then(res => {
+          alertMessages(theme, 'success', res?.data?.message)
+          getTrashedTests()
+          fetchData()
+        })
+
+      //   return response.data
+    } catch (error) {
+      console.error('Error:', error)
+    }
+  }
+
+  const deleteTest = guId => {
+    const formData = new FormData()
+
+    guId.map((choice, i) => {
+      formData.append(`guid[${i}]`, choice)
+    })
+
+    try {
+      axios
+        .post(`${process.env.NEXT_PUBLIC_LOCAL_BASEPATH_V2}test/delete`, formData, {
+          Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
+          Network: 'dev369',
+          accept: 'application/json'
+        })
+        .then(res => {
+          alertMessages(theme, 'success', res?.data?.message)
+          getTrashedTests()
+          fetchData()
+        })
+
+      //   return response.data
+    } catch (error) {
+      console.error('Error:', error)
+    }
+  }
+
+  const restoreTest = guId => {
+    const formData = new FormData()
+
+    guId?.map((choice, i) => {
+      formData.append(`guid[${i}]`, choice)
+    })
+
+    try {
+      axios
+        .post(
+          `${process.env.NEXT_PUBLIC_LOCAL_BASEPATH_V2}test/restore`,
+
+          // userData
+          formData,
+          {
+            Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
+            Network: 'dev369',
+            accept: 'application/json'
+          }
+        )
+        .then(res => {
+          alertMessages(theme, 'success', res?.data?.message)
+          getTrashedTests()
+          fetchData()
+        })
+
+      //   return response.data
+    } catch (error) {
+      console.error('Error:', error)
     }
   }
 
@@ -110,7 +237,8 @@ export default function useTestApi() {
     //userData example
     const data = {
       title: userData?.title,
-      type: userData?.type,
+
+      // type: userData?.type,
       details: userData?.description,
       category: userData?.category
     }
@@ -321,6 +449,14 @@ export default function useTestApi() {
     fetchData,
     metaData,
     searchKeyword,
-    setSearchKeyword
+    setSearchKeyword,
+    getTrashedTests,
+    trashTest,
+    deleteTest,
+    restoreTest,
+    searchTrashKeyword,
+    setSearchTrashKeyword,
+    trashMetaData,
+    trashedData
   }
 }

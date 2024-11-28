@@ -28,16 +28,21 @@ import QuestionGeneralSettingsTimingSection from '../manage/QuestionGeneralSetti
 import QuestionResultSettings from '../manage/QuestionResultSettings'
 import QuestionTestInstructions from '../manage/QuestionTestInstructions'
 import WeightedMarksSettings from '../attempts/WeightedMarksSettings'
+import useCategoryApi from '@/api/useCategoryApi'
 
 // API import
 
-const EditTest = ({ isLoading = false }) => {
+const EditTest = ({ isLoading = false, categoriesTableData, categories, setCategories }) => {
   const [types, setTypes] = useState(null)
   const [activeTab, setActiveTab] = useState('edit_details') // Ensure activeTab is initialized properly
   const [formState, setFormState] = useState(null)
+  const { fetchData } = useCategoryApi()
   const searchParams = useSearchParams()
   const guid = searchParams.get('guid')
   const router = useRouter()
+
+  // const [categories, setCategories] = useState([{ parent: null, children: categoriesTableData }])
+  const [selectedCategories, setSelectedCategories] = useState([])
 
   //   const [data, setData] = useState(null)
 
@@ -49,7 +54,7 @@ const EditTest = ({ isLoading = false }) => {
     formState: { errors, isValid }
   } = useForm()
 
-  const { data, testData, viewTest, updateTestData, categories, getCategories, testSettings } = useTestApi()
+  const { data, testData, viewTest, updateTestData, testSettings } = useTestApi()
 
   // Fetch data and populate form on component mount
   useEffect(() => {
@@ -63,11 +68,9 @@ const EditTest = ({ isLoading = false }) => {
         })
       })
     }
-  }, [guid, reset])
 
-  useEffect(() => {
-    getCategories()
-  }, [])
+    fetchData()
+  }, [guid, reset])
 
   // Function to handle tab change
   const handleChange = (event, newValue) => {
@@ -75,7 +78,44 @@ const EditTest = ({ isLoading = false }) => {
   }
 
   const handleFormSubmit = async data => {
-    updateTestData(guid, { ...data, type: types })
+    updateTestData(guid, { ...data, type: types, category: selectedCategories[selectedCategories.length - 1] })
+  }
+
+  const findCategoryByGuid = (guid, data) => {
+    for (const category of data) {
+      if (category.guid === guid) return category
+
+      if (category.children?.length) {
+        const found = findCategoryByGuid(guid, category.children)
+
+        if (found) return found
+      }
+    }
+
+    return null
+  }
+
+  const handleCategoryChange = (level, selectedGuid) => {
+    console.info(level, 'level')
+    const updatedSelectedCategories = [...selectedCategories]
+
+    updatedSelectedCategories[level] = selectedGuid
+    updatedSelectedCategories.splice(level + 1) // Remove selections for deeper levels
+    setSelectedCategories(updatedSelectedCategories)
+
+    const selectedCategory = findCategoryByGuid(selectedGuid, categoriesTableData)
+
+    if (selectedCategory?.children?.length) {
+      setCategories(prev =>
+        prev.slice(0, level + 1).concat({
+          parent: selectedGuid,
+          children: selectedCategory.children
+        })
+      )
+    } else {
+      // Remove deeper levels if no children exist
+      setCategories(prev => prev.slice(0, level + 1))
+    }
   }
 
   return (
@@ -174,22 +214,29 @@ const EditTest = ({ isLoading = false }) => {
                           </Grid>
 
                           <Grid item xs={12} py={1}>
-                            <FormControl fullWidth>
-                              <InputLabel id='category'>Select Category *</InputLabel>
-                              <Controller
-                                name='category'
-                                control={control}
-                                render={({ field }) => (
-                                  <Select label='Select Category' {...field}>
-                                    {categories?.map(item => (
-                                      <MenuItem value={item?.title} key={item?.guid}>
-                                        {item?.title}
-                                      </MenuItem>
-                                    ))}
-                                  </Select>
-                                )}
-                              />
-                            </FormControl>
+                            {categories.map((category, index) => (
+                              <FormControl key={index} fullWidth sx={{ marginBottom: 5 }}>
+                                <InputLabel
+                                  id={`category-label-${index}`}
+                                  error={!selectedCategories[index]}
+                                  style={{ color: 'silver' }}
+                                >
+                                  {index === 0 ? 'Parent Category' : `Subcategory Level ${index}`}
+                                </InputLabel>
+                                <Select
+                                  labelId={`category-label-${index}`}
+                                  value={selectedCategories[index] || ''}
+                                  onChange={e => handleCategoryChange(index, e.target.value)}
+                                  label={index === 0 ? 'Parent Category' : `Subcategory Level ${index}`} // Add the label prop
+                                >
+                                  {category.children.map(child => (
+                                    <MenuItem key={child.guid} value={child.guid}>
+                                      {child.title}
+                                    </MenuItem>
+                                  ))}
+                                </Select>
+                              </FormControl>
+                            ))}
                           </Grid>
                         </CardContent>
                       </Card>

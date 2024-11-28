@@ -94,7 +94,6 @@ export default function useTestApi() {
     //userData example
     const data = {
       title: userData?.title,
-      type: userData?.type,
       details: userData?.description,
       category: userData?.category
     }

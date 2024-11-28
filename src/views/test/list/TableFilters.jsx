@@ -19,7 +19,10 @@ const TableFilters = ({
   type,
   searchKeyword,
   localSearch,
-  setLocalSearch
+  setLocalSearch,
+  localTrashSearch,
+  setLocalTrashSearch,
+  mode
 }) => {
   // States
   const [types, setTypes] = useState([])
@@ -127,29 +130,55 @@ const TableFilters = ({
 
         <Grid item xs={12} sm={4}>
           <FormControl fullWidth>
-            <TextField
-              sx={{
-                '& .MuiInputBase-root': {
-                  height: '40px',
-                  minHeight: 'auto'
-                },
-                '& .MuiInputLabel-root': {
-                  top: '-7px'
-                }
-              }}
-              // variant='outlined'
-              placeholder='Search'
-              fullWidth
-              value={localSearch}
-              onChange={e => setLocalSearch(e.target.value)}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position='end'>
-                    <i className='ri-search-line' style={{ color: '#262B4366' }} />
-                  </InputAdornment>
-                )
-              }}
-            />
+            {mode === 'all' ? (
+              <TextField
+                sx={{
+                  '& .MuiInputBase-root': {
+                    height: '40px',
+                    minHeight: 'auto'
+                  },
+                  '& .MuiInputLabel-root': {
+                    top: '-7px'
+                  }
+                }}
+                // variant='outlined'
+                placeholder='Search'
+                fullWidth
+                value={localSearch}
+                onChange={e => setLocalSearch(e.target.value)}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position='end'>
+                      <i className='ri-search-line' style={{ color: '#262B4366' }} />
+                    </InputAdornment>
+                  )
+                }}
+              />
+            ) : (
+              <TextField
+                sx={{
+                  '& .MuiInputBase-root': {
+                    height: '40px',
+                    minHeight: 'auto'
+                  },
+                  '& .MuiInputLabel-root': {
+                    top: '-7px'
+                  }
+                }}
+                // variant='outlined'
+                placeholder='Search'
+                fullWidth
+                value={localTrashSearch}
+                onChange={e => setLocalTrashSearch(e.target.value)}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position='end'>
+                      <i className='ri-search-line' style={{ color: '#262B4366' }} />
+                    </InputAdornment>
+                  )
+                }}
+              />
+            )}
           </FormControl>
         </Grid>
         <Grid item xs={12} sm={4}>
