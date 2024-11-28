@@ -217,7 +217,7 @@ const AddTestDrawer = props => {
                   )}
                 />
               </Box>
-              {categories.map((category, index) => (
+              {/* {categories.map((category, index) => (
                 <FormControl key={index} fullWidth sx={{ marginBottom: 5 }}>
                   <InputLabel
                     id={`category-label-${index}`}
@@ -239,7 +239,7 @@ const AddTestDrawer = props => {
                     ))}
                   </Select>
                 </FormControl>
-              ))}
+              ))} */}
               {/* <FormControl
                 fullWidth
                 sx={{

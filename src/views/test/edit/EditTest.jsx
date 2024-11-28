@@ -213,7 +213,7 @@ const EditTest = ({ isLoading = false, categoriesTableData, categories, setCateg
                             </FormControl>
                           </Grid>
 
-                          <Grid item xs={12} py={1}>
+                          {/* <Grid item xs={12} py={1}>
                             {categories.map((category, index) => (
                               <FormControl key={index} fullWidth sx={{ marginBottom: 5 }}>
                                 <InputLabel
@@ -237,7 +237,7 @@ const EditTest = ({ isLoading = false, categoriesTableData, categories, setCateg
                                 </Select>
                               </FormControl>
                             ))}
-                          </Grid>
+                          </Grid> */}
                         </CardContent>
                       </Card>
                       <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center' }} py={3}>
