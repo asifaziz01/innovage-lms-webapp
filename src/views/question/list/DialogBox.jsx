@@ -29,18 +29,24 @@ const DialogBox = ({
   onChangeRole,
   isDeleteDialog,
   isStatusDialog,
-  isRoleDialog
+  isRoleDialog,
+  onSubmit,
+  handleSubmit,
+  handleReset,
+  description,
+  setDescription
 }) => {
   return (
-    <Dialog open={open} onClose={onClose} sx={{ '& .MuiDialog-paper': { width: '600px', maxWidth: '600px' } }}>
-      <DialogTitle>Add New Section</DialogTitle>
-      <DialogContent>
-        {/* Title Field */}
-        <TextField label='Title *' variant='outlined' fullWidth sx={{ marginBottom: '16px' }} />
+    <Dialog open={open} onClose={handleReset} sx={{ '& .MuiDialog-paper': { width: '600px', maxWidth: '600px' } }}>
+      <form onSubmit={handleSubmit(data => onSubmit(data))} className='flex flex-col gap-5'>
+        <DialogTitle>Add New Section</DialogTitle>
+        <DialogContent>
+          {/* Title Field */}
+          {/* <TextField label='Title *' variant='outlined' fullWidth sx={{ marginBottom: '16px' }} /> */}
 
-        {/* Toolbar for formatting options */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-          {/* <IconButton><FormatSize /></IconButton>
+          {/* Toolbar for formatting options */}
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+            {/* <IconButton><FormatSize /></IconButton>
           <IconButton><Bold /></IconButton>
           <IconButton><Italic /></IconButton>
           <Select defaultValue="Sans Serif" sx={{ marginRight: '8px', width: '120px' }}>
@@ -52,21 +58,39 @@ const DialogBox = ({
             <MenuItem value="Bold">Bold</MenuItem>
             
           </Select> */}
-          <Reactquill />
-        </div>
+            <Reactquill
+              value={description} // Pass description as value
+              onChange={setDescription}
+              label={'Description'}
+            />
+          </div>
 
-        {/* Details Text Area */}
-        {/* <TextField label='Details' multiline rows={4} variant='outlined' fullWidth sx={{ marginBottom: '16px' }} /> */}
-      </DialogContent>
+          {/* Details Text Area */}
+          {/* <TextField label='Details' multiline rows={4} variant='outlined' fullWidth sx={{ marginBottom: '16px' }} /> */}
+        </DialogContent>
 
-      <DialogActions>
-        <Button onClick={onClose} variant='outlined' color='error' sx={{ height: '38px', width: '94px' }}>
-          {cancelText}
-        </Button>
-        <Button onClick={onConfirm} variant='contained' sx={{ height: '38px', width: '94px' }} autoFocus>
-          Create
-        </Button>
-      </DialogActions>
+        <DialogActions>
+          <Button
+            onClick={handleReset}
+            // type='submit'
+            type='reset'
+            variant='outlined'
+            color='error'
+            sx={{ height: '38px', width: '94px' }}
+          >
+            {cancelText}
+          </Button>
+          <Button
+            type='submit'
+            // onClick={() => handleReset()}
+            variant='contained'
+            sx={{ height: '38px', width: '94px' }}
+            autoFocus
+          >
+            Create
+          </Button>
+        </DialogActions>
+      </form>
     </Dialog>
   )
 }

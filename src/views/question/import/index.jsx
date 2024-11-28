@@ -174,7 +174,11 @@ const ImportQuestion = () => {
       dispatch(uploadFilesAsync(files))
       // alert()
       // toast.success('Files uploaded successfully!')
-      router.push(`/question/import/view?guid=${guid}`)
+      if (guid) {
+        router.push(`/question/import/view?guid=${guid}`)
+      } else {
+        router.push('/question/import/view')
+      }
     } catch (error) {
       console.error('Error during file upload:', error)
     }

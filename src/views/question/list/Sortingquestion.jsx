@@ -39,6 +39,8 @@ const Sortingquestion = ({ onSortChange }) => {
       <Button
         aria-controls='options-menu'
         aria-haspopup='true'
+        variant='outlined'
+        color='secondary'
         onClick={handleClick}
         endIcon={<i class='ri-arrow-down-s-line' />}
       >

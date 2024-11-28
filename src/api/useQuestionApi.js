@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { useTheme } from '@mui/material/styles'
 
-import { QUESTION_MODULE_ENDPOINTS } from '@/Const/ApiEndpoints'
+import { QUESTION_MODULE_ENDPOINTS } from '@/Const/test/ApiEndpoints'
 import { alertMessages } from '@/components/globals/AlertMessages'
 
 export default function useQuestionApi() {

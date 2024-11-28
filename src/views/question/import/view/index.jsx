@@ -20,6 +20,7 @@ const ImportView = () => {
   const { files, uploading, error } = useSelector(state => state.fileReducer)
   const [editingQuestion, setEditingQuestion] = useState(null)
   const [questions, setQuestions] = useState([])
+  const [selectAll, setSelectAll] = useState(false)
   console.log(files, 'ccccc')
   console.log(uploadData, 'ssssss')
   const createFileArray = fileList => {
@@ -54,13 +55,13 @@ const ImportView = () => {
         .filter(key => uploadData[key].question !== null)
         .map((key, index) => {
           const item = uploadData[key]
-          const { choice, is_correct_answer, question, parent_id, created_by, order, type, guid } = item
+          const { choice, correct_answer, question, parent_id, created_by, order, type, guid } = item
           return {
             guid: guid,
             id: index + 1,
             text: question,
             options: choice || [],
-            correctanswer: is_correct_answer,
+            correctanswer: correct_answer,
             order,
             created_by,
             parent_id,
@@ -210,6 +211,20 @@ const ImportView = () => {
       setOpenDeleteDialog(true)
     }
   }
+  console.log(selectedQuestions, 'selectedquetsion')
+  const handleSelectAllClick = event => {
+    const isChecked = event.target.checked
+    setSelectAll(isChecked) // Update "Select All" checkbox state
+
+    if (isChecked) {
+      // Select all questions
+      const allQuestionIds = questions.map(q => q.id)
+      setSelectedQuestions(allQuestionIds)
+    } else {
+      // Deselect all questions
+      setSelectedQuestions([])
+    }
+  }
   const handleExpandAll = () => {
     setIsVisible(true) // Show the questions
     setExpandedPanels(questionss.map(q => q.id)) // Expand all panels
@@ -239,6 +254,7 @@ const ImportView = () => {
           onEditClick={handleEditClick}
           marginLeft={marginLeft}
           width={width}
+          handleSelectAllClick={handleSelectAllClick}
           expandedPanels={expandedPanels}
           setExpandedPanels={setExpandedPanels}
           isVisible={isVisible}
@@ -256,6 +272,7 @@ const ImportView = () => {
           setSelectedQuestions={setSelectedQuestions}
           edit={edit}
           setEdit={setEdit}
+          selectAll={selectAll}
         />
       )}
       {editingQuestion && <EditImport question={editingQuestion} onSave={handleSave} />}

@@ -33,14 +33,15 @@ const SortingType = ({ onSortChange }) => {
   return (
     <>
       <Button
-        style={{ border: 'none' }}
+        // style={{ border: 'none' }}
         aria-controls='options-menu'
         aria-haspopup='true'
-        variant='Contained'
+        variant='outlined'
+        color='secondary'
         // color='secondary'
         onClick={handleClick}
         endIcon={<i class='ri-arrow-down-s-line' />}
-        sx={{ ml: 3 }}
+        // sx={{ ml: 3 }}
       >
         Type
       </Button>

@@ -5,9 +5,6 @@ import {
   CardContent,
   Button,
   Typography,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Checkbox,
   FormControlLabel,
   Divider,
@@ -17,7 +14,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  InputAdornment,
   Box,
   Menu
 } from '@mui/material'
@@ -26,12 +22,12 @@ import Reactquill from './Reactquill'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import Tablefor from '../import/view/Tablefor'
-import { useForm, Controller } from 'react-hook-form'
-import QuestionSettings from './QuestionSetting'
 import AddUserDrawer from './AddUserDrawer'
 import { useSearchParams } from 'next/navigation'
 
 const QuestionCard = ({
+  handleSelectAllClick,
+  selectAll,
   marginLeft,
   width,
   expandedPanels,
@@ -101,22 +97,18 @@ const QuestionCard = ({
     setEditedText(currentText) // Set the current text in the input field
     setEditingAnswerId(null)
   }
-
+  useEffect(() => {
+    if (questionData.length > 0) {
+      const allQuestionIds = questionData.map(question => question.id)
+      // Check if the state is already the same before setting it
+      if (JSON.stringify(allQuestionIds) !== JSON.stringify(showAnswers)) {
+        setShowAnswers(allQuestionIds)
+      }
+    }
+  }, [questionData, showAnswers])
   // Handle when the user types in the input field
-  const handleEditChange = e => {
-    setEditedText(e.target.value)
-  }
-  console.log(questions, 'question12344')
+
   // Handle when the user presses Enter or blurs out of the input
-  const handleEditSave = questionId => {
-    const updatedQuestions = questionList.map(question =>
-      question.id === questionId ? { ...question, text: editedText } : question
-    )
-    // Stop editing mode
-    // You would ideally call a function here to save the changes to the server or state
-    setQuestionData(updatedQuestions)
-    setEditingQuestionId(null)
-  }
   // Handle when the user clicks on an answer to edit
   const handleEditAnswerClick = (questionId, answerIndex, currentAnswer) => {
     setEditingAnswerId(`${questionId}-${answerIndex}`) // Set the answer ID being edited
@@ -128,7 +120,7 @@ const QuestionCard = ({
   const handleEditAnswerChange = e => {
     setEditedAnswer(e.target.value)
   }
-  console.log('hye')
+  console.log(selectAll, 'selectAll')
   // Handle saving the edited answer
   const handleEditAnswerSave = (questionId, answerIndex) => {
     const updatedQuestions = questionList.map(question => {
@@ -145,70 +137,124 @@ const QuestionCard = ({
   useEffect(() => {}, [questions, isVisible, expandedPanels, questions])
   console.log(editedAnswer, 'gg')
 
+  const MAX_QUESTIONS_PER_BATCH = 40
+
   const handleImportSelected = async () => {
     if (selectedQuestions.length === 0) {
       toast.error('Please select at least one question.')
       return
     }
 
+    const selectedQuestionData = questionData.filter(q => selectedQuestions.includes(q.id))
+    const batches = []
+    for (let i = 0; i < selectedQuestionData.length; i += MAX_QUESTIONS_PER_BATCH) {
+      batches.push(selectedQuestionData.slice(i, i + MAX_QUESTIONS_PER_BATCH))
+    }
+
+    try {
+      for (const batch of batches) {
+        const formData = new FormData()
+        if (guid) {
+          formData.append('category', guid)
+        }
+        batch.forEach((question, index) => {
+          formData.append(`questions[${index}][question]`, question.text)
+          formData.append(`questions[${index}][difficulty]`, settings.difficultyLevel)
+          formData.append(`questions[${index}][test_name]`, settings.testName)
+          formData.append(`questions[${index}][type]`, settings.questionType)
+          formData.append(`questions[${index}][importance]`, settings.importance)
+          formData.append(`questions[${index}][marks]`, settings.marksPerQuestion)
+          formData.append(`questions[${index}][category]`, guid)
+          formData.append(`questions[${index}][neg_marks]`, settings.negativeMarks)
+          formData.append(`questions[${index}][time]`, settings.timeAllowed)
+
+          question.options.forEach((choice, choiceIndex) => {
+            formData.append(`questions[${index}][choice][${choiceIndex}]`, choice)
+          })
+
+          if (question.correctanswer && question.correctanswer.length > 0) {
+            question.correctanswer.forEach((correctAnswer, correctAnswerIndex) => {
+              formData.append(`questions[${index}][correct_answer][${correctAnswerIndex}]`, correctAnswer)
+            })
+          }
+        })
+
+        const endpoint = `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/questions/save_import`
+
+        await axios.post(endpoint, formData, {
+          headers: {
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_LMS_TOKEN}`,
+            Network: process.env.NEXT_PUBLIC_LMS_TOKEN,
+            Accept: 'application/json',
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+      }
+
+      toast.success('Selected questions imported successfully!')
+    } catch (error) {
+      toast.error('Failed to import selected questions.')
+    }
+  }
+  const handleImportAll = async () => {
+    console.log('hyeeeee')
+    if (!questionData || questionData.length === 0) {
+      toast.error('No questions available to import.')
+      return
+    }
+
     // Create a new FormData object
     const formData = new FormData()
-    formData.append('category_guid', guid)
-    const selectedQuestionData = questionData.filter(q => selectedQuestions.includes(q.id))
-
-    // Loop through selected questions and append to formData
-    selectedQuestionData.forEach((question, index) => {
+    if (guid) {
+      formData.append('category', guid)
+    }
+    // Loop through all questions and append to formData
+    questionData.forEach((question, index) => {
       // Append question fields in the required form-data format
       formData.append(`questions[${index}][question]`, question.text) // Question text
-      // formData.append(`questions[${index}][question_type]`, question.question_type) // Assuming 'mcq' as question type
-      // Append question settings for each question
       formData.append(`questions[${index}][difficulty]`, settings.difficultyLevel)
-      formData.append(`questions[${index}][test_name]`, settings.testName)
+      formData.append(`questions[${index}][test_name]`, settings.testName || 'Default Test Name')
       formData.append(`questions[${index}][type]`, settings.questionType)
       formData.append(`questions[${index}][importance]`, settings.importance)
       formData.append(`questions[${index}][marks]`, settings.marksPerQuestion)
       formData.append(`questions[${index}][category]`, guid)
       formData.append(`questions[${index}][neg_marks]`, settings.negativeMarks)
       formData.append(`questions[${index}][time]`, settings.timeAllowed)
-      // formData.append(`questions[${index}][time_unit]`, settings.timeUnit)
+
       // Append choices for the question
       question.options.forEach((choice, choiceIndex) => {
         formData.append(`questions[${index}][choice][${choiceIndex}]`, choice)
       })
 
-      question.correctanswer.forEach((correctanswer, correctAnswerIndex) => {
-        formData.append(`questions[${index}][correct_answer][${correctAnswerIndex}]`, correctanswer)
-      })
+      // Append correct answers for the question
 
-      // question.order.forEach((order, orderIndex) => {
-      //   formData.append(`questions[${index}][order][${orderIndex}]`, order)
-      // })
+      if (question.correctanswer && question.correctanswer.length > 0) {
+        question.correctanswer.forEach((correctAnswer, correctAnswerIndex) => {
+          formData.append(`questions[${index}][correct_answer][${correctAnswerIndex}]`, correctAnswer)
+        })
+      }
     })
 
     try {
       const endpoint = `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/questions/save_import`
 
-      const response = await axios.post(
-        endpoint,
-        formData, // Send the formData object
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_LMS_TOKEN}`, // Include Authorization header
-            Network: process.env.NEXT_PUBLIC_LMS_TOKEN, // Include Network header
-            Accept: 'application/json', // Specify accepted response format
-            'Content-Type': 'multipart/form-data' // Specify form-data content type
-          }
+      // Make the API call
+      const response = await axios.post(endpoint, formData, {
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_LMS_TOKEN}`,
+          Network: process.env.NEXT_PUBLIC_LMS_TOKEN,
+          Accept: 'application/json',
+          'Content-Type': 'multipart/form-data'
         }
-      )
+      })
 
       // Handle success response
-      toast.success('Selected questions imported successfully!')
-
-      setQuestionData(selectedQuestionData)
+      toast.success('All questions imported successfully!')
     } catch (error) {
-      toast.error('Failed to import selected questions.')
+      toast.error('Failed to import questions.')
     }
   }
+
   const handleExpandAllButton = () => {
     setIsVisible(true) // Show the questions
     setExpandedPanels(questionData.map(q => q.id)) // Expand all panels
@@ -222,13 +268,6 @@ const QuestionCard = ({
   const handleClose = () => {
     setAnchorEl(null)
   }
-
-  // Handler for "Import All"
-  const handleImportAll = () => {
-    setAnchorEl(null)
-    // Add your logic for "Import All" here
-  }
-
   const handleDeleteClick = async () => {
     if (selectedQuestions.length === 0) {
       toast.error('Please select at least one question to delete.')
@@ -270,7 +309,7 @@ const QuestionCard = ({
     }
   }
 
-  console.log(expandedPanels, 'showanswert')
+  console.log(questions, 'showanswert')
   const decodeHtmlEntities = html => {
     const txt = document.createElement('textarea')
     txt.innerHTML = html
@@ -297,7 +336,7 @@ const QuestionCard = ({
   const setNegativeMarks = value => setSettings(prev => ({ ...prev, negativeMarks: value }))
   const setTime = value => setSettings(prev => ({ ...prev, timeAllowed: value }))
   const setTimeUnit = value => setSettings(prev => ({ ...prev, timeUnit: value }))
-  console.log(settings.questionType, 'questiontype')
+  console.log(questions.length, 'questiontype')
   return (
     <>
       {check && (
@@ -327,34 +366,38 @@ const QuestionCard = ({
               <FormControlLabel
                 control={
                   <Checkbox
-                    checked={selectedQuestions && selectedQuestions.includes(questions.id)}
-                    onChange={e => handleCheckboxChange(questions.id, e.target.checked)}
+                    checked={selectAll}
+                    onChange={handleSelectAllClick}
+                    // checkedIcon={selectedQuestions.length !== questions.length ? <i class='ri-checkbox-fill'></i> : ''}
+                    label='Select All'
                   />
                 }
                 style={{ marginRight: '10px' }}
               />
+              Select All
             </div>
           }
-          subheaderTypographyProps={{ style: { color: '#262B43E5', fontSize: '13px' } }}
+          // subheaderTypographyProps={{ style: { color: '#262B43E5', fontSize: '13px' } }}
           action={
             <>
-              <Button
-                variant='contained'
-                startIcon={<i className='ri-download-2-line' style={{ color: 'white' }} />}
-                onClick={handleClick} // Open the dropdown menu on button click
-              >
-                Import
-              </Button>
-              <Menu
-                anchorEl={anchorEl}
-                open={open}
-                onClose={handleClose}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-                transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-              >
-                <MenuItem onClick={handleImportAll}>Import All</MenuItem>
-                <MenuItem onClick={handleImportSelected}>Import Selected</MenuItem>
-              </Menu>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <Button
+                  variant='contained'
+                  startIcon={<i className='ri-download-2-line' style={{ color: 'white' }} />}
+                  onClick={handleImportSelected}
+                  disabled={selectedQuestions.length === 0} // Disable if no questions selected
+                >
+                  Import Selected
+                </Button>
+                <Button
+                  variant='contained'
+                  startIcon={<i className='ri-download-2-line' style={{ color: 'white' }} />}
+                  onClick={handleImportAll}
+                  // disabled={selectedQuestions.length !== questions.length} // Disable if not all questions are selected
+                >
+                  Import All
+                </Button>
+              </div>
             </>
           }
         />
@@ -371,7 +414,7 @@ const QuestionCard = ({
                 console.log(question && question.correctanswer && question.correctanswer[index] === '1', 'questiondemo')
                 return (
                   <>
-                    <Accordion
+                    <div
                       key={question.id}
                       expanded={showAnswers.includes(question.id)} // Check if this question is in the expandedPanels array
                       onDragStart={() => handleDragStart(index)}
@@ -379,17 +422,15 @@ const QuestionCard = ({
                       onDrop={() => handleDrop(index)}
                       draggable
                       style={{
-                        padding: '10px',
-                        margin: '5px 0',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
+                        borderRadius: 'none',
+                        borderTop: 'none',
+                        border: 'none'
                         // boxShadow: 'none',
                         // border: 'none'
                       }}
                       sx={{ '& .MuiAccordionSummary-expandIconWrapper': { display: 'none' } }} // Th
                     >
-                      <AccordionSummary aria-controls={`panel${question.id}-content`} id={`panel${question.id}-header`}>
+                      <div aria-controls={`panel${question.id}-content`} id={`panel${question.id}-header`}>
                         <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                           {/* Checkbox for selecting questions */}
                           <FormControlLabel
@@ -405,8 +446,14 @@ const QuestionCard = ({
                           />
                           {/* Editable question text */}
                           <Typography
-                            variant='body1'
-                            style={{ flexGrow: 1, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                            // variant='body2'
+                            style={{
+                              flexGrow: 1,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              color: 'black'
+                            }}
                             onClick={() => handleEditClick(question.id, processedText)} // Switch to editing mode on click
                             dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(`${index + 1}. ${question.text}`) }}
                           >
@@ -414,7 +461,7 @@ const QuestionCard = ({
                           </Typography>
                           <Divider />
                           <Button
-                            style={{ marginLeft: '20px' }}
+                            // style={{ marginLeft: '20px' }}
                             variant='text'
                             onClick={e => {
                               e.stopPropagation() // Prevent accordion toggle
@@ -428,9 +475,12 @@ const QuestionCard = ({
                             )}
                           </Button>
                         </div>
-                      </AccordionSummary>
+                      </div>
                       {showAnswers.includes(question.id) && (
-                        <AccordionDetails style={{ marginLeft: '40px' }}>
+                        <div
+                        //  style={{
+                        //   marginLeft: '40px' }}
+                        >
                           {question.options ? (
                             <ul style={{ listStyleType: 'none', paddingLeft: '0' }}>
                               {question.options.map((option, index) => (
@@ -459,7 +509,7 @@ const QuestionCard = ({
                                   ) : (
                                     <Typography
                                       style={{
-                                        color: question.correctanswer[index] === '1' ? '#34C759' : 'black',
+                                        color: question?.correctanswer?.[index] === '1' ? '#34C759' : 'black',
                                         flexGrow: 1, // Use flexGrow to take remaining space
                                         cursor: 'pointer'
                                       }}
@@ -478,17 +528,9 @@ const QuestionCard = ({
                             </Typography>
                           )}
 
-                          <Accordion expanded={isExpanded} onChange={handleExpandClick} style={{ border: 'none ' }}>
-                            <AccordionSummary
-                            //  expandIcon={
-                            // <ExpandMoreIcon />
-                            // }
-                            >
-                              <Typography>
-                                {isExpanded ? 'Hide' : 'Show'} {isExpanded ? '▲' : '▼'}
-                              </Typography>
-                            </AccordionSummary>
-                            <AccordionDetails>
+                          <div expanded={isExpanded} onChange={handleExpandClick} style={{ border: 'none ' }}>
+                            <div></div>
+                            <div>
                               <Grid container spacing={2}>
                                 {/* Difficulty */}
                                 <Grid item xs={3}>
@@ -584,23 +626,19 @@ const QuestionCard = ({
                                   </FormControl>
                                 </Grid>
                               </Grid>
-                            </AccordionDetails>
-                          </Accordion>
-                        </AccordionDetails>
+                            </div>
+                          </div>
+                        </div>
                       )}
-                      {/* <Button
-                        style={{ color: 'rgba(38, 43, 67, 0.898)', marginTop: '10px' }}
-                        // onClick={() => handleAccordionClick(question.guid)}
-                      >
-                        <i className='ri-delete-bin-7-line' style={{ color: 'rgba(38, 43, 67, 0.898)' }}></i>
-                      </Button> */}
+
                       <Button
                         style={{ color: 'rgba(38, 43, 67, 0.898)', marginTop: '10px' }}
                         onClick={() => onEditClick(question)}
                       >
                         <i className='ri-edit-box-line' style={{ color: 'rgba(38, 43, 67, 0.898)' }}></i>
                       </Button>
-                    </Accordion>
+                      <hr style={{ width: '100%', border: '0.5px solid #ddd', margin: '10px 0' }} />
+                    </div>
                   </>
                 )
               })}

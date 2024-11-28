@@ -1,6 +1,5 @@
 // React Imports
 import { useState } from 'react'
-
 // MUI Imports
 import Button from '@mui/material/Button'
 import Drawer from '@mui/material/Drawer'
@@ -19,45 +18,36 @@ import { Box } from '@mui/material'
 import { styled } from '@mui/material/styles'
 import moment from 'moment/moment'
 import ReactQuill from 'react-quill'
-
 import 'react-quill/dist/quill.snow.css'
 import ReactQuillLimited from './ReactQuillLimited'
-
 // Vars
 const initialData = {
   company: '',
   country: '',
   contact: ''
 }
-
 const AddTestDrawer = props => {
   // Props
   const { open, handleClose, userData, addUserData } = props
   const [categories, setCategories] = useState([{ parent: null, children: userData }])
-
   // States
   const [formData, setFormData] = useState(initialData)
   const [description, setDescription] = useState('')
   const [value, setValue] = useState('')
   const [selectedCategories, setSelectedCategories] = useState([])
-
   const findCategoryByGuid = (guid, data) => {
     for (const category of data) {
       if (category.guid === guid) return category
-
       if (category.children?.length) {
         const found = findCategoryByGuid(guid, category.children)
-
         if (found) return found
       }
     }
-
     return null
   }
 
   const handleCategoryChange = (level, selectedGuid) => {
     const updatedSelectedCategories = [...selectedCategories]
-
     updatedSelectedCategories[level] = selectedGuid
     updatedSelectedCategories.splice(level + 1) // Remove selections for deeper levels
     setSelectedCategories(updatedSelectedCategories)
@@ -76,9 +66,7 @@ const AddTestDrawer = props => {
       setCategories(prev => prev.slice(0, level + 1))
     }
   }
-
   console.log(selectedCategories[selectedCategories.length - 1], 'selectedcategories')
-
   // Hooks
   const {
     control,
@@ -89,7 +77,6 @@ const AddTestDrawer = props => {
     defaultValues: {
       title: '',
       description: '',
-
       // type: '',
       parent: ''
     }
@@ -106,7 +93,6 @@ const AddTestDrawer = props => {
       border-top-right-radius: 12px !important;
     }
   `
-
   const onSubmit = data => {
     const newUser = {
       id: (userData?.length && userData?.length + 1) || 1,

@@ -54,8 +54,8 @@ export default function useCategoryApi() {
     // Create the data object
     const data = {
       title: userData?.title,
-      description: userData?.description,
-      parent: userData?.parent
+      description: userData?.description
+      // parent: userData?.parent
     }
 
     const formData = new FormData()
@@ -66,8 +66,8 @@ export default function useCategoryApi() {
     })
 
     // Only append parent_guid if userData.category has a value
-    if (userData?.category) {
-      formData.append('parent_guid', userData.category)
+    if (userData?.parent) {
+      formData.append('parent', userData.parent)
     }
 
     try {
@@ -146,6 +146,7 @@ export default function useCategoryApi() {
 
     // Append each GUID
     guids.forEach(id => {
+      console.log(id, 'idss')
       formData.append('guid[]', id)
     })
 
@@ -173,7 +174,7 @@ export default function useCategoryApi() {
         )
         .then(() => fetchData())
 
-      //   return response.data
+      return response.data
     } catch (error) {
       console.error('Error:', error)
     }
@@ -196,7 +197,7 @@ export default function useCategoryApi() {
         )
         ?.then(res => {
           //   setData(res?.payload?.data)
-          setTrashData(res?.data?.payload)
+          setTrashData(res?.data?.payload.data)
         })
     } catch (error) {
       console.error('Error fetching data:', error)

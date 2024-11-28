@@ -1,18 +1,9 @@
 'use client'
 import React, { useEffect, useState, useCallback } from 'react'
-
 import '../../style/styles.css'
-
-// import useQuestionApi from '../../Api/useQuestionApi'
-import { useSearchParams, useRouter } from 'next/navigation'
-
 import {
   Grid,
   Box,
-  CircularProgress,
-  FormControl,
-  CardHeader,
-  TextField,
   Dialog,
   DialogActions,
   DialogContent,
@@ -22,27 +13,22 @@ import {
   Card
 } from '@mui/material'
 
-import QuestionCard from '../list/QuestionCard'
-import TableFilters from '../list/TableFilters'
-import TestCard from '../list/TestCard'
-import QuickLinksCard from '../list/QuickLinkCards'
 import useQuestionModuleApi from '@/api/useQuestionModuleApi'
 import useImportanceApi from '@/api/useImportanceApi'
 
-// import QuestionCardBankModule from '../list/QuestionCardBankModule'
 import PaginationCard from '@/api/Pagination'
 import Sortingquestion from '../list/Sortingquestion'
 
-// import Topcard from '../list/Topcard
 import Topcard from '../list/Topcard'
 import FilterHeader from '@/Components/globals/FilterHeader'
-
+import { useSearchParams } from 'next/navigation'
 import QuestionCardBankModule from '../list/QuestionCardBankModule'
 import useCategoryApi from '@/api/useCategoryApi'
-
+import { useRouter } from 'next/navigation'
+import DialogBox from '../list/DialogBox'
+import { useForm } from 'react-hook-form'
 const debounce = (func, delay) => {
   let timeoutId
-
   return (...args) => {
     clearTimeout(timeoutId)
     timeoutId = setTimeout(() => {
@@ -50,7 +36,6 @@ const debounce = (func, delay) => {
     }, delay)
   }
 }
-
 const AllQuestionList = () => {
   const {
     allquestionData,
@@ -63,13 +48,13 @@ const AllQuestionList = () => {
     deleteSingleQuestion,
     trashData,
     trashDifficultyData,
-    resetQuestionData
+    resetQuestionData,
+    BulkDeleteQuestion,
+    addSection
   } = useQuestionModuleApi()
-
   const { fetchImportanceData } = useImportanceApi
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
-  const [selectAll, setSelectAll] = useState('')
-
+  // const [selectAll, setSelectAll] = useState('')
   // const [showCorrectAnswer, setShowCorrectAnswer] = useState(false)
   // const [showCategory, setShowCategory] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
@@ -80,32 +65,31 @@ const AllQuestionList = () => {
   const [showAnswers, setShowAnswers] = useState([]) // Tracks which panels' answers are shown
   const [sortOption, setSortOption] = useState(null)
   const [selectedType, setSelectedType] = useState('')
+  const [addUserOpen, setAddUserOpen] = useState(false)
   const [order, setOrder] = useState('')
   const [checkStatus, setCheckStatus] = useState('Active')
   const [categoryGuid, setCategoryGuid] = useState('')
-
   // const [debouncedSearchKeyword, setDebouncedSearchKeyword] = useState(searchKeyword)
   const [localSearch, setLocalSearch] = useState('') // local state for search input
-  const [isExpandedAll, setIsExpandedAll] = useState(false) // Tracks if all are expanded
+  const [isExpandedAll, setIsExpandedAll] = useState(true) // Tracks if all are expanded
   const [selectedQuestions, setSelectedQuestions] = useState([])
-
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [trashOpen, setTrashOpen] = useState(false)
+  const [showAll, setShowAll] = useState(false)
+  const [selectAll, setSelectAll] = useState(false)
+  const [description, setDescription] = useState('')
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(() => {
     // Initialize state from localStorage or default to false
     const savedValue = localStorage.getItem('showCorrectAnswer')
-
     return savedValue !== null ? JSON.parse(savedValue) : false
   })
-
   console.log(trashData, 'trash')
-
   const [showCategory, setShowCategory] = useState(() => {
     return JSON.parse(localStorage.getItem('showCategory')) || false // Initialize from localStorage
   })
-
   const [showFields, setShowFields] = useState(() => {
     return JSON.parse(localStorage.getItem('showFields')) || false // Initialize from localStorage
   })
-
   const [categories, setCategories] = useState([])
   const [selectedCategory, setSelectedCategory] = useState('Categories')
   const { data } = useCategoryApi()
@@ -113,14 +97,12 @@ const AllQuestionList = () => {
   const guid = param.get('guid')
   const router = useRouter()
   const [isTrash, setIsTrash] = useState(false)
-
   // Effect to update localStorage whenever showCorrectAnswer changes
   useEffect(() => {
     localStorage.setItem('showCorrectAnswer', JSON.stringify(showCorrectAnswer))
     localStorage.setItem('showCategory', JSON.stringify(showCategory))
     localStorage.setItem('showFields', JSON.stringify(showFields))
   }, [showCorrectAnswer, showCategory, showFields])
-
   // Debounce effect to delay the API call until the user stops typing
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -129,32 +111,59 @@ const AllQuestionList = () => {
 
     return () => clearTimeout(delayDebounceFn) // Cleanup the timeout
   }, [localSearch, setSearchKeyword])
+  const {
+    control,
+    reset: resetForm,
+    handleSubmit,
+    formState: { errors }
+  } = useForm({
+    defaultValues: {
+      description: ''
+      // type: '',
+    }
+  })
+  console.log(description, 'description')
+  const onSubmit = data => {
+    const newUser = {
+      // avatar: `/images/avatars/${Math.floor(Math.random() * 8) + 1}.png`,
+      // title: data.title,
+      description: description
+      // type: data.type,
+      // parent: selectedCategories[selectedCategories.length - 1],
+      // created_on: moment().format('YYYY-MM-DD HH:mm:ss'),
+
+      // optional parameters
+      // created_by: 'ADJ20',
+      // status: '0'
+    }
+
+    addSection(newUser)
+    setAddUserOpen(!addUserOpen)
+    setDescription(null)
+    // setFormData(initialData)
+    resetForm({ description: '' })
+    console.log(description, 'setDescriprion')
+  }
+  const handleReset = () => {
+    setAddUserOpen(!addUserOpen)
+    // setFormData(initialData)
+    setDescription('')
+  }
 
   const handleCategoryTitle = category => {
-    console.log('1234')
+    console.log(allquestionData, '1234')
     console.log(category, 'selected category')
     setSelectedCategory(category.title)
     setCategoryGuid(category.guid)
-
-    // Update the selected category based on whether it's a parent or subcategory
-    // if (isSubcategory) {
-    //   console.log(selectedCategory, 'sssss')
-    //   setSelectedCategory(category.title)
-    // } else {
-    //   // Only set the parent category if it's explicitly clicked
-    //   setSelectedCategory(category.title)
-    // }
 
     setIsDropdownOpen(false)
   }
 
   const handleCategoryChange = event => {
     const value = event.target.value
-
     setSelectedCategory(value)
     console.log('Selected Category ID:', value)
   }
-
   console.log(categoryGuid, 'selectedcategory')
   useEffect(() => {
     fetchDataallquestion({
@@ -166,17 +175,15 @@ const AllQuestionList = () => {
       category: categoryGuid
     })
   }, [currentPage, rowsPerPage, selectedType, order, searchKeyword, selectedCategory])
-
+  console.log(selectedType, 'typeselectedchecking')
   useEffect(() => {
     const dataSource = isTrash ? trashData : allquestionData
-
     if (dataSource && dataSource.meta) {
       setTotalPages(Math.ceil(dataSource.meta.total_results / rowsPerPage))
     }
   }, [allquestionData, trashData, rowsPerPage, isTrash])
 
   console.log(allquestionData?.meta?.total_results, 'kkkk')
-
   const handlePageChange = page => {
     setCurrentPage(page)
   }
@@ -185,50 +192,36 @@ const AllQuestionList = () => {
     setRowsPerPage(rows)
     setCurrentPage(1) // Reset to the first page when changing rows per page
   }
-
   useEffect(() => {
     trashDifficultyData()
   }, [])
-  console.log('1234')
-
+  const showAllQuestion = () => {
+    // if(allquestionData.length>0){
+    const totalresults = allquestionData?.meta?.total_results
+    fetchDataallquestion({ results_per_page: totalresults })
+    setShowAll(true)
+    // }
+  }
+  console.log(allquestionData, '1234')
   // Handle search input
   const handleSearch = debounce(event => {
     setSearchKeyword(event.target.value) // Update the search keyword
   }, 500) // 500ms delay before making the API call
 
-  const handleExpandAll = () => {
-    // setIsVisible(true) // Show the questions
-    // setExpandedPanels(questions.map(q => q.id)) // Expand all panels
-    // setShowAnswers([]) // Reset showing answers (no answers shown)
-    // setIsExpandedAll(true) // Set the expanded state
-  }
-
-  const handleExpandAllButton = () => {
-    setIsVisible(true) // Show the questions
-    setExpandedPanels(questions.map(q => q.id)) // Expand all panels
-    setShowAnswers(questions.map(q => q.id)) // Reset showing answers (no answers shown)
-    // setIsExpandedAll(true) // Set the expanded state
-  }
+  const handleExpandAll = () => {}
 
   // Function to collapse all accordions and hide everything
-  const handleCollapseAll = () => {
-    // setExpandedPanels([]) // Collapse all panels
-    // setIsVisible(false) // Hide the questions
-    // setShowAnswers([]) // Reset answers visibility
-    // setIsExpandedAll(false) // Reset the expanded state
-  }
-
+  const handleCollapseAll = () => {}
   console.log(order, 'sssssssssssss')
-
   // Function to toggle the answer visibility of a specific question
   const toggleAnswer = questionId => {
-    setShowAnswers(prev => {
-      if (prev.includes(questionId)) {
-        return prev.filter(id => id !== questionId) // Remove from shown
-      } else {
-        return [...prev, questionId] // Add to shown
-      }
-    })
+    // setShowAnswers(prev => {
+    //   if (prev.includes(questionId)) {
+    //     return prev.filter(id => id !== questionId) // Remove from shown
+    //   } else {
+    //     return [...prev, questionId] // Add to shown
+    //   }
+    // })
   }
 
   // Track selected checkboxes in QuestionCard
@@ -238,9 +231,9 @@ const AllQuestionList = () => {
     console.log(questionId)
 
     if (isChecked) {
-      setSelectedQuestions([...selectedQuestions, questionId]) // Add question to selected list
+      setSelectedQuestions(prevSelected => [...prevSelected, questionId])
     } else {
-      setSelectedQuestions(selectedQuestions.filter(id => id !== questionId)) // Remove from list
+      setSelectedQuestions(prevSelected => prevSelected.filter(id => id !== questionId))
     }
   }
 
@@ -251,30 +244,31 @@ const AllQuestionList = () => {
   const handleDeleteClick = () => {
     if (selectedQuestions.length > 0) {
       setOpenDeleteDialog(true)
+      setDeleteOpen(true)
+      setTrashOpen(false)
+    }
+    // setDeleteOpen(true)
+  }
+  const handleResetClick = () => {
+    if (selectedQuestions.length > 0) {
+      setOpenDeleteDialog(true)
+      setTrashOpen(true)
+      setDeleteOpen(false)
     }
   }
 
-  // const parseCategories = (categories, level = 0) => {
-  //   return categories.flatMap(category => [
-  //     { id: category.id, title: category.title, level },
-  //     ...parseCategories(category.children || [], level + 1)
-  //   ])
-  // }
-  // useEffect(() => {
-  //   if (data) {
-  //     console.log(data, 'data12334')
-  //     const parsedCategories = parseCategories(data)
-  //     setCategories(parsedCategories)
-  //   }
-  // }, [data])
   console.log(categories, 'categorydata')
-
   // Handle category selection
 
   const handleConfirmDelete = async () => {
     try {
       // Call the delete function from your API hook
-      await BulkDelete(selectedQuestions) // Assuming deleteQuestions accepts an array of IDs
+      if (!isTrash) {
+        await BulkDelete(selectedQuestions) // Assuming deleteQuestions accepts an array of IDs
+      }
+      if (isTrash) {
+        await BulkDeleteQuestion(selectedQuestions)
+      }
       console.log('Deleted questions:', selectedQuestions)
       setSelectedQuestions([]) // Clear the selected questions
       setOpenDeleteDialog(false) // Close the dialog
@@ -283,7 +277,6 @@ const AllQuestionList = () => {
       console.error('Error deleting questions:', error)
     }
   }
-
   const handleResetData = async () => {
     try {
       // Call the delete function from your API hook
@@ -296,46 +289,36 @@ const AllQuestionList = () => {
       console.error('Error deleting questions:', error)
     }
   }
-
   useEffect(() => {
     if (!sortOption) {
       // If no option is selected (unchecking), reset filters
       setSelectedType(null)
       setOrder(null)
     }
-
     if (sortOption === 'multiple_choice_question') {
       setSelectedType('mcmc')
     }
-
     if (sortOption === 'true_false') {
       setSelectedType('tf')
     }
-
     if (sortOption === 'question_asc') setOrder('title_asc')
-
     if (sortOption === 'question_desc') {
       setOrder('title_desc')
     }
-
     if (sortOption === 'creation_date_asc') {
       setOrder('newest_first')
     }
-
     if (sortOption === 'creation_date_desc') {
       setOrder('newest_last')
     }
-
     // else {
     //   setSelectedType(null)
     //   setOrder(null)
     // }
   }, [sortOption, selectedType])
-
   const handleCancelDelete = () => {
     setOpenDeleteDialog(false)
   }
-
   // State for toggling between active and trash data
 
   const questions =
@@ -343,7 +326,6 @@ const AllQuestionList = () => {
     (isTrash ? trashData : allquestionData).data
       ?.filter(item => {
         console.log(item, 'itemcheck')
-
         return item.question !== null
       }) // Filter based on status if isTrash is true
       .map((item, index) => ({
@@ -358,33 +340,26 @@ const AllQuestionList = () => {
         neg_marks: item?.neg_marks,
         time: item?.time
       }))
-
   console.log(questions, 'questionsss')
-
   const filteredQuestions = questions?.filter(question =>
     question.text.toLowerCase().includes(searchKeyword.toLowerCase())
   )
-
   const width = 'auto'
   const deleteIconActive = selectedQuestions.length > 0
-
   console.log(filteredQuestions, 'questions')
 
   // Function to handle sort change
   const handleSortChange = sortType => {
     setSortOption(sortType)
   }
-
   const handleStatusToggle = status => {
     setIsTrash(status === 'trash')
   }
-
   // Sorting logic
   const applySort = questions => {
     const stripHtmlTags = text => {
       const parser = new DOMParser()
       const parsedHtml = parser.parseFromString(text, 'text/html')
-
       return parsedHtml.body.textContent || ''
     }
 
@@ -398,79 +373,30 @@ const AllQuestionList = () => {
       return strippedText.trim()
     }
 
-    // if (sortOption === 'creation_date_asc') {
-    //   return questions.sort((a, b) => new Date(a.creationDate) - new Date(b.creationDate))
-    // } else if (sortOption === 'creation_date_desc') {
-    //   return questions.sort((a, b) => new Date(b.creationDate) - new Date(a.creationDate))
-    // }
-    //  else if (sortOption === 'question_asc') {
-    //   const sortedQuestions = questions.sort((a, b) => {
-    //     console.log(cleanText(a.text), 'cleaned a.text')
-    //     console.log(cleanText(b.text), 'cleaned b.text')
-    //     return cleanText(a.text).localeCompare(cleanText(b.text))
-    //   })
-
-    //   console.log(sortedQuestions, 'Sorted by question (asc)')
-    //   return sortedQuestions
-    // } else if (sortOption === 'question_desc') {
-    //   const sortedQuestions = questions.sort((a, b) => stripHtmlTags(b.text).localeCompare(stripHtmlTags(a.text)))
-    //   console.log(sortedQuestions, 'Sorted by question (desc)')
-    //   return sortedQuestions
-    // }
-    // else if (sortOption === 'multiple_choice_question') {
-    //   console.log(
-    //     'Question types for multiple_choice:',
-    //     questions.map(q => q.question_type)
-    //   ) // Debugging
-    //   return questions.filter(q => q.question_type === 'mcmc')
-    // } else if (sortOption === 'true_false') {
-    //   console.log(
-    //     'Question types for multiple_choice:',
-    //     questions.map(q => q.question_type)
-    //   ) // Debuggin
-    //   return questions.filter(q => q.question_type === 'tf')
-    // }
     return questions
   }
-
   const categoryPage = () => {
     router.push('/categories/list')
   }
-
   const addQuestion = () => {
     router.push('/test/questions')
   }
-
   const sortedQuestions = applySort(filteredQuestions)
-
   const parseCategories = (categories, level = 0) => {
     return categories.flatMap(category => [
       { id: category.id, title: category.title, level },
       ...parseCategories(category.children || [], level + 1)
     ])
   }
-
   useEffect(() => {
     if (data) {
       console.log(data, 'data12334')
       const parsedCategories = parseCategories(data)
-
       setCategories(parsedCategories)
     }
   }, [data])
   console.log(categories, 'categorydata')
   const [hoveredCategory, setHoveredCategory] = useState(null)
-
-  const handleMouseEnter = categoryId => {
-    setHoveredCategory(categoryId)
-  }
-
-  const handleMouseLeave = categoryId => {
-    // Prevent resetting the hover state if hovering over a subcategory
-    if (hoveredCategory === categoryId) {
-      setHoveredCategory(null)
-    }
-  }
 
   const [clickedCategories, setClickedCategories] = useState([]) // Track which category is clicked
 
@@ -485,43 +411,81 @@ const AllQuestionList = () => {
       }
     })
   }
-
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
   // Handle the toggle of the category dropdown
   const handleDropdownToggle = () => {
     setIsDropdownOpen(!isDropdownOpen)
   }
+  const handleSelectAllClick = () => {
+    if (selectAll) {
+      // Deselect all questions on the current page
+      const currentPageQuestionIds = questions.map(question => question.guid)
+      setSelectedQuestions(prevSelected => prevSelected.filter(id => !currentPageQuestionIds.includes(id)))
+    } else {
+      // Select all questions on the current page
+      const currentPageQuestionIds = questions.map(question => question.guid)
+      setSelectedQuestions(prevSelected => [...new Set([...prevSelected, ...currentPageQuestionIds])])
+    }
+    setSelectAll(!selectAll) // Toggle the select-all state
+  }
 
-  // const handleCategoryTitle = category => {
-  //   console.log('1234')
-  //   console.log(category, 'selected category')
-  //   setSelectedCategory(category.title)
-  //   // Update the selected category based on whether it's a parent or subcategory
-  //   // if (isSubcategory) {
-  //   //   console.log(selectedCategory, 'sssss')
-  //   //   setSelectedCategory(category.title)
-  //   // } else {
-  //   //   // Only set the parent category if it's explicitly clicked
-  //   //   setSelectedCategory(category.title)
-  //   // }
+  // Check if all questions are selected
+  const isAllSelected = questions && selectedQuestions.length === questions.length
 
-  //   setIsDropdownOpen(false)
-  // }
+  useEffect(() => {
+    if (questions && questions.map(question => selectedQuestions.includes(question.guid))) {
+      setSelectAll(true)
+    } else {
+      setSelectAll(false)
+    }
+  }, [])
+  console.log(selectedQuestions, 'selectedQuestion')
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(prev => prev + 1)
+    }
+  }
+
+  // Handle the previous page functionality
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(prev => prev - 1)
+    }
+  }
+  console.log(questions, 'allselected')
   return (
     <>
-      {/* <TableFilters
-        setData={setFilteredData}
-        tableData={allquestionData}
-        handleExpandAll={handleExpandAllButton}
-        handleCollapseAll={handleCollapseAll}
-        expandedPanels={expandedPanels}
-        // handleToggle={handleToggle}
-        selectedQuestions={selectedQuestions}
-        deleteIconActive={deleteIconActive}
-        onDeleteClick={handleDeleteClick}
-      /> */}
       <FilterHeader title='All Questions' subtitle='Orders placed across your store' link='/test/questions'>
+        <Grid
+          item
+          xs={6}
+          // gap={2}
+          md={2}
+          display='flex'
+          alignItems='end'
+          justifyContent='flex-end'
+          /* Aligns the button to the right */ pb={3}
+        >
+          <Button
+            fullWidth
+            variant='contained'
+            className='max-sm:is-full'
+            onClick={() => setAddUserOpen(!addUserOpen)}
+            startIcon={
+              <i
+                className='ri-add-fill'
+                style={{
+                  width: 21.6,
+                  height: 21.6
+                }}
+                // onClick={e => handleDeleteClick(e, 1)}
+              />
+            }
+          >
+            Add Section
+          </Button>
+        </Grid>
         <Grid
           item
           xs={6}
@@ -560,22 +524,7 @@ const AllQuestionList = () => {
           justifyContent='flex-end'
           /* Aligns the button to the right */ pb={3}
         >
-          <Button
-            fullWidth
-            variant='contained'
-            onClick={categoryPage}
-            className='max-sm:is-full'
-
-            // startIcon={
-            //   <i
-            //     class='ri-add-fill'
-            //     style={{
-            //       width: 21.6,
-            //       height: 21.6
-            //     }}
-            //   />
-            // }
-          >
+          <Button fullWidth variant='contained' onClick={categoryPage} className='max-sm:is-full'>
             Categories
           </Button>
         </Grid>
@@ -593,8 +542,10 @@ const AllQuestionList = () => {
       >
         <Topcard
           handleCategoryChange={handleCategoryChange}
-          // handleSortChange={handleSortChange}
+          handleSortChange={handleSortChange}
           onDeleteClick={handleDeleteClick}
+          onResetClick={handleResetClick}
+          selectedQuestions={selectedQuestions}
           deleteIconActive={deleteIconActive}
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
@@ -608,20 +559,25 @@ const AllQuestionList = () => {
           allquestionlength={allquestionData && allquestionData.meta && allquestionData.meta.total_results}
           // // handleCategoryChange={handleCategoryChange}
           searchKeyword={searchKeyword}
+          handlePrevPage={handlePrevPage}
+          handleNextPage={handleNextPage}
+          currentPage={currentPage}
+          totalPages={totalPages}
           handleSearch={e => setLocalSearch(e.target.value)}
           // searchKeyword={localSearch}
           showCorrectAnswer={showCorrectAnswer} // Pass state to Topcard
           setShowCorrectAnswer={setShowCorrectAnswer}
           showCategory={showCategory}
           setShowCategory={setShowCategory}
-          // setShowFields={setShowFields}
-          // showFields={showFields}
+          setShowFields={setShowFields}
+          showFields={showFields}
           clickedCategories={clickedCategories}
           setClickedCategories={setClickedCategories}
           handleCategoryTitle={handleCategoryTitle}
           handleStatusToggle={handleStatusToggle}
           trash={isTrash}
-
+          showAllQuestion={showAllQuestion}
+          handleSelectAllClick={handleSelectAllClick}
           // isDropdownOpen={isDropdownOpen}
           // setIsDropdownOpen={setIsDropdownOpen}
         />
@@ -629,30 +585,13 @@ const AllQuestionList = () => {
         {/* <Card> */}
         <Grid container spacing={2}>
           <Grid item xs={12} style={{ display: 'flex', justifyContent: 'space-between' }}>
-            {/* <Grid item xs={12}> */}
-            {/* <Grid container spacing={5} alignItems='center'>
-                <Grid item xs={12} sm={12}>
-                  <FormControl fullWidth sx={{ marginBottom: '10px' }}>
-                    <CardHeader title='Filter' />
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth sx={{ paddingLeft: '15px' }}>
-                    <TextField
-                      label='Search Questions'
-                      value={searchKeyword}
-                      onChange={handleSearch}
-                      variant='outlined'
-                    />
-                  </FormControl>
-                </Grid>
-              </Grid> */}
             {sortedQuestions && sortedQuestions.length > 0 ? (
               <QuestionCardBankModule
                 handleSearch={handleSearch}
                 searchKeyword={searchKeyword}
                 setSearchKeyword={setSearchKeyword}
                 allquestion={'true'}
+                currentPage={currentPage}
                 //   userListTable={'true'}
                 marginLeft={'17px'}
                 width={'100%'}
@@ -687,23 +626,20 @@ const AllQuestionList = () => {
                 </Box>
               </>
             )}
-            {/* </Grid> */}
-            {/* <Grid item xs={4} sm={4} md={6} lg={3} style={{ marginRight: '25px' }}>
-            <TestCard />
-            <QuickLinksCard />
-          </Grid> */}
           </Grid>
         </Grid>
 
         <Grid item xs={12} md={12}>
           {/* <div style={{ width: '60%' }}> */} {/* Set the width to 50% */}
-          <PaginationCard
-            rowsPerPage={rowsPerPage} // e.g., 10
-            currentPage={currentPage} // e.g., 1
-            totalPages={totalPages} // e.g., 5
-            onPageChange={handlePageChange} // Your function to handle page changes
-            onRowsPerPageChange={handleRowsPerPageChange} // Your function to handle rows per page change
-          />
+          {!showAll && (
+            <PaginationCard
+              rowsPerPage={rowsPerPage} // e.g., 10
+              currentPage={currentPage} // e.g., 1
+              totalPages={totalPages} // e.g., 5
+              onPageChange={handlePageChange} // Your function to handle page changes
+              onRowsPerPageChange={handleRowsPerPageChange} // Your function to handle rows per page change
+            />
+          )}
           {/* </div> */}
         </Grid>
       </Card>
@@ -716,9 +652,10 @@ const AllQuestionList = () => {
       >
         <DialogTitle id='alert-dialog-title'>{'Delete Questions'}</DialogTitle>
         <DialogContent>
-          {isTrash ? (
+          {isTrash && trashOpen && (
             <DialogContentText id='alert-dialog-description'>Are you sure you want to Recover ?</DialogContentText>
-          ) : (
+          )}
+          {deleteOpen && (
             <DialogContentText id='alert-dialog-description'>Are you sure you want to Delete ?</DialogContentText>
           )}
         </DialogContent>
@@ -730,15 +667,35 @@ const AllQuestionList = () => {
             Cancel
           </Button>
           <Button
-            onClick={isTrash ? handleResetData : handleConfirmDelete}
+            onClick={
+              isTrash && trashOpen
+                ? handleResetData // For "Recover"
+                : deleteOpen
+                  ? handleConfirmDelete // For "Delete"
+                  : null
+            }
             variant='contained'
             style={{ height: '38px', width: '94px' }}
             autoFocus
           >
-            {isTrash ? 'Restore' : 'Delete'}
+            {isTrash && trashOpen ? 'Restore' : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>
+      <DialogBox
+        open={addUserOpen}
+        onClose={() => setAddUserOpen(!addUserOpen)}
+        onSubmit={onSubmit}
+        description={description}
+        setDescription={setDescription}
+        handleSubmit={handleSubmit}
+        handleReset={handleReset}
+        // userData={data}
+        // setData={setData}
+        edit={false}
+        // updateUserData={updateUserData}
+        // addUserData={addUserData}
+      />
       {/* </Card> */}
     </>
   )

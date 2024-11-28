@@ -1,8 +1,6 @@
 // React Imports
 import { useState } from 'react'
-
-import { Box, IconButton } from '@mui/material'
-
+import { Box } from '@mui/material'
 // MUI Imports
 import Button from '@mui/material/Button'
 import Drawer from '@mui/material/Drawer'
@@ -14,10 +12,9 @@ import TextField from '@mui/material/TextField'
 import FormHelperText from '@mui/material/FormHelperText'
 import Typography from '@mui/material/Typography'
 import Divider from '@mui/material/Divider'
-
+import { IconButton } from '@mui/material'
 // Third-party Imports
 import { useForm, Controller } from 'react-hook-form'
-
 import Reactquill from './Reactquill'
 
 // Vars
@@ -35,7 +32,6 @@ const AddUserDrawer = props => {
   // Handle input change
   const handleChange = event => {
     const { name, value } = event.target
-
     setLocalSettings(prevSettings => ({
       ...prevSettings,
       [name]: value
@@ -46,7 +42,6 @@ const AddUserDrawer = props => {
     onSaveSettings(localSettings) // Call the function to update parent state
     handleClose()
   }
-
   const {
     control,
     reset: resetForm,

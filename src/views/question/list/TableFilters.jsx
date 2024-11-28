@@ -202,16 +202,16 @@ const TableFilters = ({
         </Grid> */}
 
           {/* Filter Controls */}
+          <Grid item xs={3}>
+            <FormControl fullWidth sx={{ paddingLeft: '15px' }}>
+              <DebouncedInput
+                value={globalFilter ?? ''}
+                onChange={value => setGlobalFilter(String(value))}
+                placeholder='Search User'
+              />
+            </FormControl>
+          </Grid>
           {/* <Grid item xs={3}>
-          <FormControl fullWidth sx={{ paddingLeft: '15px' }}>
-            <DebouncedInput
-              value={globalFilter ?? ''}
-              onChange={value => setGlobalFilter(String(value))}
-              placeholder='Search User'
-            />
-          </FormControl>
-        </Grid>
-        <Grid item xs={3}>
           <FormControl fullWidth>
             <InputLabel id='role-select-label'>Select Role</InputLabel>
             <Select
@@ -230,8 +230,8 @@ const TableFilters = ({
               ))}
             </Select>
           </FormControl>
-        </Grid>
-        <Grid item xs={3}>
+        </Grid> */}
+          {/* <Grid item xs={3}>
           <FormControl fullWidth>
             <InputLabel id='status-select-label'>Select Status</InputLabel>
             <Select
@@ -250,7 +250,7 @@ const TableFilters = ({
               ))}
             </Select>
           </FormControl>
-        </Grid> */}
+        </Grid>/ */}
 
           {/* Buttons */}
           {/* <Button

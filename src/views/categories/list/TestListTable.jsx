@@ -118,7 +118,10 @@ const TestListTable = ({
   trashCategoryData,
   handleTrashClick,
   trashView,
-  resetCategoryData
+  resetCategoryData,
+  trashDataLength,
+  activeDataLength,
+  handleActiveClick
 }) => {
   // States
   const [addUserOpen, setAddUserOpen] = useState(false)
@@ -425,8 +428,11 @@ const TestListTable = ({
     return flatten(data)
   }
 
-  const tableDatas = useMemo(() => flattenTreeData(tableData, expandedParents), [tableData, expandedParents, data])
-  console.log(data, 'table123')
+  const tableDatas = useMemo(
+    () => (tableData.length > 0 ? flattenTreeData(tableData, expandedParents) : tableData),
+    [tableData, expandedParents, data]
+  )
+  console.log(tableData, 'table123')
   // console.log(hasChildCategories, 'cccccc')
   const columns = useMemo(
     () =>
@@ -505,6 +511,21 @@ const TestListTable = ({
                   })
                 : null
             case 'created_by':
+              if (trashView) {
+                return visibleColumns.created_by
+                  ? columnHelper.accessor('parent_guid', {
+                      header: 'Deleted Date',
+                      cell: ({ row }) => {
+                        const parentCategory = data.find(item => item.guid === row.original.parent_guid)
+                        {
+                          console.log(row?.original, 'wos')
+                        }
+                        const formattedDate = formatDate(row?.original?.deleted_at)
+                        return <Typography>{formattedDate}</Typography>
+                      }
+                    })
+                  : null
+              }
               return visibleColumns.created_by
                 ? columnHelper.accessor('parent_guid', {
                     header: 'Creation Date',
@@ -518,7 +539,12 @@ const TestListTable = ({
                     }
                   })
                 : null
+
             case 'test':
+              if (trashView) {
+                return null
+              }
+
               return visibleColumns.test
                 ? columnHelper.accessor('test', {
                     header: ' number of Questions',
@@ -621,7 +647,7 @@ const TestListTable = ({
 
   console.info(rowSelection, 'row')
   const [addData, setAddData] = useState(tableData)
-  console.log(addData, 'ssssscheck')
+  console.log(data, 'ssssscheck')
   return (
     <>
       <FilterHeader title='All Category' subtitle='Orders placed across your store' link='/test/list'>
@@ -754,8 +780,11 @@ const TestListTable = ({
           {/* <Grid container item xs={6} spacing={3} display='flex' alignItems='center' justifyContent='flex-end'> */}
           <Grid item pr={8}>
             <Box display='flex' alignItems='center' justifyContent='flex-end'>
-              <Typography style={{ textDecoration: 'underline', cursor: 'pointer' }} onClick={handleTrashClick}>
-                Trash
+              <Typography style={{ cursor: 'pointer' }} onClick={handleActiveClick}>
+                Active {activeDataLength}
+              </Typography>
+              <Typography style={{ cursor: 'pointer' }} sx={{ ml: 3 }} onClick={handleTrashClick}>
+                Trash {trashDataLength}
               </Typography>
             </Box>
           </Grid>

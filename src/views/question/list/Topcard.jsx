@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+// import useQuestionApi from '@/api/useQuestionApi'
 import {
   Card,
   Box,
@@ -12,7 +13,11 @@ import {
   Select,
   FormControl,
   InputLabel,
-  InputAdornment
+  InputAdornment,
+  ListItemText,
+  Dialog,
+  DialogTitle,
+  DialogContent
 } from '@mui/material'
 import Sortingquestion from './Sortingquestion'
 import SortingType from './SortingType'
@@ -20,6 +25,12 @@ import SortingType from './SortingType'
 // import { useRouter } from 'next/router'
 import { useRouter } from 'next/navigation'
 import useCategoryApi from '@/api/useCategoryApi'
+import ExportPopup from './ExportPopup'
+import TestListTable from '../selectcategory/TestListTable'
+import TestList from './TestList'
+import useTestApi from '@/api/useTestApi'
+import useQuestionApi from '@/api/useQuestionApi'
+import useQuestionModuleApi from '@/api/useQuestionModuleApi'
 // import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 const CategoryItem = ({ category, handleCategoryClick, clickedCategories, handleCategoryTitle }) => {
   // Check if the category is clicked and should display subcategories
@@ -80,6 +91,7 @@ const Topcard = ({
   showFields,
   setShowFields,
   categories,
+  selectedQuestions,
   setCategories,
   selectedCategory,
   setSelectedCategory,
@@ -87,13 +99,20 @@ const Topcard = ({
   handleCategoryChange,
   isDropdownOpen,
   trashDatalength,
+  showAllQuestion,
   // Sortingquestion,
   setIsDropdownOpen,
   handleDropdownToggle,
   handleCategoryClick,
   clickedCategories,
   allquestionlength,
-  trash
+  trash,
+  onResetClick,
+  handleSelectAllClick,
+  handleNextPage,
+  handlePrevPage,
+  currentPage,
+  totalPages
   // handleCategoryClick
 }) => {
   const [anchorElOptions, setAnchorElOptions] = React.useState(null)
@@ -108,11 +127,8 @@ const Topcard = ({
     trueFalse: false
   })
   const [isFilterActive, setIsFilterActive] = useState(false)
-
-  // const [categories, setCategories] = useState([])
-  // const [selectedCategory, setSelectedCategory] = useState('')
-  // const [selectedCategory, setSelectedCategory] = useState('Category')
   const { data } = useCategoryApi()
+  const { fetchTestData, testData, addQuestionInTest } = useQuestionModuleApi()
   // const router = useRouter()
   useEffect(() => {
     const hasActiveFilter = searchKeyword || Object.values(sortOptions).some(option => option)
@@ -124,7 +140,9 @@ const Topcard = ({
       setShowCorrectAnswer(JSON.parse(savedShowCorrectAnswer)) // Parse the string as boolean
     }
   }, [setShowCorrectAnswer])
-
+  useEffect(() => {
+    fetchTestData()
+  }, [])
   // Save the "showCorrectAnswer" state to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('showCorrectAnswer', JSON.stringify(showCorrectAnswer))
@@ -141,26 +159,7 @@ const Topcard = ({
     setAnchorElOptions(null)
     setAnchorElSort(null)
   }
-  // const parseCategories = (categories, level = 0) => {
-  //   return categories.flatMap(category => [
-  //     { id: category.id, title: category.title, level },
-  //     ...parseCategories(category.children || [], level + 1)
-  //   ])
-  // }
-  // useEffect(() => {
-  //   if (data) {
-  //     console.log(data, 'data12334')
-  //     const parsedCategories = parseCategories(data)
-  //     setCategories(parsedCategories)
-  //   }
-  // }, [data])
-  console.log(categories, 'categorydata')
-  // Handle category selection
-  // const handleCategoryChange = event => {
-  //   const value = event.target.value
-  //   setSelectedCategory(value)
-  //   console.log('Selected Category ID:', value)
-  // }
+
   const handleCheckboxChange = event => {
     const { name, checked } = event.target
     setSortOptions(prevOptions => ({
@@ -190,80 +189,49 @@ const Topcard = ({
     handleSearch({ target: { value: '' } })
   }
 
-  // const isFilterActive = () => {
-  //   return searchValue !== '' || Object.values(sortOptions).some(value => value === true)
-  // }
-  console.log(
-    Object.values(sortOptions).some(option => option),
-    'aaaa'
-  )
-  // const selectCategoriesPage = () => {
-  //   console.log('Navigating to:', '/categories/list')
-
-  //   router.push(
-  //     {
-  //       pathname: '/categories/list',
-  //       query: { category: 'check' } // still using query here if needed
-  //     },
-  //     undefined,
-  //     { state: { category: 'check' } }
-  //   )
-  // }
-  // const router = useRouter()
-
-  // useEffect(() => {
-  //   // Add any effect needed for router changes
-  // }, [router])
   const handleImport = () => {
     router.push('/question/selectcategory')
   }
-  // const [hoveredCategory, setHoveredCategory] = useState(null)
 
-  // const handleMouseEnter = categoryId => {
-  //   setHoveredCategory(categoryId)
-  // }
+  const [isPopupOpen, setIsPopupOpen] = useState(false)
 
-  // const handleMouseLeave = categoryId => {
-  //   // Prevent resetting the hover state if hovering over a subcategory
-  //   if (hoveredCategory === categoryId) {
-  //     setHoveredCategory(null)
-  //   }
-  // }
-  // const [clickedCategories, setClickedCategories] = useState([]) // Track which category is clicked
+  const handleOpenPopup = () => setIsPopupOpen(true)
+  const handleClosePopup = () => setIsPopupOpen(false)
 
-  // Handle category click to toggle the visibility of its subcategories
-  // const handleCategoryClick = categoryId => {
-  //   setClickedCategories(prevClickedCategories => {
-  //     if (prevClickedCategories.includes(categoryId)) {
-  //       // If the category is already clicked, remove it (collapse it)
-  //       return prevClickedCategories.filter(id => id !== categoryId)
-  //     } else {
-  //       // If not clicked, add it to the list of clicked categories
-  //       return [...prevClickedCategories, categoryId]
-  //     }
-  //   })
-  // }
-  // const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const handleExport = format => {
+    console.log(`Exporting in ${format} format`)
+    // Add your export logic here
+    setIsPopupOpen(false)
+  }
+  const [anchorEl, setAnchorEl] = useState(null)
+  const [selectedFilters, setSelectedFilters] = useState([])
 
-  // // Handle the toggle of the category dropdown
-  // const handleDropdownToggle = () => {
-  //   setIsDropdownOpen(!isDropdownOpen)
-  // }
-  // const handleCategoryTitle = category => {
-  //   console.log('1234')
-  //   console.log(category, 'selected category')
-  //   setSelectedCategory(category.title)
-  //   // Update the selected category based on whether it's a parent or subcategory
-  //   // if (isSubcategory) {
-  //   //   console.log(selectedCategory, 'sssss')
-  //   //   setSelectedCategory(category.title)
-  //   // } else {
-  //   //   // Only set the parent category if it's explicitly clicked
-  //   //   setSelectedCategory(category.title)
-  //   // }
+  const open = Boolean(anchorEl)
 
-  //   setIsDropdownOpen(false)
-  // }
+  const handleClick = event => {
+    setAnchorEl(event.currentTarget)
+  }
+
+  const handleClosex = () => {
+    setAnchorEl(null)
+  }
+  const [modalOpen, setModalOpen] = useState(false)
+
+  const handleOpenModal = () => {
+    if (deleteIconActive) {
+      setModalOpen(true)
+    }
+  }
+  const handleCloseModal = () => setModalOpen(false)
+
+  const handleFilterChange = filter => {
+    setSelectedFilters(prev => (prev.includes(filter) ? prev.filter(item => item !== filter) : [...prev, filter]))
+  }
+  console.log(selectedQuestions, 'sec123')
+  const difficultyFilters = ['Low', 'Medium', 'High']
+
+  const importanceFilters = ['Low', 'Medium', 'High']
+
   return (
     // <Card
     //   sx={{
@@ -282,29 +250,31 @@ const Topcard = ({
           Filter
         </Typography>
       </Grid>
-      <Grid container spacing={2} sx={{ mt: 3 }}>
+      <Grid container spacing={2} sx={{ mt: 4 }}>
         {/* Row 1: Search Input */}
-        <div className='dropdown-container' style={{ marginTop: '8px' }}>
-          <div className='dropdown-toggle' onClick={handleDropdownToggle}>
-            {selectedCategory}
+        <Grid item xs={12} md={2}>
+          <div className='dropdown-container' style={{ height: '40px' }}>
+            <div className='dropdown-toggle' onClick={handleDropdownToggle}>
+              {selectedCategory}
+            </div>
+            {isDropdownOpen && (
+              <ul className='category-dropdown'>
+                {data.map(category => (
+                  <CategoryItem
+                    key={category.id}
+                    category={category}
+                    // handleMouseEnter={handleMouseEnter}
+                    // handleMouseLeave={handleMouseLeave}
+                    // hoveredCategory={hoveredCategory}
+                    handleCategoryClick={handleCategoryClick}
+                    clickedCategories={clickedCategories}
+                    handleCategoryTitle={handleCategoryTitle}
+                  />
+                ))}
+              </ul>
+            )}
           </div>
-          {isDropdownOpen && (
-            <ul className='category-dropdown'>
-              {data.map(category => (
-                <CategoryItem
-                  key={category.id}
-                  category={category}
-                  // handleMouseEnter={handleMouseEnter}
-                  // handleMouseLeave={handleMouseLeave}
-                  // hoveredCategory={hoveredCategory}
-                  handleCategoryClick={handleCategoryClick}
-                  clickedCategories={clickedCategories}
-                  handleCategoryTitle={handleCategoryTitle}
-                />
-              ))}
-            </ul>
-          )}
-        </div>
+        </Grid>
         <Grid item xs={12} md={3}>
           <TextField
             sx={{
@@ -346,7 +316,7 @@ const Topcard = ({
             }
           }}
         >
-          <Box display='flex' justifyContent='flex-end' flexWrap='wrap' gap={1}>
+          <Box display='flex' alignItems='center' justifyContent='flex-end' flexWrap='wrap' gap={2}>
             {/* <FormControl variant='outlined' sx={{ minWidth: 90 }}>
               <InputLabel>Type</InputLabel>
               <Select label='Type' onClick={handleSortClick}>
@@ -364,37 +334,74 @@ const Topcard = ({
                 </MenuItem>
               </Select>
             </FormControl> */}
-            <Grid sx={{ ml: 4 }}>
-              <Box sx={{ ml: 4 }}>
-                <SortingType onSortChange={handleSortChange} />
-              </Box>
-            </Grid>
+            {/* <Box display='flex' alignItems='center' flexWrap='wrap' gap={2} sx={{ ml: 2 }}> */}
+            {/* Difficulty Filter */}
+
+            <Button
+              variant='outlined'
+              color='secondary'
+              onClick={handleClick}
+              style={{ textTransform: 'none', margin: '8px 0' }}
+              endIcon={<i class='ri-arrow-down-s-line'></i>}
+            >
+              Difficulty
+            </Button>
+            <Menu anchorEl={anchorEl} open={open} onClose={handleClosex}>
+              {difficultyFilters.map(filter => (
+                <MenuItem key={filter} onClick={() => handleFilterChange(filter)}>
+                  <Checkbox checked={selectedFilters.includes(filter)} />
+                  <ListItemText primary={filter} />
+                </MenuItem>
+              ))}
+            </Menu>
+
+            {/* Importance Filter */}
+            {/* <Typography style={{ marginTop: '16px' }}></Typography> */}
+            <Button
+              variant='outlined'
+              color='secondary'
+              onClick={handleClick}
+              style={{ textTransform: 'none', margin: '8px 0' }}
+              endIcon={<i class='ri-arrow-down-s-line'></i>}
+            >
+              Importance
+            </Button>
+            <Menu anchorEl={anchorEl} open={open} onClose={handleClosex}>
+              {importanceFilters.map(filter => (
+                <MenuItem key={filter} onClick={() => handleFilterChange(filter)}>
+                  <Checkbox checked={selectedFilters.includes(filter)} />
+                  <ListItemText primary={filter} />
+                </MenuItem>
+              ))}
+            </Menu>
+            <SortingType onSortChange={handleSortChange} />
+
             {/* <Button variant='contained' color='primary'> */}
-            <FormControl variant='outlined' sx={{ minWidth: 90 }}>
-              <InputLabel>Test</InputLabel>
-              <Select
-                label='Sort Questions'
-                onClick={handleSortClick}
-                // IconComponent={ArrowDropDownIcon}
-              >
-                {/* <MenuItem onClick={handleClose} sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Checkbox name='creationAsc' checked={sortOptions.creationAsc} onChange={handleCheckboxChange} />
-                  Creation Date Ascending
-                </MenuItem>
-                <MenuItem onClick={handleClose} sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Checkbox name='creationDesc' checked={sortOptions.creationDesc} onChange={handleCheckboxChange} />
-                  Creation Date Descending
-                </MenuItem>
-                <MenuItem onClick={handleClose} sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Checkbox name='questionAsc' checked={sortOptions.questionAsc} onChange={handleCheckboxChange} />
-                  Question Ascending
-                </MenuItem>
-                <MenuItem onClick={handleClose} sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Checkbox name='questionDesc' checked={sortOptions.questionDesc} onChange={handleCheckboxChange} />
-                  Question Descending
-                </MenuItem> */}
-              </Select>
-            </FormControl>
+            <Button
+              aria-controls='options-menu'
+              aria-haspopup='true'
+              variant='outlined'
+              color='secondary'
+              onClick={handleClick}
+              endIcon={<i class='ri-arrow-down-s-line' />}
+            >
+              Test
+            </Button>
+            <Menu id='options-menu' anchorEl={anchorElOptions} open={Boolean(anchorElOptions)} onClose={handleClose}>
+              <MenuItem onClick={handleShowCorrectAnswerChange}>
+                <Checkbox /> General Knoledge test
+              </MenuItem>
+              <MenuItem>
+                <Checkbox /> Science Test
+              </MenuItem>
+              <MenuItem>
+                <Checkbox /> Maths Test
+              </MenuItem>
+              <MenuItem>
+                <Checkbox /> English Test
+              </MenuItem>
+            </Menu>
+            {/* </Box> */}
             {/* </Button> */}
             {isFilterActive && (
               <Button variant='text' color='error' onClick={handleResetFilters}>
@@ -430,7 +437,7 @@ const Topcard = ({
                   // className='max-sm:is-full'
                   // onClick={e => handleDeleteClick(e, 1)}
                   style={{ color: '#FFFFFF', border: '1px solid #E7E7E7', minWidth: '40px' }}
-                  onClick={onDeleteClick}
+                  onClick={onResetClick}
                 >
                   <i
                     className='ri-reset-left-line'
@@ -448,6 +455,7 @@ const Topcard = ({
                     justifyContent='center'
                     className='hover-container'
                     style={{ position: 'relative', width: '40px', height: '40px' }}
+                    onClick={handleSelectAllClick}
                   >
                     {/* <i className='ri-menu-add-line' style={{ fontSize: '24px' }} /> */}
                     <i class='ri-checkbox-multiple-line' style={{ fontSize: '24px' }} />
@@ -459,8 +467,12 @@ const Topcard = ({
                     justifyContent='center'
                     className='hover-container'
                     style={{ position: 'relative', width: '40px', height: '40px' }}
+                    onClick={handleOpenModal}
                   >
-                    <i className='ri-menu-add-line' style={{ fontSize: '24px' }} />
+                    <i
+                      className='ri-menu-add-line'
+                      style={{ fontSize: '24px', color: deleteIconActive ? '#007AFF' : '#8080808C' }}
+                    />
                     <span className='hover-text'>Add in Test</span>
                   </Box>
 
@@ -484,9 +496,10 @@ const Topcard = ({
                     className='hover-container'
                     style={{ position: 'relative', width: '40px', height: '40px' }}
                   >
-                    <i className='ri-upload-2-line' style={{ fontSize: '24px' }} />
+                    <i className='ri-upload-2-line' style={{ fontSize: '24px' }} onClick={handleOpenPopup} />
                     <span className='hover-text'>Export</span>
                   </Box>
+                  <ExportPopup open={isPopupOpen} onClose={handleClosePopup} onExport={handleExport} />
                 </>
               )}
             </Box>
@@ -496,6 +509,8 @@ const Topcard = ({
               <Button
                 aria-controls='options-menu'
                 aria-haspopup='true'
+                variant='outlined'
+                color='secondary'
                 onClick={handleOptionsClick}
                 endIcon={<i class='ri-arrow-down-s-line' />}
               >
@@ -553,8 +568,31 @@ const Topcard = ({
             alignItems='center'
             justifyContent='flex-end'
             className='hover-container'
-            style={{ position: 'relative' }}
+            style={{ position: 'relative', padding: '8px' }}
           >
+            <div className='pagination-controls' style={{ marginRight: '20px' }}>
+              <Button
+                variant='outlined'
+                onClick={handlePrevPage}
+                color='secondary'
+                sx={{ height: '30px' }}
+                disabled={currentPage === 1}
+              >
+                <i class='ri-arrow-left-s-line'></i>
+              </Button>
+              <Button
+                variant='outlined'
+                onClick={handleNextPage}
+                color='secondary'
+                sx={{ height: '30px' }}
+                disabled={currentPage === totalPages}
+              >
+                <i class='ri-arrow-right-s-line'></i>
+              </Button>
+            </div>
+            <Typography onClick={showAllQuestion} style={{ marginRight: '20px' }}>
+              Show All
+            </Typography>
             <Typography
               onClick={() => handleStatusToggle('active')}
               style={{ marginRight: '20px' }} // Add spacing between the elements
@@ -564,6 +602,29 @@ const Topcard = ({
             <Typography onClick={() => handleStatusToggle('trash')}>Trash {trashDatalength}</Typography>
           </Box>
         </Grid>
+        <Dialog
+          open={modalOpen}
+          onClose={handleCloseModal}
+          maxWidth='lg'
+          fullWidth
+          // sx={{ ml: 8 }}
+          style={{ marginLeft: '200px' }}
+        >
+          <DialogTitle>Test List</DialogTitle>
+          <DialogContent>
+            <TestList
+              tableData={testData}
+              selectedFilters={selectedFilters}
+              selectedQuestions={selectedQuestions}
+              addQuestionInTest={addQuestionInTest}
+              // tableData={tableData}
+              // addUserData={addUserData}
+              // deleteUserData={deleteUserData}
+              // categories={categories}
+              // getCategories={getCategories}
+            />
+          </DialogContent>
+        </Dialog>
       </Grid>
     </>
     // </Card>

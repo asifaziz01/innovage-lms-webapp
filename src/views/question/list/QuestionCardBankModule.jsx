@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import {
   Card,
@@ -57,7 +57,8 @@ const QuestionCardBankModule = ({
   showCategory,
   showFields,
   deleteSingleQuestion,
-  trash
+  trash,
+  currentPage
 }) => {
   const [editingQuestionId, setEditingQuestionId] = useState(null) // To track which question is being edited
   const [editedText, setEditedText] = useState('') // To store the edited text for a question
@@ -69,7 +70,7 @@ const QuestionCardBankModule = ({
   // Using a custom hook for drag-and-drop
   const { items: questionList, handleDragStart, handleDragOver, handleDrop } = useDraggableList(questions)
   const [questionData, setQuestionData] = useState(questions)
-
+  const isInitialRender = useRef(true) // Track if this is the initial render
   // Use useEffect to update questionData whenever questions prop changes
   useEffect(() => {
     setQuestionData(questions)
@@ -77,11 +78,19 @@ const QuestionCardBankModule = ({
 
   // Set all questions to be expanded by default on initial render
   useEffect(() => {
-    if (questionData.length > 0) {
+    if (isInitialRender.current && questionData.length > 0) {
       const allQuestionIds = questionData.map(question => question.id)
       setShowAnswers(allQuestionIds)
+      isInitialRender.current = false // Set flag to false
     }
-  }, []) // Empty dependency array ensures this only runs on the initial render
+  }, [questionData, currentPage])
+
+  const handleToggleAnswer = questionId => {
+    setShowAnswers(prevAnswers =>
+      prevAnswers.includes(questionId) ? prevAnswers.filter(id => id !== questionId) : [...prevAnswers, questionId]
+    )
+  }
+  // Include showAnswers // Empty dependency array ensures this only runs on the initial render
   const handleEditClick = (questionId, currentText) => {
     setEditingQuestionId(questionId) // Set the question ID being edited
     setEditedText(currentText) // Set the current text in the input field
@@ -194,7 +203,17 @@ const QuestionCardBankModule = ({
     txt.innerHTML = html
     return txt.value.replace(/<[^>]*>/g, '') // Remove HTML tags
   }
+  // const handleToggleAnswer = questionId => {
+  //   setShowAnswers(
+  //     prevAnswers =>
+  //       prevAnswers.includes(questionId)
+  //         ? prevAnswers.filter(id => id !== questionId) // Remove if already expanded
+  //         : [...prevAnswers, questionId] // Add if not expanded
+  //   )
+  //   setIsExpandedAll(false)
+  // }
 
+  console.log(showAnswers, 'showanswercheck')
   return (
     <>
       {/* <Card style={{ marginTop: '50px', padding: '20px', width: width }}> */}
@@ -299,7 +318,7 @@ const QuestionCardBankModule = ({
                         variant='text'
                         onClick={e => {
                           e.stopPropagation() // Prevent accordion toggle
-                          toggleAnswer(question.id)
+                          handleToggleAnswer(question.id)
                         }}
                       >
                         {showAnswers.includes(question.id) ? (
@@ -345,86 +364,108 @@ const QuestionCardBankModule = ({
                       ) : (
                         ''
                       )}
-                      <Box display='flex' justifyContent='space-between' alignItems='center'>
+                      <Grid
+                        container
+                        spacing={2}
+                        justifyContent='space-between'
+                        alignItems='center'
+                        sx={{
+                          flexWrap: { xs: 'wrap', md: 'nowrap' } // Wrap on smaller screens, single row on desktop
+                        }}
+                      >
                         {/* Marks */}
                         {showFields && (
-                          <Box display='flex' alignItems='center'>
-                            <IconButton style={{ borderRadius: '8px', background: '#F0EFF0' }}>
-                              <i className='ri-percent-line' style={{ color: '#262B43E5' }} />
-                            </IconButton>
-                            <Box display='flex' flexDirection='column' style={{ marginLeft: '5px' }}>
-                              <Typography variant='body2' style={{ color: 'black' }}>
-                                Marks:
-                              </Typography>
-                              <Typography>{question?.marks}</Typography>
+                          <Grid item xs={12} md>
+                            <Box display='flex' alignItems='center'>
+                              <IconButton style={{ borderRadius: '8px', background: '#F0EFF0' }}>
+                                <i className='ri-percent-line' style={{ color: '#262B43E5' }} />
+                              </IconButton>
+                              <Box display='flex' flexDirection='column' style={{ marginLeft: '5px' }}>
+                                <Typography variant='body2' style={{ color: 'black' }}>
+                                  Marks:
+                                </Typography>
+                                <Typography>{question?.marks}</Typography>
+                              </Box>
                             </Box>
-                          </Box>
+                          </Grid>
                         )}
                         {/* Category */}
                         {showCategory && (
-                          <Box display='flex' alignItems='center'>
-                            <IconButton style={{ borderRadius: '8px', background: '#F0EFF0' }}>
-                              <i className='ri-list-unordered' style={{ color: '#262B43E5' }} />
-                            </IconButton>
-                            <Box display='flex' flexDirection='column' style={{ marginLeft: '5px' }}>
-                              <Typography variant='body2' style={{ color: 'black' }}>
-                                Category:
-                              </Typography>
-                              <Typography variant='body2'>Quiz</Typography>
+                          <Grid item xs={12} md>
+                            <Box display='flex' alignItems='center'>
+                              <IconButton style={{ borderRadius: '8px', background: '#F0EFF0' }}>
+                                <i className='ri-list-unordered' style={{ color: '#262B43E5' }} />
+                              </IconButton>
+                              <Box display='flex' flexDirection='column' style={{ marginLeft: '5px' }}>
+                                <Typography variant='body2' style={{ color: 'black' }}>
+                                  Category:
+                                </Typography>
+                                <Typography variant='body2'>Quiz</Typography>
+                              </Box>
                             </Box>
-                          </Box>
+                          </Grid>
                         )}
                         {/* Difficulty */}
-                        <Box display='flex' alignItems='center'>
-                          <IconButton style={{ borderRadius: '8px', background: '#F0EFF0' }}>
-                            <i className='ri-compass-2-line' style={{ color: '#262B43E5' }} />
-                          </IconButton>
-                          <Box display='flex' flexDirection='column'>
-                            <Typography variant='body2' style={{ color: 'black' }}>
-                              Difficulty
-                            </Typography>
-                            <Typography variant='body2'>Medium</Typography>
+                        <Grid item xs={12} md>
+                          <Box display='flex' alignItems='center'>
+                            <IconButton style={{ borderRadius: '8px', background: '#F0EFF0' }}>
+                              <i className='ri-compass-2-line' style={{ color: '#262B43E5' }} />
+                            </IconButton>
+                            <Box display='flex' flexDirection='column'>
+                              <Typography variant='body2' style={{ color: 'black' }}>
+                                Difficulty
+                              </Typography>
+                              <Typography variant='body2'>Medium</Typography>
+                            </Box>
                           </Box>
-                        </Box>
+                        </Grid>
                         {/* Importance */}
-                        <Box display='flex' alignItems='center'>
-                          <IconButton style={{ borderRadius: '8px', background: '#F0EFF0' }}>
-                            <i className='ri-information-line' style={{ color: '#262B43E5' }} />
-                          </IconButton>
-                          <Box display='flex' flexDirection='column' style={{ marginLeft: '5px' }}>
-                            <Typography variant='body2' style={{ color: 'black' }}>
-                              Importance:
-                            </Typography>
-                            <Typography>High</Typography>
-                          </Box>
-                        </Box>
-                        {showFields && (
+                        <Grid item xs={12} md>
                           <Box display='flex' alignItems='center'>
                             <IconButton style={{ borderRadius: '8px', background: '#F0EFF0' }}>
                               <i className='ri-information-line' style={{ color: '#262B43E5' }} />
                             </IconButton>
                             <Box display='flex' flexDirection='column' style={{ marginLeft: '5px' }}>
                               <Typography variant='body2' style={{ color: 'black' }}>
-                                Negative Marks:
+                                Importance:
                               </Typography>
-                              <Typography>{question?.neg_marks}</Typography>
+                              <Typography>High</Typography>
                             </Box>
                           </Box>
-                        )}
+                        </Grid>
+                        {/* Negative Marks */}
                         {showFields && (
-                          <Box display='flex' alignItems='center'>
-                            <IconButton style={{ borderRadius: '8px', background: '#F0EFF0' }}>
-                              <i className='ri-information-line' style={{ color: '#262B43E5' }} />
-                            </IconButton>
-                            <Box display='flex' flexDirection='column' style={{ marginLeft: '5px' }}>
-                              <Typography variant='body2' style={{ color: 'black' }}>
-                                Time:
-                              </Typography>
-                              <Typography>{question?.time}</Typography>
+                          <Grid item xs={12} md>
+                            <Box display='flex' alignItems='center'>
+                              <IconButton style={{ borderRadius: '8px', background: '#F0EFF0' }}>
+                                <i className='ri-information-line' style={{ color: '#262B43E5' }} />
+                              </IconButton>
+                              <Box display='flex' flexDirection='column' style={{ marginLeft: '5px' }}>
+                                <Typography variant='body2' style={{ color: 'black' }}>
+                                  Negative Marks:
+                                </Typography>
+                                <Typography>{question?.neg_marks}</Typography>
+                              </Box>
                             </Box>
-                          </Box>
+                          </Grid>
                         )}
-                      </Box>
+                        {/* Time */}
+                        {showFields && (
+                          <Grid item xs={12} md>
+                            <Box display='flex' alignItems='center'>
+                              <IconButton style={{ borderRadius: '8px', background: '#F0EFF0' }}>
+                                <i className='ri-information-line' style={{ color: '#262B43E5' }} />
+                              </IconButton>
+                              <Box display='flex' flexDirection='column' style={{ marginLeft: '5px' }}>
+                                <Typography variant='body2' style={{ color: 'black' }}>
+                                  Time:
+                                </Typography>
+                                <Typography>{question?.time}</Typography>
+                              </Box>
+                            </Box>
+                          </Grid>
+                        )}
+                      </Grid>
                     </div>
                   )}
                   {/* <Button

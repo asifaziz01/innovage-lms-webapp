@@ -826,7 +826,7 @@ const TestListTable = ({
                     setSelectedRows(null)
                   }}
                 >
-                  <Typography>{`Active (${metaData.total_results})`}</Typography>
+                  <Typography>{`Active (${metaData?.total_results})`}</Typography>
                 </IconButton>
                 <IconButton
                   disableRipple

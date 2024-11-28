@@ -14,20 +14,29 @@ const CategoriesList = () => {
   const [tableData, setTableData] = useState(data)
   const [trashView, setTrashView] = useState(false)
   useEffect(() => {
-    setTableData(data) // Set initial data on load
-  }, [data])
-
-  useEffect(() => {
-    if (trashData) {
-      setTableData(trashData) // Set trash data when it changes
+    if (trashView) {
+      setTableData(trashData) // Set trash data when in trash view
+    } else {
+      setTableData(data) // Set active data when not in trash view
     }
-  }, [trashData])
+  }, [trashView, data, trashData])
+
+  // useEffect(() => {
+  //   if (trashData) {
+  //     setTableData(trashData) // Set trash data when it changes
+  //   }
+  // }, [trashData])
 
   // Handler for the trash button click
+  const handleActiveClick = () => {
+    setTrashView(false)
+  }
   const handleTrashClick = () => {
-    trashDifficultyData() // Call the API to fetch trash data
     setTrashView(true)
   }
+  useEffect(() => {
+    trashDifficultyData()
+  }, [])
   console.log(trashView, 'checking')
   return (
     <Grid container spacing={6}>
@@ -42,6 +51,9 @@ const CategoriesList = () => {
           handleTrashClick={handleTrashClick}
           trashView={trashView}
           resetCategoryData={resetCategoryData}
+          trashDataLength={trashData.length}
+          activeDataLength={data.length}
+          handleActiveClick={handleActiveClick}
         />
       </Grid>
     </Grid>
