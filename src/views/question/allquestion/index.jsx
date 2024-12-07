@@ -105,8 +105,6 @@ const AllQuestionList = () => {
     return savedValue !== null ? JSON.parse(savedValue) : false
   })
 
-  console.log(trashData, 'trash')
-
   const [showCategory, setShowCategory] = useState(() => {
     return JSON.parse(localStorage.getItem('showCategory')) || false // Initialize from localStorage
   })
@@ -115,7 +113,6 @@ const AllQuestionList = () => {
     return JSON.parse(localStorage.getItem('showFields')) || false // Initialize from localStorage
   })
 
-  console.log(sectionGuid, 'guissss')
   const [categories, setCategories] = useState([])
   const [selectedCategory, setSelectedCategory] = useState('Categories')
   const { data } = useCategoryApi()
@@ -153,8 +150,6 @@ const AllQuestionList = () => {
       // type: '',
     }
   })
-
-  console.log(description, 'description')
 
   const handleEdit = (description, guid) => {
     setIsEditing(true)
@@ -195,11 +190,7 @@ const AllQuestionList = () => {
 
     // setFormData(initialData)
     resetForm({ description: '', currentDescription: '' })
-    console.log(description, 'setDescriprion')
   }
-
-  console.log(description, 'description1')
-  console.log(currentDescription, 'description12')
 
   const handleFilterChange = filter => {
     setSelectedFilters(prev => (prev.includes(filter) ? prev.filter(item => item !== filter) : [...prev, filter]))
@@ -219,8 +210,6 @@ const AllQuestionList = () => {
   }
 
   const handleCategoryTitle = category => {
-    console.log(allquestionData, '1234')
-    console.log(category, 'selected category')
     setSelectedCategory(category.title)
     setCategoryGuid(category.guid)
 
@@ -231,10 +220,8 @@ const AllQuestionList = () => {
     const value = event.target.value
 
     setSelectedCategory(value)
-    console.log('Selected Category ID:', value)
   }
 
-  console.log(categoryGuid, 'selectedcategory')
   useEffect(() => {
     fetchDataallquestion({
       searchKeyword: searchKeyword,
@@ -247,7 +234,7 @@ const AllQuestionList = () => {
       difficultSelect: difficultSelect
     })
   }, [currentPage, rowsPerPage, selectedType, order, searchKeyword, selectedCategory, selectedFilters, difficultSelect])
-  console.log(selectedType, 'typeselectedchecking')
+
   useEffect(() => {
     const dataSource = isTrash ? trashData : allquestionData
 
@@ -255,8 +242,6 @@ const AllQuestionList = () => {
       setTotalPages(Math.ceil(dataSource.meta.total_results / rowsPerPage))
     }
   }, [allquestionData, trashData, rowsPerPage, isTrash])
-
-  console.log(allquestionData?.meta?.total_results, 'kkkk')
 
   const handlePageChange = page => {
     setCurrentPage(page)
@@ -292,8 +277,6 @@ const AllQuestionList = () => {
     // }
   }
 
-  console.log(allquestionData, '1234')
-
   // Handle search input
   const handleSearch = debounce(event => {
     setSearchKeyword(event.target.value) // Update the search keyword
@@ -303,8 +286,6 @@ const AllQuestionList = () => {
 
   // Function to collapse all accordions and hide everything
   const handleCollapseAll = () => {}
-
-  console.log(order, 'sssssssssssss')
 
   // Function to toggle the answer visibility of a specific question
   const toggleAnswer = questionId => {
@@ -321,8 +302,6 @@ const AllQuestionList = () => {
   //   console.log(questions, 'questions')
   // Pass this to QuestionCard to manage checkbox selections
   const handleCheckboxChange = (questionId, isChecked) => {
-    console.log(questionId)
-
     if (isChecked) {
       setSelectedQuestions(prevSelected => [...prevSelected, questionId])
     } else {
@@ -360,8 +339,6 @@ const AllQuestionList = () => {
     }
   }
 
-  console.log(categories, 'categorydata')
-
   // Handle category selection
 
   const handleConfirmDelete = async () => {
@@ -375,7 +352,6 @@ const AllQuestionList = () => {
         await BulkDeleteQuestion(selectedQuestions)
       }
 
-      console.log('Deleted questions:', selectedQuestions)
       setSelectedQuestions([]) // Clear the selected questions
       setOpenDeleteDialog(false) // Close the dialog
       fetchDataallquestion({ page: currentPage, results_per_page: rowsPerPage })
@@ -391,7 +367,7 @@ const AllQuestionList = () => {
     try {
       // Call the delete function from your API hook
       await resetQuestionData(selectedQuestions) // Assuming deleteQuestions accepts an array of IDs
-      console.log('Deleted questions:', selectedQuestions)
+
       setSelectedQuestions([]) // Clear the selected questions
       setOpenDeleteDialog(false) // Close the dialog
       fetchDataallquestion({ page: currentPage, results_per_page: rowsPerPage })
@@ -431,18 +407,11 @@ const AllQuestionList = () => {
     if (sortOption === 'creation_date_desc') {
       setOrder('newest_last')
     }
-
-    // else {
-    //   setSelectedType(null)
-    //   setOrder(null)
-    // }
   }, [sortOption, selectedType])
 
   const handleCancelDelete = () => {
     setOpenDeleteDialog(false)
   }
-
-  // State for toggling between active and trash data
 
   const questions =
     (isTrash ? trashData : allquestionData) &&
@@ -465,115 +434,12 @@ const AllQuestionList = () => {
         importance: item?.importance?.title
       }))
 
-  const sectionsWithQuestions =
-    (isTrash ? trashData : allquestionData)?.sections
-      ?.filter(item => item?.question !== null) // Filter out sections without valid questions
-      .map((section, index) => {
-        // Map through each section
-
-        const sectionQuestions =
-          section?.questions
-            ?.filter(question => question?.question !== null) // Filter out invalid questions
-            .map((item, questionIndex) => ({
-              // sectionGuid:s allquestionData.sections.guid,
-              guid: item?.guid,
-              id: (currentPage - 1) * rowsPerPage + index * section.questions.length + questionIndex + 1, // Unique id for each question
-              text: item?.question,
-              options: Array.isArray(item?.choices) ? item.choices.map(choice => choice.choice) : [],
-              correctanswer: Array.isArray(item?.choices) ? item.choices.map(choice => choice.is_correct_answer) : [],
-              marks: item?.marks,
-              creationDate: item?.created_on,
-              question_type: item?.question_type,
-              neg_marks: item?.neg_marks,
-              time: item?.time
-            })) || [] // Ensure questions array is always defined
-
-        // Return section with questions
-        return {
-          sectionGuid: section?.guid,
-          sectionId: section?.id,
-          sectionTitle: section?.title,
-          questions: sectionQuestions // Add questions to each section
-        }
-      }) || [] // Ensure empty array if no sections exist
-
-  console.log(allquestionData?.data, 'allquestiondata ')
-
-  // const questionss =
-  //   ((isTrash ? trashData : allquestionData.data) &&
-  //     (isTrash ? trashData : allquestionData?.data?.questions)
-  //       ?.filter(item => {
-  //         // return item.question !== null
-  //         console.log(item, 'checking')
-  //       }) // Filter based on status if isTrash is true
-  //       .map((item, index) => ({
-  //         guid: item?.guid,
-  //         id: (currentPage - 1) * rowsPerPage + index + 1,
-  //         text: item?.question, // No need for null check here since it's already filtered
-  //         options: Array.isArray(item?.choices) ? item.choices.map(choice => choice.choice) : [], // Map the options only if choices is an array
-  //         correctanswer: Array.isArray(item?.choices) ? item.choices.map(choice => choice.is_correct_answer) : [], // Map correct answers only if choices are valid
-  //         marks: item?.marks,
-  //         creationDate: item?.created_on,
-  //         question_type: item?.question_type,
-  //         neg_marks: item?.neg_marks,
-  //         difficulty: item?.difficulty?.title,
-  //         importance: item?.importance?.title,
-  //         time: item?.time,
-  //         sectionData: null // Default sectionData for non-sectioned questions
-  //       }))) ||
-  //   []
-
-  // const sectionsWithQuestionss =
-  //   (isTrash ? trashData : allquestionData)?.sections
-  //     ?.filter(item => item) // Filter out sections without valid questions
-  //     .map((section, index) => {
-  //       // Map through each section
-  //       const sectionQuestions =
-  //         section?.questions
-  //           ?.filter(question => question?.question !== null) // Filter out invalid questions
-  //           .map((item, questionIndex) => ({
-  //             guid: item?.guid,
-  //             id: (currentPage - 1) * rowsPerPage + index * section.questions.length + questionIndex + 1, // Unique id for each question
-  //             text: item?.question,
-  //             options: Array.isArray(item?.choices) ? item.choices.map(choice => choice.choice) : [],
-  //             correctanswer: Array.isArray(item?.choices) ? item.choices.map(choice => choice.is_correct_answer) : [],
-  //             marks: item?.marks,
-  //             creationDate: item?.created_on,
-  //             question_type: item?.question_type,
-  //             neg_marks: item?.neg_marks,
-  //             time: item?.time,
-  //             sectionData: {
-  //               sectionId: section?.id,
-  //               sectionTitle: section?.title
-  //             } // Add section data to each question
-  //           })) || [] // Ensure questions array is always defined
-
-  //       // Return section with questions
-  //       return {
-  //         sectionId: section?.id,
-  //         sectionTitle: section?.title,
-  //         questions: sectionQuestions // Add questions to each section
-  //       }
-  //     }) || []
-
-  // Merge all section questions into the questions array
-  // const allQuestionsWithSections = [...sectionsWithQuestionss.flatMap(section => section), ...questionss]
-
-  // const information = {
-  //   questions: questions,
-  //   sections: sectionsWithQuestions
-  // }
-
-  // console.log(allQuestionsWithSections, 'questionsss')
-
   const filteredQuestions = questions?.filter(question =>
     question.text.toLowerCase().includes(searchKeyword.toLowerCase())
   )
 
-  const width = 'auto'
   const deleteIconActive = selectedQuestions.length > 0
 
-  console.log(filteredQuestions, 'questions')
   const newsections = (isTrash ? trashData : allquestionData).data?.filter(item => item.type === 'section') || []
   const newquestions = (isTrash ? trashData : allquestionData)?.data?.filter(item => item.type !== 'section') || []
   let globalCounter = (currentPage - 1) * rowsPerPage
@@ -632,11 +498,6 @@ const AllQuestionList = () => {
     setIsTrash(status === 'trash')
   }
 
-  const information = {
-    sections: newsectionsWithQuestions,
-    questions: formattedQuestions
-  }
-
   let globalCounters = 0
 
   const formattedData = (isTrash ? trashData : allquestionData).data?.map(item => {
@@ -683,59 +544,6 @@ const AllQuestionList = () => {
     }
   })
 
-  console.log(formattedData, 'formattedDate')
-
-  const combinedData = [...newsections, ...newquestions]
-    .sort((a, b) => (a.position || 0) - (b.position || 0)) // Ensure correct order based on `position` if provided
-    .map((item, index) => {
-      if (item.type === 'section') {
-        // Format section
-        return {
-          type: 'section',
-          id: (currentPage - 1) * rowsPerPage + index + 1, // Sequential ID
-          sectionGuid: item?.guid,
-          sectionId: index + 1,
-          sectionTitle: item?.title,
-          questions:
-            item?.children
-              ?.filter(child => child.question !== null)
-              ?.map(child => ({
-                guid: child?.guid,
-                text: child?.question,
-                options: Array.isArray(child?.choices) ? child.choices.map(choice => choice.choice) : [],
-                correctanswer: Array.isArray(child?.choices)
-                  ? child.choices.map(choice => choice.is_correct_answer)
-                  : [],
-                marks: child?.marks,
-                creationDate: child?.created_on,
-                question_type: child?.question_type,
-                neg_marks: child?.neg_marks,
-                time: child?.time
-              })) || []
-        }
-      } else {
-        // Format question
-        return {
-          type: 'question',
-          id: (currentPage - 1) * rowsPerPage + index + 1, // Sequential ID
-          guid: item?.guid,
-          text: item?.question,
-          options: Array.isArray(item?.choices) ? item.choices.map(choice => choice.choice) : [],
-          correctanswer: Array.isArray(item?.choices) ? item.choices.map(choice => choice.is_correct_answer) : [],
-          marks: item?.marks,
-          creationDate: item?.created_on,
-          question_type: item?.question_type,
-          neg_marks: item?.neg_marks,
-          time: item?.time,
-          difficulty: item?.difficulty?.title,
-          importance: item?.importance?.title
-        }
-      }
-    })
-
-  console.log({ combinedData }, 'show')
-  console.log(information, 'checkinformation')
-
   // Sorting logic
   const applySort = questions => {
     const stripHtmlTags = text => {
@@ -781,14 +589,11 @@ const AllQuestionList = () => {
 
   useEffect(() => {
     if (data) {
-      console.log(data, 'data12334')
       const parsedCategories = parseCategories(data)
 
       setCategories(parsedCategories)
     }
   }, [data])
-  console.log(categories, 'categorydata')
-  const [hoveredCategory, setHoveredCategory] = useState(null)
 
   const [clickedCategories, setClickedCategories] = useState([]) // Track which category is clicked
 
@@ -804,7 +609,6 @@ const AllQuestionList = () => {
     })
   }
 
-  console.log(newsectionsWithQuestions, 'newsectionwithquestion')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
   // Handle the toggle of the category dropdown
@@ -838,7 +642,6 @@ const AllQuestionList = () => {
       setSelectAll(false)
     }
   }, [])
-  console.log(isEditing, 'selectedQuestion')
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
@@ -853,18 +656,14 @@ const AllQuestionList = () => {
     }
   }
 
-  console.log(questions, 'allselected')
-
   const handleClose = () => {
     setAddUserOpen(false)
     setIsEditing(false)
     setCurrentDescription('') // Reset description after closing
   }
 
-  console.log(formattedData, 'information')
-
+  //section subquestion selection functionality
   const manageCheckboxState = (sectionGuid, questionGuid, isChecked, isSectionAction) => {
-    console.log(questionGuid, 'questionGuid')
     const updatedSelectedQuestions = new Set(selectedQuestions)
 
     if (isSectionAction) {
@@ -918,41 +717,9 @@ const AllQuestionList = () => {
     setSelectedQuestions([...updatedSelectedQuestions])
   }
 
-  console.log(selectedQuestions, 'parent')
-
   return (
     <>
       <FilterHeader title='All Questions' subtitle='Orders placed across your store' link='/test/questions'>
-        {/* <Grid
-          item
-          xs={6}
-
-          md={2}
-          display='flex'
-          alignItems='end'
-          justifyContent='flex-end'
-          pb={3}
-        >
-          <Button
-            fullWidth
-            variant='contained'
-            className='max-sm:is-full'
-            onClick={() => setAddUserOpen(!addUserOpen)}
-            startIcon={
-              <i
-                className='ri-add-fill'
-                style={{
-                  width: 21.6,
-                  height: 21.6
-                }}
-
-                // onClick={e => handleDeleteClick(e, 1)}
-              />
-            }
-          >
-            Add Section
-          </Button>
-        </Grid> */}
         <Grid
           item
           xs={6}
