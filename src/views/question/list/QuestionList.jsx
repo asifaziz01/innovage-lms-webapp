@@ -311,7 +311,7 @@ const QuestionList = ({ tableData }) => {
   }
 
   const AddQuestion = () => {
-    router.push(`/test/questions?testguid=${testGuid}&sguid${sec}`)
+    router.push(`/test/questions?testguid=${testGuid}`)
   }
 
   // const handleDeleteClick = () => {
@@ -528,31 +528,6 @@ const QuestionList = ({ tableData }) => {
             }
           >
             Add Question
-          </Button>
-        </Grid>
-        <Grid
-          item
-          xs={6}
-          md={2}
-          display='flex'
-          alignItems='end'
-          justifyContent='flex-end'
-          /* Aligns the button to the right */ pb={3}
-        >
-          <Button
-            fullWidth
-            variant='contained'
-            onClick={() => setAddUserOpen(!addUserOpen)}
-            startIcon={
-              <i
-                className='ri-add-fill'
-                style={{ color: 'white' }}
-
-                // onClick={e => handleDeleteClick(e, 1)}
-              />
-            }
-          >
-            Add Section
           </Button>
         </Grid>
       </FilterHeader>
