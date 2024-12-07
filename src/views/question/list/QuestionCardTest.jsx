@@ -1,35 +1,76 @@
 import React, { useState, useEffect, useRef } from 'react'
 
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
-import { Button, Typography, Checkbox, FormControlLabel, Box, IconButton, Grid } from '@mui/material'
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  Button,
+  Typography,
+  Checkbox,
+  FormControlLabel,
+  Divider,
+  TextField,
+  Grid,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Box,
+  Menu,
+  IconButton
+} from '@mui/material'
+import { styled } from '@mui/material/styles'
 
 import axios from 'axios'
+
 import { toast } from 'react-toastify'
 
 import useDraggableList from './useDraggableList' // Import the custom hook
-import Tablefor from '../import/view/Tablefor'
+import Reactquill from './Reactquill'
 
-const QuestionCardBankModule = ({
+import Tablefor from '../import/view/Tablefor'
+import AddUserDrawer from './AddUserDrawer'
+
+// import { useRouter } from 'next/navigation'
+const debounce = (func, delay) => {
+  let timeoutId
+
+  return (...args) => {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => {
+      func.apply(null, args)
+    }, delay)
+  }
+}
+
+const QuestionCardTest = ({
+  handleSelectAllClick,
+  selectAll,
+  marginLeft,
+  width,
   expandedPanels,
+  setExpandedPanels,
   isVisible,
+  setIsVisible,
   showAnswers,
   setShowAnswers,
   handleCollapseAll,
+  toggleAnswer,
   questions,
   selectedQuestions,
-  handleCheckboxChange,
-  showCorrectAnswer,
-  check,
-  showCategory,
-  showFields,
-  trash,
-  currentPage,
-  addQuestion,
-  handleEdit,
   setSelectedQuestions,
-  manageCheckboxState
+  check,
+  setEdit,
+  edit,
+  onEditClick,
+  addQuestion,
+  manageCheckboxState,
+  handleEdit
 }) => {
+  const [addUserOpen, setAddUserOpen] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
   const [editingQuestionId, setEditingQuestionId] = useState(null) // To track which question is being edited
   const [editedText, setEditedText] = useState('') // To store the edited text for a question
   const [editingAnswerId, setEditingAnswerId] = useState(null) // To track which answer is being edited
@@ -37,40 +78,75 @@ const QuestionCardBankModule = ({
   // Using a custom hook for drag-and-drop
   const { items: questionList, handleDragStart, handleDragOver, handleDrop } = useDraggableList(questions)
   const [questionData, setQuestionData] = useState(questions)
-  const isInitialRender = useRef(true) // Track if this is the initial render
+
+  const [anchorEl, setAnchorEl] = useState(null)
+  const search = useSearchParams()
+
+  const guid = search.get('guid')
+  const testGuid = search.get('testguid')
+  const open = Boolean(anchorEl)
+
+  const [settings, setSettings] = useState({
+    questionType: 'mcmc',
+    marksPerQuestion: 2,
+    negativeMarks: 2,
+    timeAllowed: 0,
+    timeUnit: 'Second',
+    difficultyLevel: 'Low',
+    importance: 'Low'
+  })
+
+  const isInitialRender = useRef(true)
+
+  const handleSettingsChange = newSettings => {
+    setSettings(newSettings)
+  }
+
+  const router = useRouter()
 
   // Use useEffect to update questionData whenever questions prop changes
   useEffect(() => {
-    setQuestionData(questions)
-  }, [questions])
+    setQuestionData(questions) // Sync the questions prop with questionData state
+  }, [questions, toggleAnswer])
+  console.log
 
-  // Set all questions to be expanded by default on initial render
-  useEffect(() => {
-    if (isInitialRender.current && questionData.length > 0) {
-      const allQuestionIds = questionData.map(question => question.id)
-
-      setShowAnswers(allQuestionIds)
-      isInitialRender.current = false // Set flag to false
+  // Function to handle checkbox change
+  const handleCheckboxChange = (questionId, isChecked) => {
+    if (isChecked) {
+      setSelectedQuestions([...selectedQuestions, questionId]) // Add question to selected list
+    } else {
+      setSelectedQuestions(selectedQuestions.filter(id => id !== questionId)) // Remove from list
     }
-  }, [questionData, currentPage])
-
-  // const groupedBySection = questionData?.sections.reduce((acc, question) => {
-  //   const section = question.section || 'Default Section' // Use 'Default Section' if no section specified
-
-  //   if (!acc[section]) acc[section] = []
-  //   acc[section].push(question)
-
-  //   return acc
-  // }, {})
-
-  console.log(questionData, 'sectionss')
-
-  const handleToggleAnswer = questionId => {
-    setShowAnswers(prevAnswers =>
-      prevAnswers.includes(questionId) ? prevAnswers.filter(id => id !== questionId) : [...prevAnswers, questionId]
-    )
   }
 
+  console.log(selectedQuestions, 'questionsselected')
+
+  const handleExpandClick = () => {
+    setIsExpanded(!isExpanded)
+  }
+
+  // Handle when the user clicks on a question to edit
+  const handleEditClick = (questionId, currentText) => {
+    setEditingQuestionId(questionId) // Set the question ID being edited
+    setEditedText(currentText) // Set the current text in the input field
+    setEditingAnswerId(null)
+  }
+
+  // useEffect(() => {
+  //   if (questionData.length > 0) {
+  //     const allQuestionIds = questionData.map(question => question.id)
+
+  //     // Check if the state is already the same before setting it
+  //     if (JSON.stringify(allQuestionIds) !== JSON.stringify(showAnswers)) {
+  //       setShowAnswers(allQuestionIds)
+  //     }
+  //   }
+  // }, [questionData, showAnswers])
+
+  // Handle when the user types in the input field
+
+  // Handle when the user presses Enter or blurs out of the input
+  // Handle when the user clicks on an answer to edit
   const handleEditAnswerClick = (questionId, answerIndex, currentAnswer) => {
     setEditingAnswerId(`${questionId}-${answerIndex}`) // Set the answer ID being edited
     setEditedAnswer(currentAnswer) // Set the current answer in the input field
@@ -78,10 +154,47 @@ const QuestionCardBankModule = ({
   }
 
   // Handle answer edit change
+  const handleEditAnswerChange = e => {
+    setEditedAnswer(e.target.value)
+  }
+
+  console.log(selectAll, 'selectAll')
 
   // Handle saving the edited answer
+  const handleEditAnswerSave = (questionId, answerIndex) => {
+    const updatedQuestions = questionList.map(question => {
+      if (question.id === questionId) {
+        const updatedOptions = question.options.map((option, index) => (index === answerIndex ? editedAnswer : option))
+
+        return { ...question, options: updatedOptions }
+      }
+
+      return question
+    })
+
+    setEditingAnswerId(null) // Stop editing mode for answer
+    // You would ideally call a function here to save the changes to the server or state
+    console.log('Updated questions with edited answer:', updatedQuestions)
+  }
+
   useEffect(() => {}, [questions, isVisible, expandedPanels, questions])
   console.log(editedAnswer, 'gg')
+  useEffect(() => {
+    if (isInitialRender.current && questionData.length > 0) {
+      const allQuestionIds = questionData.map(question => question.id)
+
+      setShowAnswers(allQuestionIds)
+      isInitialRender.current = false // Set flag to false
+    }
+  }, [questionData])
+
+  const handleToggleAnswer = questionId => {
+    setShowAnswers(prevAnswers =>
+      prevAnswers.includes(questionId) ? prevAnswers.filter(id => id !== questionId) : [...prevAnswers, questionId]
+    )
+  }
+
+  const MAX_QUESTIONS_PER_BATCH = 40
 
   const handleImportSelected = async () => {
     if (selectedQuestions.length === 0) {
@@ -90,142 +203,291 @@ const QuestionCardBankModule = ({
       return
     }
 
+    const selectedQuestionData = questionData.filter(q => selectedQuestions.includes(q.id))
+    const batches = []
+
+    for (let i = 0; i < selectedQuestionData.length; i += MAX_QUESTIONS_PER_BATCH) {
+      batches.push(selectedQuestionData.slice(i, i + MAX_QUESTIONS_PER_BATCH))
+    }
+
+    try {
+      for (const batch of batches) {
+        const formData = new FormData()
+
+        if (guid) {
+          formData.append('category', guid)
+        }
+
+        if (testGuid) {
+          formData.append('test_guid', testGuid)
+        }
+
+        batch.forEach((question, index) => {
+          formData.append(`questions[${index}][question]`, question.text)
+          formData.append(`questions[${index}][difficulty]`, settings.difficultyLevel)
+          formData.append(`questions[${index}][test_name]`, settings.testName)
+          formData.append(`questions[${index}][type]`, settings.questionType)
+          formData.append(`questions[${index}][importance]`, settings.importance)
+          formData.append(`questions[${index}][marks]`, settings.marksPerQuestion)
+          formData.append(`questions[${index}][category]`, guid)
+          formData.append(`questions[${index}][neg_marks]`, settings.negativeMarks)
+          formData.append(`questions[${index}][time]`, settings.timeAllowed)
+
+          question.options.forEach((choice, choiceIndex) => {
+            formData.append(`questions[${index}][choice][${choiceIndex}]`, choice)
+          })
+
+          if (question.correctanswer && question.correctanswer.length > 0) {
+            question.correctanswer.forEach((correctAnswer, correctAnswerIndex) => {
+              formData.append(`questions[${index}][correct_answer][${correctAnswerIndex}]`, correctAnswer)
+            })
+          }
+        })
+
+        const endpoint = `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/questions/save_import`
+
+        await axios.post(endpoint, formData, {
+          headers: {
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_LMS_TOKEN}`,
+            Network: process.env.NEXT_PUBLIC_LMS_TOKEN,
+            Accept: 'application/json',
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+      }
+
+      toast.success('Selected questions imported successfully!')
+    } catch (error) {
+      toast.error('Failed to import selected questions.')
+    }
+  }
+
+  const handleImportAll = async () => {
+    console.log('hyeeeee')
+
+    if (!questionData || questionData.length === 0) {
+      toast.error('No questions available to import.')
+
+      return
+    }
+
     // Create a new FormData object
     const formData = new FormData()
 
-    const selectedQuestionData = questionData.filter(q => selectedQuestions.includes(q.id))
+    if (guid) {
+      formData.append('category', guid)
+    }
 
-    // Loop through selected questions and append to formData
-    selectedQuestionData.forEach((question, index) => {
+    if (testGuid) {
+      formData.append('test_guid', testGuid)
+    }
+
+    // Loop through all questions and append to formData
+    questionData.forEach((question, index) => {
       // Append question fields in the required form-data format
       formData.append(`questions[${index}][question]`, question.text) // Question text
-      formData.append(`questions[${index}][question_type]`, question.question_type) // Assuming 'mcq' as question type
+      formData.append(`questions[${index}][difficulty]`, settings.difficultyLevel)
+      formData.append(`questions[${index}][test_name]`, settings.testName || 'Default Test Name')
+      formData.append(`questions[${index}][type]`, settings.questionType)
+      formData.append(`questions[${index}][importance]`, settings.importance)
+      formData.append(`questions[${index}][marks]`, settings.marksPerQuestion)
+      formData.append(`questions[${index}][category]`, guid)
+      formData.append(`questions[${index}][neg_marks]`, settings.negativeMarks)
+      formData.append(`questions[${index}][time]`, settings.timeAllowed)
 
       // Append choices for the question
       question.options.forEach((choice, choiceIndex) => {
         formData.append(`questions[${index}][choice][${choiceIndex}]`, choice)
       })
 
-      question.correctanswer.forEach((correctanswer, correctAnswerIndex) => {
-        formData.append(`questions[${index}][correct_answer][${correctAnswerIndex}]`, correctanswer)
-      })
+      // Append correct answers for the question
 
-      question.order.forEach((order, orderIndex) => {
-        formData.append(`questions[${index}][order][${orderIndex}]`, order)
-      })
+      if (question.correctanswer && question.correctanswer.length > 0) {
+        question.correctanswer.forEach((correctAnswer, correctAnswerIndex) => {
+          formData.append(`questions[${index}][correct_answer][${correctAnswerIndex}]`, correctAnswer)
+        })
+      }
     })
 
     try {
-      const endpoint = `${process.env.NEXT_PUBLIC_LMS_API_URL}tests/save_uploaded_questions/MAT3`
+      const endpoint = `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/questions/save_import`
 
-      const response = await axios.post(
+      // Make the API call
+      const response = await axios.post(endpoint, formData, {
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_LMS_TOKEN}`,
+          Network: process.env.NEXT_PUBLIC_LMS_TOKEN,
+          Accept: 'application/json',
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+
+      // Handle success response
+      toast.success('All questions imported successfully!')
+    } catch (error) {
+      toast.error('Failed to import questions.')
+    }
+  }
+
+  const handleExpandAllButton = () => {
+    setIsVisible(true) // Show the questions
+    setExpandedPanels(questionData.map(q => q.id)) // Expand all panels
+    setShowAnswers(questionData.map(q => q.id)) // Reset showing answers (no answers shown)
+    // setIsExpandedAll(true) // Set the expanded state
+  }
+
+  const handleClick = event => {
+    setAnchorEl(event.currentTarget)
+  }
+
+  const handleClose = () => {
+    setAnchorEl(null)
+  }
+
+  const handleDeleteClick = async () => {
+    if (selectedQuestions.length === 0) {
+      toast.error('Please select at least one question to delete.')
+
+      return
+    }
+
+    console.log(isVisible, 'jjjjj')
+
+    // Get selected questions' GUIDs
+    const selectedQuestionGuids = questionData
+      .filter(question => {
+        console.log(question, 'uuuuuu') // Log each question object
+
+        return selectedQuestions.includes(question.id) // Filter selected questions by their id
+      })
+      .map(question => question.guid) // Map to GUID
+
+    try {
+      // Send the selected question GUIDs to the API for deletion
+      const endpoint = `${process.env.NEXT_PUBLIC_LMS_API_URL}qb/questions/${selectedQuestionGuids}/delete`
+
+      await axios.delete(
         endpoint,
-        formData, // Send the formData object
+        {},
+
+        // Send the GUIDs in the request body
         {
           headers: {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_LMS_TOKEN}`, // Include Authorization header
-            Network: process.env.NEXT_PUBLIC_LMS_TOKEN, // Include Network header
-            Accept: 'application/json', // Specify accepted response format
-            'Content-Type': 'multipart/form-data' // Specify form-data content type
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_LMS_TOKEN}`,
+            Network: process.env.NEXT_PUBLIC_LMS_TOKEN,
+            Accept: 'application/json'
           }
         }
       )
 
-      // Handle success response
-      toast.success('Selected questions imported successfully!')
+      // Filter out deleted questions from local state
+      const updatedQuestionData = questionData.filter(question => !selectedQuestionGuids.includes(question.guid))
 
-      setQuestionData(selectedQuestionData)
+      setQuestionData(updatedQuestionData) // Update state with remaining questions
+      setSelectedQuestions([]) // Clear selected questions
+      toast.success('Selected questions deleted successfully!')
     } catch (error) {
-      toast.error('Failed to import selected questions.')
+      toast.error('Failed to delete selected questions.')
     }
   }
 
-  const handleExpandAllButton = () => {}
+  const handleSearch = debounce(event => {
+    setSearchKeyword(event.target.value) // Update the search keyword
+  }, 500) //
 
-  const router = useRouter()
-
-  const handleAccordionClick = guid => {
-    router.push(`/question/edit?guid=${guid}`) // Redirect to question edit page with the question's guid
-  }
-
-  const handleViewPage = guid => {
-    router.push(`/question/view?guid=${guid}`) // Redirect to question edit page with the question's guid
-  }
+  console.log(questions, 'showanswert')
 
   const decodeHtmlEntities = html => {
     const txt = document.createElement('textarea')
 
     txt.innerHTML = html
 
-    return txt.value.replace(/<[^>]*>/g, '') // Remove HTML tags
+    return txt.value // Return the decoded string
   }
 
-  const handleImport = guid => {
-    router.push(`/question/import?sectionguid=${guid}`)
+  const decodeAndStripHtml = html => {
+    const div = document.createElement('div')
+
+    div.innerHTML = html // Decode HTML entities
+
+    return div.textContent || div.innerText || '' // Strip HTML tags
   }
 
-  // const manageCheckboxState = (sectionGuid, questionGuid, isChecked, isSectionAction) => {
-  //   const updatedSelectedQuestions = new Set(selectedQuestions)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
-  //   if (isSectionAction) {
-  //     // Section checkbox logic
-  //     const section = questionData.find(section => section.sectionGuid === sectionGuid)
+  const handleAccordionClick = guid => {
+    router.push(`/question/edit?guid=${guid}&source=${testGuid}`) // Redirect to question edit page with the question's guid
+  }
 
-  //     if (section) {
-  //       if (isChecked) {
-  //         // Add all questions and the section itself
-  //         section.questions.forEach(question => updatedSelectedQuestions.add(question.guid))
-  //         updatedSelectedQuestions.add(sectionGuid)
-  //       } else {
-  //         // Remove all questions and the section itself
-  //         section.questions.forEach(question => updatedSelectedQuestions.delete(question.guid))
-  //         updatedSelectedQuestions.delete(sectionGuid)
-  //       }
-  //     }
-  //   } else {
-  //     // Question checkbox logic
-  //     if (isChecked) {
-  //       updatedSelectedQuestions.add(questionGuid)
-
-  //       // If all questions in a section are selected, the section remains unchecked
-  //       const parentSection = questionData.find(section =>
-  //         section.questions.some(question => question.guid === questionGuid)
-  //       )
-
-  //       if (parentSection && parentSection.questions.every(question => updatedSelectedQuestions.has(question.guid))) {
-  //         // Do not add section even if all questions are selected
-  //         updatedSelectedQuestions.delete(parentSection.sectionGuid)
-  //       }
-  //     } else {
-  //       updatedSelectedQuestions.delete(questionGuid)
-
-  //       // Ensure section is unchecked if any question is unchecked
-  //       const parentSection = questionData.find(section =>
-  //         section.questions.some(question => question.guid === questionGuid)
-  //       )
-
-  //       if (parentSection) {
-  //         updatedSelectedQuestions.delete(parentSection.sectionGuid)
-  //       }
-  //     }
-  //   }
-
-  //   setSelectedQuestions([...updatedSelectedQuestions])
-  // }
-  console.log(selectedQuestions, 'selctedquestions')
+  const handleViewPage = guid => {
+    router.push(`/question/view?guid=${guid}`) // Redirect to question edit page with the question's guid
+  }
 
   return (
     <>
-      {/* <Card style={{ marginTop: '50px', padding: '20px', width: width }}> */}
       {check && (
-        <Tablefor
-          handleExpandAll={handleExpandAllButton}
-          handleCollapseAll={handleCollapseAll}
-          handleImportSelected={handleImportSelected}
-        />
+        <>
+          {/* <Tablefor
+            handleExpandAll={handleExpandAllButton}
+            handleCollapseAll={handleCollapseAll}
+            handleImportSelected={handleImportSelected}
+            open={isSettingsOpen}
+            handleClose={handleCloseSettings}
+            handleSave={handleSaveSettings}
+            addUserOpen={addUserOpen}
+            setAddUserOpen={setAddUserOpen}
+          /> */}
+        </>
       )}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}></div>
+      <AddUserDrawer
+        open={addUserOpen}
+        handleClose={() => setAddUserOpen(!addUserOpen)}
+        settings={settings}
+        onSaveSettings={handleSettingsChange}
+      />
 
+      {/* <CardHeader
+          title={
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={selectAll}
+                    onChange={handleSelectAllClick}
+                    // checkedIcon={selectedQuestions.length !== questions.length ? <i class='ri-checkbox-fill'></i> : ''}
+                    label='Select All'
+                  />
+                }
+                style={{ marginRight: '10px' }}
+              />
+              Select All
+            </div>
+          }
+          // subheaderTypographyProps={{ style: { color: '#262B43E5', fontSize: '13px' } }}
+          action={
+            <>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <Button
+                  variant='contained'
+                  startIcon={<i className='ri-download-2-line' style={{ color: 'white' }} />}
+                  onClick={handleImportSelected}
+                  disabled={selectedQuestions.length === 0} // Disable if no questions selected
+                >
+                  Import Selected
+                </Button>
+                <Button
+                  variant='contained'
+                  startIcon={<i className='ri-download-2-line' style={{ color: 'white' }} />}
+                  onClick={handleImportAll}
+                  // disabled={selectedQuestions.length !== questions.length} // Disable if not all questions are selected
+                >
+                  Import All
+                </Button>
+              </div>
+            </>
+          }
+        /> */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}></div>
       {isVisible && (
         <div style={{ width: '100%', marginTop: '20px' }}>
           {/* Render Sections */}
@@ -266,7 +528,7 @@ const QuestionCardBankModule = ({
                           color: 'black'
                         }}
                         dangerouslySetInnerHTML={{
-                          __html: decodeHtmlEntities(`${section?.sectionId}.${section.sectionTitle}`)
+                          __html: decodeAndStripHtml(`${section?.sectionId}.${section.sectionTitle}`)
                         }}
                       />
                       {/* Toggle Section Button */}
@@ -396,7 +658,7 @@ const QuestionCardBankModule = ({
                                 }}
                                 onClick={() => handleViewPage(question?.guid)}
                                 dangerouslySetInnerHTML={{
-                                  __html: decodeHtmlEntities(`${questionIndex + 1}. ${processedText}`)
+                                  __html: decodeAndStripHtml(`${questionIndex + 1}. ${processedText}`)
                                 }}
                               />
 
@@ -422,7 +684,13 @@ const QuestionCardBankModule = ({
                                 {question.options && (
                                   <ul style={{ listStyleType: 'none', paddingLeft: '0' }}>
                                     {question.options.map((option, idx) => {
-                                      const label = `${String.fromCharCode(97 + idx)}. ${decodeHtmlEntities(option)}`
+                                      const stripHtmlTags = str => str.replace(/<\/?[^>]+(>|$)/g, '')
+
+                                      const label = `${String.fromCharCode(97 + idx)}. ${stripHtmlTags(option)}`
+
+                                      {
+                                        /*  console.log(isCorrect, 'iscorrect') */
+                                      }
 
                                       const isCorrect = question.correctanswer[idx] === 1
 
@@ -436,14 +704,12 @@ const QuestionCardBankModule = ({
                                         >
                                           <Typography
                                             style={{
-                                              color: showCorrectAnswer && isCorrect ? '#34C759' : 'black',
+                                              color: isCorrect ? '#34C759' : 'black',
                                               cursor: 'pointer'
                                             }}
                                             onClick={() => handleEditAnswerClick(question.id, idx, option)}
-                                            dangerouslySetInnerHTML={{
-                                              __html: label
-                                            }}
                                           />
+                                          {label}
                                         </li>
                                       )
                                     })}
@@ -459,7 +725,7 @@ const QuestionCardBankModule = ({
                                   }}
                                 >
                                   {/* Marks */}
-                                  {showFields && (
+                                  {
                                     <Grid item xs={12} md>
                                       <Box display='flex' alignItems='center'>
                                         <IconButton style={{ borderRadius: '8px', background: '#F0EFF0' }}>
@@ -473,9 +739,9 @@ const QuestionCardBankModule = ({
                                         </Box>
                                       </Box>
                                     </Grid>
-                                  )}
+                                  }
                                   {/* Category */}
-                                  {showCategory && (
+                                  {
                                     <Grid item xs={12} md>
                                       <Box display='flex' alignItems='center'>
                                         <IconButton style={{ borderRadius: '8px', background: '#F0EFF0' }}>
@@ -489,7 +755,7 @@ const QuestionCardBankModule = ({
                                         </Box>
                                       </Box>
                                     </Grid>
-                                  )}
+                                  }
                                   {/* Difficulty */}
                                   <Grid item xs={12} md>
                                     <Box display='flex' alignItems='center'>
@@ -519,7 +785,7 @@ const QuestionCardBankModule = ({
                                     </Box>
                                   </Grid>
                                   {/* Negative Marks */}
-                                  {showFields && (
+                                  {
                                     <Grid item xs={12} md>
                                       <Box display='flex' alignItems='center'>
                                         <IconButton style={{ borderRadius: '8px', background: '#F0EFF0' }}>
@@ -533,9 +799,9 @@ const QuestionCardBankModule = ({
                                         </Box>
                                       </Box>
                                     </Grid>
-                                  )}
+                                  }
                                   {/* Time */}
-                                  {showFields && (
+                                  {
                                     <Grid item xs={12} md>
                                       <Box display='flex' alignItems='center'>
                                         <IconButton style={{ borderRadius: '8px', background: '#F0EFF0' }}>
@@ -549,7 +815,7 @@ const QuestionCardBankModule = ({
                                         </Box>
                                       </Box>
                                     </Grid>
-                                  )}
+                                  }
                                 </Grid>
                                 {/* Additional Info */}
                               </div>
@@ -639,21 +905,22 @@ const QuestionCardBankModule = ({
                         {section.options ? (
                           <ul style={{ listStyleType: 'none', paddingLeft: '0' }}>
                             {section.options.map((option, index) => {
+                              const stripHtmlTags = str => str.replace(/<\/?[^>]+(>|$)/g, '')
                               const letter = String.fromCharCode(97 + index) // Convert index to letter (A=65, B=66, ...)
-                              const labeledOption = `${letter}. ${decodeHtmlEntities(option)}`
+                              const labeledOption = `${letter}. ${stripHtmlTags(option)}`
 
                               return (
                                 <li key={index} style={{ display: 'flex', alignItems: 'center' }}>
                                   <Typography
                                     style={{
-                                      color:
-                                        showCorrectAnswer && section.correctanswer[index] === 1 ? '#34C759' : 'black',
+                                      color: section.correctanswer[index] === 1 ? '#34C759' : 'black',
                                       flexGrow: 1,
                                       cursor: 'pointer'
                                     }}
                                     onClick={() => handleEditAnswerClick(section.id, index, option)}
                                     dangerouslySetInnerHTML={{ __html: labeledOption }}
                                   />
+                                  {/* {labeledOption} */}
                                   {/* <span style={{ marginLeft: '10px', fontWeight: 'bold' }}>{letter}</span> */}
                                 </li>
                               )
@@ -672,7 +939,7 @@ const QuestionCardBankModule = ({
                           }}
                         >
                           {/* Marks */}
-                          {showFields && (
+                          {
                             <Grid item xs={12} md>
                               <Box display='flex' alignItems='center'>
                                 <IconButton style={{ borderRadius: '8px', background: '#F0EFF0' }}>
@@ -686,9 +953,9 @@ const QuestionCardBankModule = ({
                                 </Box>
                               </Box>
                             </Grid>
-                          )}
+                          }
                           {/* Category */}
-                          {showCategory && (
+                          {
                             <Grid item xs={12} md>
                               <Box display='flex' alignItems='center'>
                                 <IconButton style={{ borderRadius: '8px', background: '#F0EFF0' }}>
@@ -702,7 +969,7 @@ const QuestionCardBankModule = ({
                                 </Box>
                               </Box>
                             </Grid>
-                          )}
+                          }
                           {/* Difficulty */}
                           <Grid item xs={12} md>
                             <Box display='flex' alignItems='center'>
@@ -734,7 +1001,7 @@ const QuestionCardBankModule = ({
                             </Box>
                           </Grid>
                           {/* Negative Marks */}
-                          {showFields && (
+                          {
                             <Grid item xs={12} md>
                               <Box display='flex' alignItems='center'>
                                 <IconButton style={{ borderRadius: '8px', background: '#F0EFF0' }}>
@@ -748,9 +1015,9 @@ const QuestionCardBankModule = ({
                                 </Box>
                               </Box>
                             </Grid>
-                          )}
+                          }
                           {/* Time */}
-                          {showFields && (
+                          {
                             <Grid item xs={12} md>
                               <Box display='flex' alignItems='center'>
                                 <IconButton style={{ borderRadius: '8px', background: '#F0EFF0' }}>
@@ -764,18 +1031,18 @@ const QuestionCardBankModule = ({
                                 </Box>
                               </Box>
                             </Grid>
-                          )}
+                          }
                         </Grid>
                       </div>
                     )}
-                    {!trash && (
+                    {
                       <Button
                         style={{ color: 'rgba(38, 43, 67, 0.898)', marginTop: '10px' }}
                         onClick={() => handleAccordionClick(section.guid)}
                       >
                         <i className='ri-edit-box-line' style={{ color: 'rgba(38, 43, 67, 0.898)' }}></i>
                       </Button>
-                    )}
+                    }
                     <hr style={{ width: '100%', border: '0.5px solid #ddd', margin: '10px 0' }} />
                   </div>
                 )
@@ -795,4 +1062,6 @@ const QuestionCardBankModule = ({
   )
 }
 
-export default QuestionCardBankModule
+export default QuestionCardTest
+
+//}tests/save_uploaded_questions/SAM8 api save

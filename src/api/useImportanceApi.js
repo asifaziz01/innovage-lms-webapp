@@ -32,7 +32,7 @@ export default function useImportanceApi() {
 
     try {
       axios
-        .post(`${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/importance/all`, formData, {
+        .post(`${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/importance/all`, formData, {
           Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
           Network: 'dev369',
           accept: 'application/json'
@@ -62,7 +62,7 @@ export default function useImportanceApi() {
 
     try {
       axios
-        .post(`${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/importance/all`, formData, {
+        .post(`${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/importance/all`, formData, {
           Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
           Network: 'dev369',
           accept: 'application/json'
@@ -98,7 +98,7 @@ export default function useImportanceApi() {
     try {
       axios
         .post(
-          `${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/importance/create`,
+          `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/importance/create`,
 
           // userData
           formData,
@@ -129,7 +129,7 @@ export default function useImportanceApi() {
     try {
       axios
         .post(
-          `${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/importance/${guid}/add_to_questions`,
+          `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/importance/${guid}/add_to_questions`,
 
           // userData
           formData,
@@ -159,7 +159,7 @@ export default function useImportanceApi() {
     try {
       axios
         .post(
-          `${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/importance/${guid}/remove_from_questions`,
+          `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/importance/${guid}/remove_from_questions`,
 
           // userData
           formData,
@@ -182,7 +182,7 @@ export default function useImportanceApi() {
   const viewImportance = guid => {
     // try {
     return axios.post(
-      `${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/importance/${guid}/view`,
+      `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/importance/${guid}/view`,
       {},
       {
         Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
@@ -202,7 +202,7 @@ export default function useImportanceApi() {
     }
 
     try {
-      axios.post(`${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/importance/${guId}/edit`, formData).then(res => {
+      axios.post(`${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/importance/${guId}/edit`, formData).then(res => {
         alertMessages(theme, 'success', res?.data?.message)
       })
 
@@ -223,7 +223,7 @@ export default function useImportanceApi() {
     try {
       axios
         .post(
-          `${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/importance/trash`,
+          `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/importance/trash`,
 
           // userData
           formData,
@@ -254,7 +254,7 @@ export default function useImportanceApi() {
 
     try {
       axios
-        .post(`${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/importance/delete`, formData, {
+        .post(`${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/importance/delete`, formData, {
           Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
           Network: 'dev369',
           accept: 'application/json'
@@ -281,7 +281,7 @@ export default function useImportanceApi() {
     try {
       axios
         .post(
-          `${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/importance/restore`,
+          `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/importance/restore`,
 
           // userData
           formData,
@@ -320,7 +320,7 @@ export default function useImportanceApi() {
 
     try {
       axios
-        .post(`${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/importance/trashed`, formData, {
+        .post(`${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/importance/trashed`, formData, {
           Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
           Network: 'dev369',
           accept: 'application/json'

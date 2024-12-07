@@ -1,7 +1,7 @@
 'use client'
 
 // MUI Imports
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { useRouter, useSearchParams } from 'next/navigation'
 
@@ -14,6 +14,8 @@ import QuestionsSection from './QuestionsSection'
 import AlertDialogBox from '@/components/Common/AlertDialogBox'
 import useTestApi from '@/api/test/useTestApi'
 import FilterHeader from '@/components/globals/FilterHeader'
+// import useTestApi from '@/api/useTestApi'
+import useQuestionModuleApi from '@/api/useQuestionModuleApi'
 
 const UserListCards = () => {
   const theme = useTheme()
@@ -23,7 +25,8 @@ const UserListCards = () => {
   const [checked, setChecked] = useState(false)
   const [open, setOpen] = useState(false)
   const { deleteTestData, handleTestPublish } = useTestApi()
-
+  // const { viewTest } = useTestApi()
+  const { viewTest, viewTestData } = useQuestionModuleApi()
   const handleChange = event => {
     setChecked(event.target.checked)
     handleTestPublish(guid, Number(event.target.checked))
@@ -36,7 +39,10 @@ const UserListCards = () => {
       </Grid>
     )
   }
-
+  useEffect(() => {
+    viewTest(guid)
+  }, [guid])
+  console.log(viewTestData, 'viewTestData')
   const data = [
     {
       stats: '7',
@@ -127,7 +133,7 @@ const UserListCards = () => {
     {
       icon: '/images/icons/badge.svg',
       title: 'All Questions',
-      handleClick: () => router.push(`/question/list`)
+      handleClick: () => router.push(`/question/list/?testguid=${guid}`)
     },
     {
       icon: '/images/icons/preview.svg',
@@ -137,7 +143,7 @@ const UserListCards = () => {
     {
       icon: '/images/icons/import.svg',
       title: 'Import Questions',
-      handleClick: () => router.push(`/question/import`)
+      handleClick: () => router.push(`/question/import/?testguid=${guid}`)
     },
     {
       icon: '/images/icons/test.svg',
@@ -175,7 +181,7 @@ const UserListCards = () => {
           ))}
         </Grid>
         <Grid container item xs={12} mt={10} spacing={5}>
-          <QuestionsSection title='Questions' subtitle='Mathematics Test' dummyData={questionsData}>
+          <QuestionsSection title='Questions' subtitle={viewTestData?.title} dummyData={questionsData}>
             <Grid item xs={12} md={2.5}>
               <Button
                 fullWidth

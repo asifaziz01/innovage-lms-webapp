@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react'
+
 // import useQuestionApi from '@/api/useQuestionApi'
+import { useRouter } from 'next/navigation'
+
 import {
   Card,
   Box,
@@ -19,11 +22,12 @@ import {
   DialogTitle,
   DialogContent
 } from '@mui/material'
+
 import Sortingquestion from './Sortingquestion'
 import SortingType from './SortingType'
+
 // import Router, { withRouter } from 'next/router'
 // import { useRouter } from 'next/router'
-import { useRouter } from 'next/navigation'
 import useCategoryApi from '@/api/useCategoryApi'
 import ExportPopup from './ExportPopup'
 import TestListTable from '../selectcategory/TestListTable'
@@ -31,11 +35,14 @@ import TestList from './TestList'
 import useTestApi from '@/api/useTestApi'
 import useQuestionApi from '@/api/useQuestionApi'
 import useQuestionModuleApi from '@/api/useQuestionModuleApi'
+
 // import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 const CategoryItem = ({ category, handleCategoryClick, clickedCategories, handleCategoryTitle }) => {
   // Check if the category is clicked and should display subcategories
   const isCategoryClicked = clickedCategories.includes(category.id)
+
   console.log(category.title, 'categorytitle')
+
   return (
     <li
       className='category-item'
@@ -84,6 +91,7 @@ const Topcard = ({
   deleteIconActive,
   searchKeyword,
   handleSearch,
+  importanceData,
   showCorrectAnswer,
   setShowCorrectAnswer,
   showCategory,
@@ -100,6 +108,7 @@ const Topcard = ({
   isDropdownOpen,
   trashDatalength,
   showAllQuestion,
+
   // Sortingquestion,
   setIsDropdownOpen,
   handleDropdownToggle,
@@ -112,12 +121,21 @@ const Topcard = ({
   handleNextPage,
   handlePrevPage,
   currentPage,
-  totalPages
+  totalPages,
+  handleFilterChange,
+  selectedFilters,
+  setSelectedFilters,
+  handleDifficultchange,
+  difficultData,
+  setDifficultSelect,
+  difficultSelect
+
   // handleCategoryClick
 }) => {
   const [anchorElOptions, setAnchorElOptions] = React.useState(null)
   const [anchorElSort, setAnchorElSort] = React.useState(null)
   const [searchValue, setSearchValue] = React.useState('')
+
   const [sortOptions, setSortOptions] = useState({
     creationAsc: false,
     creationDesc: false,
@@ -126,16 +144,21 @@ const Topcard = ({
     multipleChoice: false,
     trueFalse: false
   })
+
+  console.log(difficultData, 'checkimportance')
   const [isFilterActive, setIsFilterActive] = useState(false)
   const { data } = useCategoryApi()
   const { fetchTestData, testData, addQuestionInTest } = useQuestionModuleApi()
+
   // const router = useRouter()
   useEffect(() => {
     const hasActiveFilter = searchKeyword || Object.values(sortOptions).some(option => option)
+
     setIsFilterActive(hasActiveFilter)
   }, [searchKeyword, sortOptions])
   useEffect(() => {
     const savedShowCorrectAnswer = localStorage.getItem('showCorrectAnswer')
+
     if (savedShowCorrectAnswer !== null) {
       setShowCorrectAnswer(JSON.parse(savedShowCorrectAnswer)) // Parse the string as boolean
     }
@@ -143,14 +166,18 @@ const Topcard = ({
   useEffect(() => {
     fetchTestData()
   }, [])
+
   // Save the "showCorrectAnswer" state to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('showCorrectAnswer', JSON.stringify(showCorrectAnswer))
   }, [showCorrectAnswer])
+
   const handleOptionsClick = event => {
     setAnchorElOptions(event.currentTarget)
   }
+
   const router = useRouter()
+
   const handleSortClick = event => {
     setAnchorElSort(event.currentTarget)
   }
@@ -162,20 +189,25 @@ const Topcard = ({
 
   const handleCheckboxChange = event => {
     const { name, checked } = event.target
+
     setSortOptions(prevOptions => ({
       ...prevOptions,
       [name]: checked // Only update the checkbox clicked
     }))
   }
+
   const handleShowCorrectAnswerChange = () => {
     setShowCorrectAnswer(prev => !prev) // Toggle the value of showCorrectAnswer
   }
+
   const handleShowCategoryChange = () => {
     setShowCategory(prev => !prev) // Toggle the value of showCorrectAnswer
   }
+
   const handleShowFieldChange = () => {
     setShowFields(prev => !prev) // Toggle the value of showCorrectAnswer
   }
+
   const handleResetFilters = () => {
     setSearchValue('')
     setSortOptions({
@@ -200,21 +232,32 @@ const Topcard = ({
 
   const handleExport = format => {
     console.log(`Exporting in ${format} format`)
+
     // Add your export logic here
     setIsPopupOpen(false)
   }
+
   const [anchorEl, setAnchorEl] = useState(null)
-  const [selectedFilters, setSelectedFilters] = useState([])
+  const [anchorE2, setAnchorE2] = useState(null)
+
+  // const [selectedFilters, setSelectedFilters] = useState([])
 
   const open = Boolean(anchorEl)
+  const open2 = Boolean(anchorE2)
 
   const handleClick = event => {
     setAnchorEl(event.currentTarget)
   }
 
+  const handleClick2 = event => {
+    setAnchorE2(event.currentTarget)
+  }
+
   const handleClosex = () => {
     setAnchorEl(null)
+    setAnchorE2(null)
   }
+
   const [modalOpen, setModalOpen] = useState(false)
 
   const handleOpenModal = () => {
@@ -222,13 +265,16 @@ const Topcard = ({
       setModalOpen(true)
     }
   }
+
   const handleCloseModal = () => setModalOpen(false)
 
-  const handleFilterChange = filter => {
-    setSelectedFilters(prev => (prev.includes(filter) ? prev.filter(item => item !== filter) : [...prev, filter]))
-  }
-  console.log(selectedQuestions, 'sec123')
-  const difficultyFilters = ['Low', 'Medium', 'High']
+  // const handleFilterChange = filter => {
+  //   setSelectedFilters(prev => (prev.includes(filter) ? prev.filter(item => item !== filter) : [...prev, filter]))
+  // }
+
+  console.log(selectedFilters, 'sec123')
+
+  // const difficultyFilters = ['Low', 'Medium', 'High']
 
   const importanceFilters = ['Low', 'Medium', 'High']
 
@@ -340,17 +386,17 @@ const Topcard = ({
             <Button
               variant='outlined'
               color='secondary'
-              onClick={handleClick}
+              onClick={handleClick2}
               style={{ textTransform: 'none', margin: '8px 0' }}
               endIcon={<i class='ri-arrow-down-s-line'></i>}
             >
               Difficulty
             </Button>
-            <Menu anchorEl={anchorEl} open={open} onClose={handleClosex}>
-              {difficultyFilters.map(filter => (
-                <MenuItem key={filter} onClick={() => handleFilterChange(filter)}>
-                  <Checkbox checked={selectedFilters.includes(filter)} />
-                  <ListItemText primary={filter} />
+            <Menu anchorEl={anchorE2} open={open2} onClose={handleClosex}>
+              {difficultData?.map(filter => (
+                <MenuItem key={filter} onClick={() => handleDifficultchange(filter.guid)}>
+                  <Checkbox checked={difficultSelect.includes(filter.title)} />
+                  <ListItemText primary={filter.title} />
                 </MenuItem>
               ))}
             </Menu>
@@ -367,12 +413,16 @@ const Topcard = ({
               Importance
             </Button>
             <Menu anchorEl={anchorEl} open={open} onClose={handleClosex}>
-              {importanceFilters.map(filter => (
-                <MenuItem key={filter} onClick={() => handleFilterChange(filter)}>
-                  <Checkbox checked={selectedFilters.includes(filter)} />
-                  <ListItemText primary={filter} />
-                </MenuItem>
-              ))}
+              {importanceData?.map(filter => {
+                console.log('Current filter:', filter) // Log each filter
+
+                return (
+                  <MenuItem key={filter.title} onClick={() => handleFilterChange(filter.guid)}>
+                    <Checkbox checked={selectedFilters.includes(filter.guid)} />
+                    <ListItemText primary={filter.title} />
+                  </MenuItem>
+                )
+              })}
             </Menu>
             <SortingType onSortChange={handleSortChange} />
 
@@ -427,6 +477,7 @@ const Topcard = ({
                   className='ri-delete-bin-6-line'
                   // style={{ color: '#8080808C' }}
                   style={{ color: deleteIconActive ? '#007AFF' : '#8080808C' }}
+
                   // onClick={e => handleDeleteClick(e, 1)}
                 />
               </Button>
@@ -443,6 +494,7 @@ const Topcard = ({
                     className='ri-reset-left-line'
                     // style={{ color: '#8080808C' }}
                     style={{ color: deleteIconActive ? '#007AFF' : '#8080808C' }}
+
                     // onClick={e => handleDeleteClick(e, 1)}
                   />
                 </Button>
@@ -617,6 +669,7 @@ const Topcard = ({
               selectedFilters={selectedFilters}
               selectedQuestions={selectedQuestions}
               addQuestionInTest={addQuestionInTest}
+
               // tableData={tableData}
               // addUserData={addUserData}
               // deleteUserData={deleteUserData}
@@ -627,6 +680,7 @@ const Topcard = ({
         </Dialog>
       </Grid>
     </>
+
     // </Card>
   )
 }

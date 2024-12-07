@@ -1,7 +1,27 @@
 import React from 'react'
+
+import { useRouter, useSearchParams } from 'next/navigation'
+
 import { Card, CardContent, Typography, List, ListItem, ListItemText, ListItemIcon } from '@mui/material'
 
 const QuickLinksCard = () => {
+  const router = useRouter()
+  const search = useSearchParams()
+
+  const testGuid = search.get('testguid')
+
+  const manageTest = () => {
+    router.push(`/test/manage?guid=${testGuid}`)
+  }
+
+  const manageSubmission = () => {
+    router.push(`/attempt?guid=${testGuid}`)
+  }
+
+  const takeTest = () => {
+    router.push(`/taketest?guid=${ENG1}`)
+  }
+
   return (
     <Card sx={{ marginTop: 2, boxShadow: 3, borderRadius: 2 }}>
       <CardContent>
@@ -14,6 +34,7 @@ const QuickLinksCard = () => {
               <i className='ri-file-list-line' style={{ color: '#8080808C' }} />
             </ListItemIcon>
             <ListItemText
+              onClick={manageTest}
               primary={
                 <Typography style={{ color: '#007AFF', fontSize: '15px', textDecoration: 'underline' }}>
                   Manage Test
@@ -79,6 +100,7 @@ const QuickLinksCard = () => {
               <i className='ri-file-list-line' style={{ color: '#8080808C' }} />
             </ListItemIcon>
             <ListItemText
+              onClick={takeTest}
               primary={
                 <Typography style={{ color: '#007AFF', fontSize: '15px', textDecoration: 'underline' }}>
                   Take test as student
@@ -92,6 +114,7 @@ const QuickLinksCard = () => {
               <i className='ri-checkbox-line' style={{ color: '#8080808C' }} />
             </ListItemIcon>
             <ListItemText
+              onClick={manageSubmission}
               primary={
                 <Typography style={{ color: '#007AFF', fontSize: '15px', textDecoration: 'underline' }}>
                   Submission

@@ -553,9 +553,9 @@ const TestListTable = ({
                       <div className='flex items-center gap-3'>
                         <Chip
                           variant='tonal'
-                          label={row?.original?.status === '1' ? 'Published' : 'Unpublished'}
+                          label={row?.original?.status === 1 ? 'Published' : 'Unpublished'}
                           size='small'
-                          color={userStatusObj?.[row?.original?.status === '1' ? 'Published' : 'Unpublished']}
+                          color={userStatusObj?.[row?.original?.status === 1 ? 'Published' : 'Unpublished']}
                           className='capitalize'
                         />
                       </div>
@@ -932,7 +932,7 @@ const TestListTable = ({
           onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
         /> */}
       </Card>
-      {categoriesData.length > 0 && (
+      {
         <AddTestDrawer
           open={addUserOpen}
           handleClose={() => setAddUserOpen(!addUserOpen)}
@@ -943,7 +943,7 @@ const TestListTable = ({
           categories={categories}
           getCategories={getCategories}
         />
-      )}
+      }
       {open && (
         <AlertDialogBox
           open={open}

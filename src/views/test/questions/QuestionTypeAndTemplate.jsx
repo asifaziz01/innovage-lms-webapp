@@ -37,6 +37,7 @@ const QuestionTypeAndTemplate = ({ control, errors, questionTypeFixed }) => {
                       <MenuItem value='mcmc'>Multiple Choice Questions</MenuItem>
                       <MenuItem value='tf'>True False</MenuItem>
                       <MenuItem value='essays'>Essays</MenuItem>
+                      <MenuItem value='section'>Section</MenuItem>
                     </Select>
                   )}
                 />

@@ -19,6 +19,7 @@ export default function useDifficultiesApi() {
 
   //trash states
   const [trashMetaData, setTrashMetaData] = useState([])
+  const [difficultData, setDifficultData] = useState([])
 
   //
   const [searchKeyword, setSearchKeyword] = useState('')
@@ -44,13 +45,14 @@ export default function useDifficultiesApi() {
 
     try {
       axios
-        .post(`${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/difficulty/all`, formData, {
+        .post(`${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/difficulty/all`, formData, {
           Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
           Network: 'dev369',
           accept: 'application/json'
         })
         ?.then(res => {
           setData(res?.data?.payload?.data)
+          setDifficultData(res?.data?.payload?.data)
           setMetaData(res?.data?.payload?.meta)
         })
     } catch (error) {
@@ -82,7 +84,7 @@ export default function useDifficultiesApi() {
     try {
       axios
         .post(
-          `${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/difficulty/create`,
+          `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/difficulty/create`,
 
           // userData
           formData,
@@ -113,7 +115,7 @@ export default function useDifficultiesApi() {
     try {
       axios
         .post(
-          `${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/difficulty/${guid}/add_to_questions`,
+          `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/difficulty/${guid}/add_to_questions`,
 
           // userData
           formData,
@@ -143,7 +145,7 @@ export default function useDifficultiesApi() {
     try {
       axios
         .post(
-          `${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/difficulty/${guid}/remove_from_questions`,
+          `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/difficulty/${guid}/remove_from_questions`,
 
           // userData
           formData,
@@ -166,7 +168,7 @@ export default function useDifficultiesApi() {
   const viewDifficulty = guid => {
     // try {
     return axios.post(
-      `${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/difficulty/${guid}/view`,
+      `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/difficulty/${guid}/view`,
       {},
       {
         Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
@@ -186,7 +188,7 @@ export default function useDifficultiesApi() {
     }
 
     try {
-      axios.post(`${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/difficulty/${guId}/edit`, formData).then(res => {
+      axios.post(`${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/difficulty/${guId}/edit`, formData).then(res => {
         alertMessages(theme, 'success', res?.data?.message)
       })
 
@@ -207,7 +209,7 @@ export default function useDifficultiesApi() {
     try {
       axios
         .post(
-          `${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/difficulty/trash`,
+          `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/difficulty/trash`,
 
           // userData
           formData,
@@ -238,7 +240,7 @@ export default function useDifficultiesApi() {
 
     try {
       axios
-        .post(`${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/difficulty/delete`, formData, {
+        .post(`${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/difficulty/delete`, formData, {
           Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
           Network: 'dev369',
           accept: 'application/json'
@@ -265,7 +267,7 @@ export default function useDifficultiesApi() {
     try {
       axios
         .post(
-          `${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/difficulty/restore`,
+          `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/difficulty/restore`,
 
           // userData
           formData,
@@ -306,7 +308,7 @@ export default function useDifficultiesApi() {
 
     try {
       axios
-        .post(`${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/difficulty/trashed`, formData, {
+        .post(`${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/difficulty/trashed`, formData, {
           Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
           Network: 'dev369',
           accept: 'application/json'
@@ -330,6 +332,8 @@ export default function useDifficultiesApi() {
   return {
     data,
     trashedData,
+    difficultData,
+    setDifficultData,
     setData,
     fetchData,
     addDifficultyData,

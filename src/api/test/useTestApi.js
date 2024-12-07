@@ -411,7 +411,7 @@ export default function useTestApi() {
     try {
       axios
         .post(
-          `${USER_MODULE_ENDPOINTS}/status/${guid}`,
+          `${process.env.NEXT_PUBLIC_LOCAL_BASEPATH_V2}test/${guid}/status`,
 
           // userData
           formData,

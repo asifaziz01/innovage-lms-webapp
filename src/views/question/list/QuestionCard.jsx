@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+
+import { useRouter, useSearchParams } from 'next/navigation'
+
 import {
   Card,
   CardHeader,
@@ -17,13 +20,17 @@ import {
   Box,
   Menu
 } from '@mui/material'
+import { styled } from '@mui/material/styles'
+
+import axios from 'axios'
+
+import { toast } from 'react-toastify'
+
 import useDraggableList from './useDraggableList' // Import the custom hook
 import Reactquill from './Reactquill'
-import axios from 'axios'
-import { toast } from 'react-toastify'
+
 import Tablefor from '../import/view/Tablefor'
 import AddUserDrawer from './AddUserDrawer'
-import { useSearchParams } from 'next/navigation'
 
 const QuestionCard = ({
   handleSelectAllClick,
@@ -37,7 +44,12 @@ const QuestionCard = ({
   showAnswers,
   setShowAnswers,
   handleCollapseAll,
-  toggleAnswer,
+  handleExpandAllButton,
+  manageCheckboxState,
+  handleEdit,
+  formattedQuestions,
+
+  // toggleAnswer,
   questions,
   selectedQuestions,
   setSelectedQuestions,
@@ -58,8 +70,15 @@ const QuestionCard = ({
 
   const [anchorEl, setAnchorEl] = useState(null)
   const search = useSearchParams()
+
   const guid = search.get('guid')
+  const testGuid = search.get('testguid')
+  const sectionGuid = search.get('sectionguid')
   const open = Boolean(anchorEl)
+  const isInitialRender = useRef(true) //
+
+  console.log(showAnswers, 'showanswer123')
+
   const [settings, setSettings] = useState({
     questionType: 'mcmc',
     marksPerQuestion: 2,
@@ -77,8 +96,9 @@ const QuestionCard = ({
   // Use useEffect to update questionData whenever questions prop changes
   useEffect(() => {
     setQuestionData(questions) // Sync the questions prop with questionData state
-  }, [questions, toggleAnswer])
+  }, [questions])
   console.log
+
   // Function to handle checkbox change
   const handleCheckboxChange = (questionId, isChecked) => {
     if (isChecked) {
@@ -87,25 +107,31 @@ const QuestionCard = ({
       setSelectedQuestions(selectedQuestions.filter(id => id !== questionId)) // Remove from list
     }
   }
+
   console.log(selectedQuestions, 'questionsselected')
+
   const handleExpandClick = () => {
     setIsExpanded(!isExpanded)
   }
+
   // Handle when the user clicks on a question to edit
   const handleEditClick = (questionId, currentText) => {
     setEditingQuestionId(questionId) // Set the question ID being edited
     setEditedText(currentText) // Set the current text in the input field
     setEditingAnswerId(null)
   }
+
   useEffect(() => {
-    if (questionData.length > 0) {
+    if (isInitialRender.current && questionData.length > 0) {
       const allQuestionIds = questionData.map(question => question.id)
-      // Check if the state is already the same before setting it
-      if (JSON.stringify(allQuestionIds) !== JSON.stringify(showAnswers)) {
-        setShowAnswers(allQuestionIds)
-      }
+
+      setShowAnswers(allQuestionIds)
+      isInitialRender.current = false // Set flag to false
     }
-  }, [questionData, showAnswers])
+  }, [questionData])
+
+  console.log(showAnswers, 'show')
+
   // Handle when the user types in the input field
 
   // Handle when the user presses Enter or blurs out of the input
@@ -116,61 +142,92 @@ const QuestionCard = ({
     setEditingQuestionId(null)
   }
 
+  const toggleAnswer = questionId => {
+    setShowAnswers(prevAnswers =>
+      prevAnswers.includes(questionId) ? prevAnswers.filter(id => id !== questionId) : [...prevAnswers, questionId]
+    )
+  }
+
   // Handle answer edit change
   const handleEditAnswerChange = e => {
     setEditedAnswer(e.target.value)
   }
+
   console.log(selectAll, 'selectAll')
+
   // Handle saving the edited answer
   const handleEditAnswerSave = (questionId, answerIndex) => {
     const updatedQuestions = questionList.map(question => {
       if (question.id === questionId) {
         const updatedOptions = question.options.map((option, index) => (index === answerIndex ? editedAnswer : option))
+
         return { ...question, options: updatedOptions }
       }
+
       return question
     })
+
     setEditingAnswerId(null) // Stop editing mode for answer
     // You would ideally call a function here to save the changes to the server or state
     console.log('Updated questions with edited answer:', updatedQuestions)
   }
+
   useEffect(() => {}, [questions, isVisible, expandedPanels, questions])
-  console.log(editedAnswer, 'gg')
+  console.log(selectedQuestions, 'gg')
 
   const MAX_QUESTIONS_PER_BATCH = 40
 
   const handleImportSelected = async () => {
     if (selectedQuestions.length === 0) {
       toast.error('Please select at least one question.')
+
       return
     }
 
-    const selectedQuestionData = questionData.filter(q => selectedQuestions.includes(q.id))
+    const selectedQuestionData = formattedQuestions.filter(q => selectedQuestions.includes(q.id))
     const batches = []
+
     for (let i = 0; i < selectedQuestionData.length; i += MAX_QUESTIONS_PER_BATCH) {
       batches.push(selectedQuestionData.slice(i, i + MAX_QUESTIONS_PER_BATCH))
     }
 
+    console.log(batches, 'batchess')
+
     try {
       for (const batch of batches) {
         const formData = new FormData()
+
         if (guid) {
           formData.append('category', guid)
         }
+
+        if (testGuid) {
+          formData.append('test_guid', testGuid)
+        }
+
+        if (sectionGuid) {
+          formData.append('section_guid', sectionGuid)
+        }
+
         batch.forEach((question, index) => {
           formData.append(`questions[${index}][question]`, question.text)
-          formData.append(`questions[${index}][difficulty]`, settings.difficultyLevel)
-          formData.append(`questions[${index}][test_name]`, settings.testName)
-          formData.append(`questions[${index}][type]`, settings.questionType)
+
+          // formData.append(`questions[${index}][difficulty]`, settings.difficultyLevel)
+          // formData.append(`questions[${index}][test_name]`, settings.testName)
+          formData.append(`questions[${index}][type]`, question.type)
           formData.append(`questions[${index}][importance]`, settings.importance)
           formData.append(`questions[${index}][marks]`, settings.marksPerQuestion)
           formData.append(`questions[${index}][category]`, guid)
           formData.append(`questions[${index}][neg_marks]`, settings.negativeMarks)
           formData.append(`questions[${index}][time]`, settings.timeAllowed)
 
-          question.options.forEach((choice, choiceIndex) => {
-            formData.append(`questions[${index}][choice][${choiceIndex}]`, choice)
-          })
+          if (question?.options?.length > 0) {
+            question.options.forEach((choice, choiceIndex) => {
+              formData.append(`questions[${index}][choice][${choiceIndex}]`, choice)
+            })
+          } else {
+            formData.append(`questions[${index}][choice]`, '0')
+          }
 
           if (question.correctanswer && question.correctanswer.length > 0) {
             question.correctanswer.forEach((correctAnswer, correctAnswerIndex) => {
@@ -196,18 +253,27 @@ const QuestionCard = ({
       toast.error('Failed to import selected questions.')
     }
   }
+
   const handleImportAll = async () => {
     console.log('hyeeeee')
+
     if (!questionData || questionData.length === 0) {
       toast.error('No questions available to import.')
+
       return
     }
 
     // Create a new FormData object
     const formData = new FormData()
+
     if (guid) {
       formData.append('category', guid)
     }
+
+    if (testGuid) {
+      formData.append('test_guid', testGuid)
+    }
+
     // Loop through all questions and append to formData
     questionData.forEach((question, index) => {
       // Append question fields in the required form-data format
@@ -255,12 +321,13 @@ const QuestionCard = ({
     }
   }
 
-  const handleExpandAllButton = () => {
-    setIsVisible(true) // Show the questions
-    setExpandedPanels(questionData.map(q => q.id)) // Expand all panels
-    setShowAnswers(questionData.map(q => q.id)) // Reset showing answers (no answers shown)
-    // setIsExpandedAll(true) // Set the expanded state
-  }
+  // const handleExpandAllButton = () => {
+  //   setIsVisible(true) // Show the questions
+  //   setExpandedPanels(questionData.map(q => q.id)) // Expand all panels
+  //   setShowAnswers(questionData.map(q => q.id)) // Reset showing answers (no answers shown)
+  //   // setIsExpandedAll(true) // Set the expanded state
+  // }
+
   const handleClick = event => {
     setAnchorEl(event.currentTarget)
   }
@@ -268,16 +335,21 @@ const QuestionCard = ({
   const handleClose = () => {
     setAnchorEl(null)
   }
+
   const handleDeleteClick = async () => {
     if (selectedQuestions.length === 0) {
       toast.error('Please select at least one question to delete.')
+
       return
     }
+
     console.log(isVisible, 'jjjjj')
+
     // Get selected questions' GUIDs
     const selectedQuestionGuids = questionData
       .filter(question => {
         console.log(question, 'uuuuuu') // Log each question object
+
         return selectedQuestions.includes(question.id) // Filter selected questions by their id
       })
       .map(question => question.guid) // Map to GUID
@@ -289,6 +361,7 @@ const QuestionCard = ({
       await axios.delete(
         endpoint,
         {},
+
         // Send the GUIDs in the request body
         {
           headers: {
@@ -298,6 +371,7 @@ const QuestionCard = ({
           }
         }
       )
+
       // Filter out deleted questions from local state
       const updatedQuestionData = questionData.filter(question => !selectedQuestionGuids.includes(question.guid))
 
@@ -310,11 +384,15 @@ const QuestionCard = ({
   }
 
   console.log(questions, 'showanswert')
+
   const decodeHtmlEntities = html => {
     const txt = document.createElement('textarea')
+
     txt.innerHTML = html
+
     return txt.value // Return the decoded string
   }
+
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
   const handleOpenSettings = () => {
@@ -324,10 +402,13 @@ const QuestionCard = ({
   const handleCloseSettings = () => {
     setIsSettingsOpen(false)
   }
+
   const handleSaveSettings = settings => {
     setIsSettingsOpen(false)
+
     // Apply the settings globally or pass them to the relevant component
   }
+
   const setDifficulty = value => setSettings(prev => ({ ...prev, difficultyLevel: value }))
   const setTestName = value => setSettings(prev => ({ ...prev, testName: value }))
   const setCategory = value => setSettings(prev => ({ ...prev, questionType: value }))
@@ -336,7 +417,9 @@ const QuestionCard = ({
   const setNegativeMarks = value => setSettings(prev => ({ ...prev, negativeMarks: value }))
   const setTime = value => setSettings(prev => ({ ...prev, timeAllowed: value }))
   const setTimeUnit = value => setSettings(prev => ({ ...prev, timeUnit: value }))
+
   console.log(questions.length, 'questiontype')
+
   return (
     <>
       {check && (
@@ -393,6 +476,7 @@ const QuestionCard = ({
                   variant='contained'
                   startIcon={<i className='ri-download-2-line' style={{ color: 'white' }} />}
                   onClick={handleImportAll}
+
                   // disabled={selectedQuestions.length !== questions.length} // Disable if not all questions are selected
                 >
                   Import All
@@ -406,241 +490,567 @@ const QuestionCard = ({
         {isVisible && (
           <CardContent>
             {questionData.length > 0 &&
-              questionData.map((question, index) => {
-                const processedText =
-                  question?.text !== null && question?.text?.startsWith('#')
-                    ? question?.text?.slice(1).trim()
-                    : question?.text
-                console.log(question && question.correctanswer && question.correctanswer[index] === '1', 'questiondemo')
-                return (
-                  <>
+              questionData.map((section, sectionIndex) => {
+                if (section.type === 'section') {
+                  console.log('Section:', section) // Log the section object
+
+                  return (
                     <div
-                      key={question.id}
-                      expanded={showAnswers.includes(question.id)} // Check if this question is in the expandedPanels array
-                      onDragStart={() => handleDragStart(index)}
-                      onDragOver={handleDragOver}
-                      onDrop={() => handleDrop(index)}
+                      key={section.sectionId}
                       draggable
-                      style={{
-                        borderRadius: 'none',
-                        borderTop: 'none',
-                        border: 'none'
-                        // boxShadow: 'none',
-                        // border: 'none'
-                      }}
-                      sx={{ '& .MuiAccordionSummary-expandIconWrapper': { display: 'none' } }} // Th
+                      onDragStart={() => handleDragStart(sectionIndex)}
+                      onDragOver={handleDragOver}
+                      onDrop={() => handleDrop(sectionIndex)}
+
+                      // style={{ padding: '10px 0', border: '1px solid #ddd', marginBottom: '20px' }}
                     >
-                      <div aria-controls={`panel${question.id}-content`} id={`panel${question.id}-header`}>
-                        <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                          {/* Checkbox for selecting questions */}
-                          <FormControlLabel
-                            aria-label='Select'
-                            control={
-                              <Checkbox
-                                checked={selectedQuestions && selectedQuestions.includes(question.id)} // Check if this question is selected
-                                onChange={e => handleCheckboxChange(question.id, e.target.checked)} // Handle checkbox change
-                              />
-                            }
-                            label=''
-                            style={{ marginRight: '10px' }}
-                          />
-                          {/* Editable question text */}
-                          <Typography
-                            // variant='body2'
-                            style={{
-                              flexGrow: 1,
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              color: 'black'
-                            }}
-                            onClick={() => handleEditClick(question.id, processedText)} // Switch to editing mode on click
-                            dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(`${index + 1}. ${question.text}`) }}
-                          >
-                            {/* {index + 1}. {processedText} */}
-                          </Typography>
-                          <Divider />
+                      <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                        <FormControlLabel
+                          aria-label='Select'
+                          control={
+                            <Checkbox
+                              checked={selectedQuestions && selectedQuestions.includes(section.id)}
+                              onChange={e => manageCheckboxState(section.id, null, e.target.checked, true)}
+                            />
+                          }
+                          label=''
+                          style={{ marginRight: '10px' }}
+                        />
+                        {/* Section Title */}
+                        <Typography
+                          variant='h6'
+                          style={{
+                            flexGrow: 1,
+                            cursor: 'pointer',
+                            textTransform: 'capitalize',
+                            color: 'black'
+                          }}
+                          dangerouslySetInnerHTML={{
+                            __html: decodeHtmlEntities(`${section?.id}.${section.text}`)
+                          }}
+                        />
+                        {/* Toggle Section Button */}
+                        {section?.questions.length > 0 && (
                           <Button
-                            // style={{ marginLeft: '20px' }}
-                            variant='text'
+                            style={{ marginLeft: '20px' }}
                             onClick={e => {
-                              e.stopPropagation() // Prevent accordion toggle
-                              toggleAnswer(question.id)
+                              e.stopPropagation()
+                              toggleAnswer(section.id)
                             }}
                           >
-                            {showAnswers.includes(question.id) ? (
+                            {showAnswers.includes(section.id) ? (
                               <i className='ri-arrow-up-s-line' style={{ color: '#262B43E5' }} />
                             ) : (
                               <i className='ri-arrow-down-s-line' style={{ color: '#262B43E5' }} />
                             )}
                           </Button>
-                        </div>
+                        )}
+                        {/* <Button
+                      style={{ color: 'rgba(38, 43, 67, 0.898)', marginTop: '10px' }}
+                      onClick={() => handleAccordionClick(question?.guid)}
+                    >
+                      <i className='ri-edit-box-line' style={{ color: 'rgba(38, 43, 67, 0.898)' }}></i>
+                    </Button> */}
                       </div>
-                      {showAnswers.includes(question.id) && (
-                        <div
-                        //  style={{
-                        //   marginLeft: '40px' }}
+                      <Box
+                        display='flex'
+                        alignItems='center'
+                        justifyContent='space-between'
+                        style={{ width: '100%', marginRight: '16px' }}
+                      >
+                        {/* Edit button on the left */}
+                        <Box
+                          display='flex'
+                          alignItems='center'
+                          justifyContent='flex-end'
+                          className='hover-container'
+                          style={{ position: 'relative', width: '40px', height: '40px' }}
+                          onClick={() => handleEdit(section.text, section.id)}
                         >
-                          {question.options ? (
-                            <ul style={{ listStyleType: 'none', paddingLeft: '0' }}>
-                              {question.options.map((option, index) => (
-                                <li key={index} style={{ display: 'flex', alignItems: 'center' }}>
-                                  <Checkbox
-                                    checked={question && question.correctanswer && question.correctanswer[index] === 1} // Check if the option is the correct one
-                                    disabled // Disable checkbox to prevent user interaction
-                                    sx={{
-                                      '&.Mui-checked': {
-                                        color: '#34C759' // Green color for the correct answer
-                                      }
+                          <i className='ri-edit-box-line' style={{ color: 'rgba(38, 43, 67, 0.898)' }}></i>
+                          <span className='hover-text'>Edit Section</span>
+                        </Box>
+
+                        {/* Add and Import icons on the right */}
+                      </Box>
+                      {/* <hr
+                    style={{
+                      width: '100%',
+                      border: '0.5px solid #ddd',
+                      margin: '10px 0'
+                    }}
+                  /> */}
+                      {/* Show Questions in Section */}
+                      {showAnswers.includes(section.id) &&
+                        section.questions.map((question, questionIndex) => {
+                          console.log('Question:', question) // Log the question object
+
+                          const processedText = question?.text?.startsWith('#')
+                            ? question?.text?.slice(1).trim()
+                            : question?.text
+
+                          return (
+                            <>
+                              <div
+                                key={question.id}
+                                draggable
+                                onDragStart={() => handleDragStart(questionIndex)}
+                                onDragOver={handleDragOver}
+                                onDrop={() => handleDrop(questionIndex)}
+                                style={{ padding: '10px 0' }}
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                  {/* Checkbox */}
+                                  <FormControlLabel
+                                    control={
+                                      <Checkbox
+                                        checked={selectedQuestions?.includes(question.id)}
+                                        onChange={e => manageCheckboxState(null, question.id, e.target.checked, false)}
+                                      />
+                                    }
+                                    label=''
+                                    style={{ marginRight: '10px' }}
+                                  />
+
+                                  {/* Question Text */}
+                                  <Typography
+                                    variant='body1'
+                                    style={{
+                                      flexGrow: 1,
+                                      cursor: 'pointer',
+                                      textTransform: 'capitalize',
+                                      color: 'black'
+                                    }}
+                                    onClick={() => handleViewPage(question?.guid)}
+                                    dangerouslySetInnerHTML={{
+                                      __html: decodeHtmlEntities(`${questionIndex + 1}. ${processedText}`)
                                     }}
                                   />
-                                  {editingAnswerId === `${question.id}-${index}` ? (
-                                    <Reactquill
-                                      value={editedAnswer}
-                                      onChange={setEditedAnswer}
-                                      style={{ backgroundColor: 'white', flexGrow: 1 }} // Use flexGrow to take remaining space
-                                      onBlur={() => handleEditAnswerSave(question.id, index)} // Save on blur
-                                      onKeyPress={e => {
-                                        if (e.key === 'Enter') handleEditAnswerSave(question.id, index) // Save on pressing Enter
-                                      }}
-                                      autoFocus
-                                      fullWidth
-                                    />
-                                  ) : (
-                                    <Typography
-                                      style={{
-                                        color: question?.correctanswer?.[index] === '1' ? '#34C759' : 'black',
-                                        flexGrow: 1, // Use flexGrow to take remaining space
-                                        cursor: 'pointer'
-                                      }}
-                                      onClick={() => handleEditAnswerClick(question.id, index, option)} // Switch to editing mode on click
-                                      dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(option) }}
-                                    >
-                                      {/* {option} */}
-                                    </Typography>
-                                  )}
-                                </li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <Typography variant='body2' style={{ whiteSpace: 'pre-line' }}>
-                              {question.sampleAnswer}
-                            </Typography>
-                          )}
 
-                          <div expanded={isExpanded} onChange={handleExpandClick} style={{ border: 'none ' }}>
-                            <div></div>
-                            <div>
-                              <Grid container spacing={2}>
-                                {/* Difficulty */}
-                                <Grid item xs={3}>
-                                  <FormControl fullWidth size='small'>
-                                    <InputLabel>Difficulty</InputLabel>
-                                    <Select
-                                      value={settings.difficultyLevel}
-                                      onChange={e => setDifficulty(e.target.value)}
-                                    >
-                                      <MenuItem value='Low'>Low</MenuItem>
-                                      <MenuItem value='Medium'>Medium</MenuItem>
-                                      <MenuItem value='High'>High</MenuItem>
-                                    </Select>
-                                  </FormControl>
-                                </Grid>
-                                {/* Test Name */}
-                                <Grid item xs={3}>
-                                  <FormControl size='small' fullWidth>
-                                    <InputLabel>Test Name</InputLabel>
-                                    <Select value={settings.testName} onChange={e => setTestName(e.target.value)}>
-                                      <MenuItem value='Math Test'>Maths Test</MenuItem>
-                                      <MenuItem value='Exam'>English Test</MenuItem>
-                                    </Select>
-                                  </FormControl>
-                                </Grid>
-                                {/* Category */}
-                                <Grid item xs={3}>
-                                  <FormControl size='small' fullWidth>
-                                    <InputLabel>Category</InputLabel>
-                                    <Select value={settings.questionType} onChange={e => setCategory(e.target.value)}>
-                                      <MenuItem value='mcmc'>MCQ</MenuItem>
-                                      <MenuItem value='True/False'>True/False</MenuItem>
-                                    </Select>
-                                  </FormControl>
-                                </Grid>
-                                {/* Importance */}
-                                <Grid item xs={3}>
-                                  <FormControl fullWidth size='small'>
-                                    <InputLabel>Importance</InputLabel>
-                                    <Select value={settings.importance} onChange={e => setImportance(e.target.value)}>
-                                      <MenuItem value='Low'>Low</MenuItem>
-                                      <MenuItem value='Medium'>Medium</MenuItem>
-                                      <MenuItem value='High'>High</MenuItem>
-                                    </Select>
-                                  </FormControl>
-                                </Grid>
+                                  {/* Toggle Answer Button */}
+                                  <Button
+                                    style={{ marginLeft: '20px' }}
+                                    onClick={e => {
+                                      e.stopPropagation()
+                                      toggleAnswer(question.id)
+                                    }}
+                                  >
+                                    {showAnswers.includes(question.id) ? (
+                                      <i className='ri-arrow-up-s-line' style={{ color: '#262B43E5' }} />
+                                    ) : (
+                                      <i className='ri-arrow-down-s-line' style={{ color: '#262B43E5' }} />
+                                    )}
+                                  </Button>
+                                </div>
 
-                                {/* Marks */}
-                                <Grid item xs={4}>
-                                  <TextField
-                                    fullWidth
-                                    size='small'
-                                    label='Marks'
-                                    type='number'
-                                    value={settings.marksPerQuestion}
-                                    onChange={e => setMarks(e.target.value)}
-                                  />
-                                </Grid>
-                                {/* Negative Marks */}
-                                <Grid item xs={4}>
-                                  <TextField
-                                    fullWidth
-                                    size='small'
-                                    label='Negative Marks'
-                                    type='number'
-                                    value={settings.negativeMarks}
-                                    onChange={e => setNegativeMarks(e.target.value)}
-                                  />
-                                </Grid>
-                                {/* Time */}
-                                <Grid item xs={4} sm={4}>
-                                  <FormControl fullWidth size='small'>
-                                    <Box display='flex' alignItems='center'>
+                                {/* Show Answer Section */}
+                                {showAnswers.includes(question.id) && (
+                                  <div style={{ marginLeft: '40px' }}>
+                                    {question.options && (
+                                      <ul style={{ listStyleType: 'none', paddingLeft: '0' }}>
+                                        {question.options.map((option, idx) => {
+                                          const label = `${String.fromCharCode(97 + idx)}. ${decodeHtmlEntities(option)}`
+
+                                          const isCorrect = question.correctanswer[idx] === 1
+
+                                          return (
+                                            <li
+                                              key={idx}
+                                              style={{
+                                                display: 'flex',
+                                                alignItems: 'center'
+                                              }}
+                                            >
+                                              <Typography
+                                                style={{
+                                                  // color: showCorrectAnswer && isCorrect ? '#34C759' : 'black',
+                                                  cursor: 'pointer'
+                                                }}
+                                                onClick={() => handleEditAnswerClick(question.id, idx, option)}
+                                                dangerouslySetInnerHTML={{
+                                                  __html: label
+                                                }}
+                                              />
+                                            </li>
+                                          )
+                                        })}
+                                      </ul>
+                                    )}
+
+                                    {/* Additional Info */}
+                                  </div>
+                                )}
+                                <Button
+                                  style={{ color: 'rgba(38, 43, 67, 0.898)', marginTop: '10px' }}
+                                  onClick={() => handleAccordionClick(question?.guid)}
+                                >
+                                  <i className='ri-edit-box-line' style={{ color: 'rgba(38, 43, 67, 0.898)' }}></i>
+                                </Button>
+                              </div>
+                              <div expanded={isExpanded} onChange={handleExpandClick} style={{ border: 'none ' }}>
+                                <div></div>
+                                <div>
+                                  <Grid container spacing={2}>
+                                    {/* Difficulty */}
+                                    <Grid item xs={3}>
+                                      <FormControl fullWidth size='small'>
+                                        <InputLabel>Difficulty</InputLabel>
+                                        <Select
+                                          value={settings.difficultyLevel}
+                                          onChange={e => setDifficulty(e.target.value)}
+                                        >
+                                          <MenuItem value='Low'>Low</MenuItem>
+                                          <MenuItem value='Medium'>Medium</MenuItem>
+                                          <MenuItem value='High'>High</MenuItem>
+                                        </Select>
+                                      </FormControl>
+                                    </Grid>
+                                    {/* Test Name */}
+                                    <Grid item xs={3}>
+                                      <FormControl size='small' fullWidth>
+                                        <InputLabel>Test Name</InputLabel>
+                                        <Select value={settings.testName} onChange={e => setTestName(e.target.value)}>
+                                          <MenuItem value='Math Test'>Maths Test</MenuItem>
+                                          <MenuItem value='Exam'>English Test</MenuItem>
+                                        </Select>
+                                      </FormControl>
+                                    </Grid>
+                                    {/* Category */}
+                                    <Grid item xs={3}>
+                                      <FormControl size='small' fullWidth>
+                                        <InputLabel>Category</InputLabel>
+                                        <Select
+                                          value={settings.questionType}
+                                          onChange={e => setCategory(e.target.value)}
+                                        >
+                                          <MenuItem value='mcmc'>MCQ</MenuItem>
+                                          <MenuItem value='True/False'>True/False</MenuItem>
+                                        </Select>
+                                      </FormControl>
+                                    </Grid>
+                                    {/* Importance */}
+                                    <Grid item xs={3}>
+                                      <FormControl fullWidth size='small'>
+                                        <InputLabel>Importance</InputLabel>
+                                        <Select
+                                          value={settings.importance}
+                                          onChange={e => setImportance(e.target.value)}
+                                        >
+                                          <MenuItem value='Low'>Low</MenuItem>
+                                          <MenuItem value='Medium'>Medium</MenuItem>
+                                          <MenuItem value='High'>High</MenuItem>
+                                        </Select>
+                                      </FormControl>
+                                    </Grid>
+
+                                    {/* Marks */}
+                                    <Grid item xs={4}>
                                       <TextField
-                                        label='Time Allowed'
-                                        name='timeAllowed'
-                                        type='number'
-                                        value={settings.timeAllowed}
-                                        onChange={e => setTime(e.target.value)}
-                                        style={{ flex: 2, marginRight: '10px' }} // Adjusts input width
+                                        fullWidth
                                         size='small'
+                                        label='Marks'
+                                        type='number'
+                                        value={settings.marksPerQuestion}
+                                        onChange={e => setMarks(e.target.value)}
                                       />
-                                      <Select
-                                        name='timeUnit'
-                                        value={settings.timeUnit}
-                                        onChange={e => setTimeUnit(e.target.value)}
-                                        style={{ flex: 1 }} // Dropdown size
-                                      >
-                                        <MenuItem value='Second'>Second</MenuItem>
-                                        <MenuItem value='Minute'>Minute</MenuItem>
-                                      </Select>
-                                    </Box>
-                                  </FormControl>
-                                </Grid>
-                              </Grid>
-                            </div>
+                                    </Grid>
+                                    {/* Negative Marks */}
+                                    <Grid item xs={4}>
+                                      <TextField
+                                        fullWidth
+                                        size='small'
+                                        label='Negative Marks'
+                                        type='number'
+                                        value={settings.negativeMarks}
+                                        onChange={e => setNegativeMarks(e.target.value)}
+                                      />
+                                    </Grid>
+                                    {/* Time */}
+                                    <Grid item xs={4} sm={4}>
+                                      <FormControl fullWidth size='small'>
+                                        <Box display='flex' alignItems='center'>
+                                          <TextField
+                                            label='Time Allowed'
+                                            name='timeAllowed'
+                                            type='number'
+                                            value={settings.timeAllowed}
+                                            onChange={e => setTime(e.target.value)}
+                                            style={{ flex: 2, marginRight: '10px' }} // Adjusts input width
+                                            size='small'
+                                          />
+                                          <Select
+                                            name='timeUnit'
+                                            value={settings.timeUnit}
+                                            onChange={e => setTimeUnit(e.target.value)}
+                                            style={{ flex: 1 }} // Dropdown size
+                                          >
+                                            <MenuItem value='Second'>Second</MenuItem>
+                                            <MenuItem value='Minute'>Minute</MenuItem>
+                                          </Select>
+                                        </Box>
+                                      </FormControl>
+                                    </Grid>
+                                  </Grid>
+                                </div>
+                              </div>
+                            </>
+                          )
+                        })}
+
+                      <hr
+                        style={{
+                          width: '100%',
+                          border: '0.5px solid #ddd',
+                          margin: '10px 0'
+                        }}
+                      />
+                    </div>
+                  )
+                } else {
+                  const processedText =
+                    section?.text !== null && section?.text?.startsWith('#')
+                      ? section?.text?.slice(1).trim()
+                      : section?.text
+
+                  console.log(
+                    section && section.correctanswer && section.correctanswer[sectionIndex] === 1,
+                    'questiondemo'
+                  )
+
+                  return (
+                    <>
+                      <div
+                        key={section.id}
+                        expanded={showAnswers.includes(section.id)} // Check if this question is in the expandedPanels array
+                        onDragStart={() => handleDragStart(index)}
+                        onDragOver={handleDragOver}
+                        onDrop={() => handleDrop(index)}
+                        draggable
+                        style={{
+                          borderRadius: 'none',
+                          borderTop: 'none',
+                          border: 'none'
+
+                          // boxShadow: 'none',
+                          // border: 'none'
+                        }}
+                        sx={{ '& .MuiAccordionSummary-expandIconWrapper': { display: 'none' } }} // Th
+                      >
+                        <div aria-controls={`panel${section.id}-content`} id={`panel${section.id}-header`}>
+                          <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                            {/* Checkbox for selecting questions */}
+                            <FormControlLabel
+                              aria-label='Select'
+                              control={
+                                <Checkbox
+                                  checked={selectedQuestions && selectedQuestions.includes(section.id)} // Check if this question is selected
+                                  onChange={e => handleCheckboxChange(section.id, e.target.checked)} // Handle checkbox change
+                                />
+                              }
+                              label=''
+                              style={{ marginRight: '10px' }}
+                            />
+                            {/* Editable question text */}
+                            <Typography
+                              // variant='body2'
+                              style={{
+                                flexGrow: 1,
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                color: 'black'
+                              }}
+                              onClick={() => handleEditClick(section.id, processedText)} // Switch to editing mode on click
+                              dangerouslySetInnerHTML={{
+                                __html: decodeHtmlEntities(`${sectionIndex + 1}. ${section.text}`)
+                              }}
+                            >
+                              {/* {index + 1}. {processedText} */}
+                            </Typography>
+                            <Divider />
+                            <Button
+                              // style={{ marginLeft: '20px' }}
+                              variant='text'
+                              onClick={e => {
+                                e.stopPropagation() // Prevent accordion toggle
+                                toggleAnswer(section.id)
+                              }}
+                            >
+                              {showAnswers.includes(section.id) ? (
+                                <i className='ri-arrow-up-s-line' style={{ color: '#262B43E5' }} />
+                              ) : (
+                                <i className='ri-arrow-down-s-line' style={{ color: '#262B43E5' }} />
+                              )}
+                            </Button>
                           </div>
                         </div>
-                      )}
+                        {showAnswers.includes(section.id) && (
+                          <div
 
-                      <Button
-                        style={{ color: 'rgba(38, 43, 67, 0.898)', marginTop: '10px' }}
-                        onClick={() => onEditClick(question)}
-                      >
-                        <i className='ri-edit-box-line' style={{ color: 'rgba(38, 43, 67, 0.898)' }}></i>
-                      </Button>
-                      <hr style={{ width: '100%', border: '0.5px solid #ddd', margin: '10px 0' }} />
-                    </div>
-                  </>
-                )
+                          //  style={{
+                          //   marginLeft: '40px' }}
+                          >
+                            {section.options ? (
+                              <ul style={{ listStyleType: 'none', paddingLeft: '0' }}>
+                                {section.options.map((option, index) => (
+                                  <li key={index} style={{ display: 'flex', alignItems: 'center' }}>
+                                    <Checkbox
+                                      checked={section && section.correctanswer && section.correctanswer[index] === 1} // Check if the option is the correct one
+                                      disabled // Disable checkbox to prevent user interaction
+                                      sx={{
+                                        '&.Mui-checked': {
+                                          color: '#34C759' // Green color for the correct answer
+                                        }
+                                      }}
+                                    />
+                                    {editingAnswerId === `${section.id}-${index}` ? (
+                                      <Reactquill
+                                        value={editedAnswer}
+                                        onChange={setEditedAnswer}
+                                        style={{ backgroundColor: 'white', flexGrow: 1 }} // Use flexGrow to take remaining space
+                                        onBlur={() => handleEditAnswerSave(section.id, index)} // Save on blur
+                                        onKeyPress={e => {
+                                          if (e.key === 'Enter') handleEditAnswerSave(section.id, index) // Save on pressing Enter
+                                        }}
+                                        autoFocus
+                                        fullWidth
+                                      />
+                                    ) : (
+                                      <Typography
+                                        style={{
+                                          color: section?.correctanswer?.[sectionIndex] === '1' ? '#34C759' : 'black',
+                                          flexGrow: 1, // Use flexGrow to take remaining space
+                                          cursor: 'pointer'
+                                        }}
+                                        onClick={() => handleEditAnswerClick(section.id, index, option)} // Switch to editing mode on click
+                                        dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(option) }}
+                                      >
+                                        {/* {option} */}
+                                      </Typography>
+                                    )}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <Typography variant='body2' style={{ whiteSpace: 'pre-line' }}>
+                                {section.sampleAnswer}
+                              </Typography>
+                            )}
+
+                            <div expanded={isExpanded} onChange={handleExpandClick} style={{ border: 'none ' }}>
+                              <div></div>
+                              <div>
+                                <Grid container spacing={2}>
+                                  {/* Difficulty */}
+                                  <Grid item xs={3}>
+                                    <FormControl fullWidth size='small'>
+                                      <InputLabel>Difficulty</InputLabel>
+                                      <Select
+                                        value={settings.difficultyLevel}
+                                        onChange={e => setDifficulty(e.target.value)}
+                                      >
+                                        <MenuItem value='Low'>Low</MenuItem>
+                                        <MenuItem value='Medium'>Medium</MenuItem>
+                                        <MenuItem value='High'>High</MenuItem>
+                                      </Select>
+                                    </FormControl>
+                                  </Grid>
+                                  {/* Test Name */}
+                                  <Grid item xs={3}>
+                                    <FormControl size='small' fullWidth>
+                                      <InputLabel>Test Name</InputLabel>
+                                      <Select value={settings.testName} onChange={e => setTestName(e.target.value)}>
+                                        <MenuItem value='Math Test'>Maths Test</MenuItem>
+                                        <MenuItem value='Exam'>English Test</MenuItem>
+                                      </Select>
+                                    </FormControl>
+                                  </Grid>
+                                  {/* Category */}
+                                  <Grid item xs={3}>
+                                    <FormControl size='small' fullWidth>
+                                      <InputLabel>Category</InputLabel>
+                                      <Select value={settings.questionType} onChange={e => setCategory(e.target.value)}>
+                                        <MenuItem value='mcmc'>MCQ</MenuItem>
+                                        <MenuItem value='True/False'>True/False</MenuItem>
+                                      </Select>
+                                    </FormControl>
+                                  </Grid>
+                                  {/* Importance */}
+                                  <Grid item xs={3}>
+                                    <FormControl fullWidth size='small'>
+                                      <InputLabel>Importance</InputLabel>
+                                      <Select value={settings.importance} onChange={e => setImportance(e.target.value)}>
+                                        <MenuItem value='Low'>Low</MenuItem>
+                                        <MenuItem value='Medium'>Medium</MenuItem>
+                                        <MenuItem value='High'>High</MenuItem>
+                                      </Select>
+                                    </FormControl>
+                                  </Grid>
+
+                                  {/* Marks */}
+                                  <Grid item xs={4}>
+                                    <TextField
+                                      fullWidth
+                                      size='small'
+                                      label='Marks'
+                                      type='number'
+                                      value={settings.marksPerQuestion}
+                                      onChange={e => setMarks(e.target.value)}
+                                    />
+                                  </Grid>
+                                  {/* Negative Marks */}
+                                  <Grid item xs={4}>
+                                    <TextField
+                                      fullWidth
+                                      size='small'
+                                      label='Negative Marks'
+                                      type='number'
+                                      value={settings.negativeMarks}
+                                      onChange={e => setNegativeMarks(e.target.value)}
+                                    />
+                                  </Grid>
+                                  {/* Time */}
+                                  <Grid item xs={4} sm={4}>
+                                    <FormControl fullWidth size='small'>
+                                      <Box display='flex' alignItems='center'>
+                                        <TextField
+                                          label='Time Allowed'
+                                          name='timeAllowed'
+                                          type='number'
+                                          value={settings.timeAllowed}
+                                          onChange={e => setTime(e.target.value)}
+                                          style={{ flex: 2, marginRight: '10px' }} // Adjusts input width
+                                          size='small'
+                                        />
+                                        <Select
+                                          name='timeUnit'
+                                          value={settings.timeUnit}
+                                          onChange={e => setTimeUnit(e.target.value)}
+                                          style={{ flex: 1 }} // Dropdown size
+                                        >
+                                          <MenuItem value='Second'>Second</MenuItem>
+                                          <MenuItem value='Minute'>Minute</MenuItem>
+                                        </Select>
+                                      </Box>
+                                    </FormControl>
+                                  </Grid>
+                                </Grid>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        <Button
+                          style={{ color: 'rgba(38, 43, 67, 0.898)', marginTop: '10px' }}
+                          onClick={() => onEditClick(section)}
+                        >
+                          <i className='ri-edit-box-line' style={{ color: 'rgba(38, 43, 67, 0.898)' }}></i>
+                        </Button>
+                        <hr style={{ width: '100%', border: '0.5px solid #ddd', margin: '10px 0' }} />
+                      </div>
+                    </>
+                  )
+                }
               })}
           </CardContent>
         )}
@@ -650,4 +1060,5 @@ const QuestionCard = ({
 }
 
 export default QuestionCard
+
 //}tests/save_uploaded_questions/SAM8 api save

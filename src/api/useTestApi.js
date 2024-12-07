@@ -18,7 +18,11 @@ export default function useTestApi() {
   const [submissionsData, setSubmissionsData] = useState([])
   const [categories, setCategories] = useState([])
   const [testData, setTestData] = useState({})
+  const [viewTestData, setViewTestData] = useState([])
+  const [testQuestionData, setTestQuestionData] = useState([])
   const theme = useTheme()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
   console.info(process.env.NEXT_PUBLIC_DOCS_URL)
 
@@ -63,28 +67,37 @@ export default function useTestApi() {
   }
 
   const viewTest = guid => {
-    // try {
-    return axios.get(
-      `${USER_MODULE_ENDPOINTS}/view/${guid}`,
-      {},
-      {
-        Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
-        Network: 'dev369',
-        accept: 'application/json'
-      }
-    )
-
-    // ?.then(res => {
-    //   setTestData(res?.data?.payload)
-    // })
-    // .catch(error => {
-    //   console.error('Error fetching data:', error)
-    // })
-
-    // } catch (error) {
-    // console.error('Error fetching data:', error)
-    // }
+    try {
+      console.log()
+      axios
+        .post(
+          `${NEXT_PUBLIC_LOCAL_BASEPATH_V2}/${guid}/view`,
+          {},
+          {
+            Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
+            Network: 'dev369',
+            accept: 'application/json'
+          }
+        )
+        ?.then(res => {
+          console.log(res, 'payloadData')
+          setViewTestData(res?.data?.payload)
+        })
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    }
   }
+
+  // ?.then(res => {
+  //   setTestData(res?.data?.payload)
+  // })
+  // .catch(error => {
+  //   console.error('Error fetching data:', error)
+  // })
+
+  // } catch (error) {
+  // console.error('Error fetching data:', error)
+  // }
 
   useEffect(() => {
     fetchData()
@@ -283,7 +296,76 @@ export default function useTestApi() {
     }
   }
 
+  const getTestQuestion = async (guid, search) => {
+    try {
+      const endpoint = `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}test/${guid}/questions/all` // Construct the full URL
+      const formData = new FormData()
+
+      if (search) {
+        formData.append('search', search)
+      }
+
+      await axios
+        .post(endpoint, formData, {
+          headers: {
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_LMS_TOKEN}`, // Add Authorization header
+            Network: process.env.NEXT_PUBLIC_LMS_TOKEN, // Add Network header
+            Accept: 'application/json' // Specify the accepted response format
+          }
+        })
+        ?.then(res => {
+          console.log(res, 'payloadData')
+          setTestQuestionData(res?.data?.payload?.data)
+          setLoading(false)
+        })
+        ?.catch(err => {
+          console.log(err, 'message')
+          setError(true)
+          setLoading(false)
+        })
+    } catch (error) {
+      console.error('Error 12345', error)
+      setLoading(false)
+    }
+  }
+
+  const BulkRemoveQuestion = async (questionIds, guid) => {
+    try {
+      const formData = new FormData()
+
+      // Append each question ID with the same key
+      questionIds.forEach(id => {
+        formData.append('questions[]', id)
+      })
+
+      // Send the DELETE request
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}test/${guid}/questions/remove`,
+        {
+          method: 'POST',
+          body: formData
+        },
+        {
+          Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
+          Network: 'dev369',
+          accept: 'application/json'
+        }
+      )
+
+      // return response.data // Return the response data for further processing if needed
+    } catch (error) {
+      console.error('Error deleting questions in bulk:', error)
+      throw error // Rethrow error to be handled in the component if necessary
+    }
+  }
+
   return {
+    BulkRemoveQuestion,
+    getTestQuestion,
+    loading,
+    setLoading,
+    error,
+    testQuestionData,
     deleteTestData,
     updateTestData,
     addTestData,
@@ -296,6 +378,8 @@ export default function useTestApi() {
     handleTestPublish,
     testSettings,
     testSubmissions,
-    submissionsData
+    submissionsData,
+    viewTestData,
+    setViewTestData
   }
 }

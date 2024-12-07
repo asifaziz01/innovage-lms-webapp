@@ -20,8 +20,6 @@ export default function useQuestionApi() {
   const createQuestion = (data, mode) => {
     const formData = new FormData()
 
-    formData.append(`category`, 'SCI38')
-
     if (typeof data === 'object') {
       Object.entries(data).forEach(([key, value]) => {
         if (key === 'choices') {
@@ -31,7 +29,8 @@ export default function useQuestionApi() {
             if (choice.choice) {
               formData.append(`choice[${i}]`, choice.choice)
               formData.append(`correct_answer[${i}]`, choice.correct_answer ? '1' : '0')
-              formData.append(`order[${i}]`, i)
+
+              // formData.append(`order[${i}]`, i)
             }
 
             if (choice.feedback) {
@@ -54,7 +53,7 @@ export default function useQuestionApi() {
       axios
 
         // .post(`${process.env.NEXT_PUBLIC_BASEPATH}tests/create_question`,formData,{
-        .post(`${process.env.NEXT_PUBLIC_BASEPATH_V2}qb/questions/create`, formData, {
+        .post(`${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/questions/create`, formData, {
           Authorization: 'Bearer 2a59a7e2800e94ae59a44b4084393b5b5df9d6a0ccfab01bd17ba5f9dc58f262',
           Network: 'dev369',
           accept: 'application/json'

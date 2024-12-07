@@ -149,11 +149,9 @@ const QuestionSettings = ({ control, errors }) => {
                 rules={{ required: true }}
                 render={({ field }) => (
                   <Select label='Select difficulty level *' {...field} error={Boolean(errors.difficulty)}>
-                    {data?.map(item => (
-                      <MenuItem value={item?.guid} onClick={() => alert('hello')}>
-                        {item?.title}
-                      </MenuItem>
-                    ))}
+                    <MenuItem value='high'>High</MenuItem>
+                    <MenuItem value='medium'>Medium</MenuItem>
+                    <MenuItem value='low'>Low</MenuItem>
                   </Select>
                 )}
               />

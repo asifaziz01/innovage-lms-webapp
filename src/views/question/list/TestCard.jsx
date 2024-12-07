@@ -1,23 +1,54 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+
+import { useRouter, useSearchParams } from 'next/navigation'
+
 import { Card, CardContent, Typography, Switch, Grid, Chip, Divider } from '@mui/material'
 
-const TestCard = () => {
+import useTestApi from '@/api/test/useTestApi'
+
+const TestCard = ({ testQuestionData, isPublished, setIsPublished, getTestQuestion, searchkeyword }) => {
   // State to track if the test is published or unpublished
-  const [isPublished, setIsPublished] = useState(false)
+
+  const { handleTestPublish } = useTestApi()
+  const search = useSearchParams()
+  const testguid = search.get('testguid')
+
+  useEffect(() => {
+    // Update the isPublished state when testQuestionData changes
+    if (testQuestionData) {
+      setIsPublished(testQuestionData.status === 1)
+    }
+  }, [testQuestionData])
 
   // Function to handle switch toggle
-  const handleSwitchChange = event => {
-    setIsPublished(event.target.checked)
+  const handleSwitchChange = async event => {
+    const newPublishState = event.target.checked
+
+    setIsPublished(newPublishState)
+
+    try {
+      // Call the API with 1 for published and 0 for unpublished
+      const publishStatus = newPublishState ? 1 : 0
+
+      await handleTestPublish(testguid, publishStatus)
+      console.log('Test publish state updated:', publishStatus)
+      await getTestQuestion(testguid, searchkeyword)
+    } catch (error) {
+      console.error('Failed to update publish state:', error)
+
+      // Revert the switch state in case of an error
+      setIsPublished(!newPublishState)
+    }
   }
 
   return (
-    <Card style={{ maxWidth: 300, margin: '0 auto', boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.1)', marginTop: '50px' }}>
+    <Card style={{ margin: '0 auto', boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.1)' }}>
       <CardContent>
         <Typography variant='h6' gutterBottom>
           Test Title
         </Typography>
         <Typography variant='body2' color='textSecondary'>
-          Mathematics
+          {testQuestionData?.title}
         </Typography>
         <Divider style={{ marginTop: '10px' }} />
         <Grid container style={{ marginTop: 10 }}>

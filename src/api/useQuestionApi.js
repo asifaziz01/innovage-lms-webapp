@@ -22,8 +22,12 @@ export default function useQuestionApi() {
     //   type: userData?.type,
     //   details: userData?.description
     // }
-
+    console.log(data, 'checkData')
     const formData = new FormData()
+
+    if (data.sectionguid) {
+      formData.append('section_guid', data.sectionguid)
+    }
 
     if (typeof data === 'object') {
       Object.entries(data).forEach(([key, value]) => {
@@ -43,7 +47,7 @@ export default function useQuestionApi() {
 
     try {
       axios
-        .post(`${QUESTION_MODULE_ENDPOINTS}/${data?.guid}`, formData, {
+        .post(`${process.env.NEXT_PUBLIC_LMS_API_URL_V2}/${data?.guid}`, formData, {
           Authorization: 'Bearer a87afd2b2930bc58266c773f66b78b57e157fef39dd6fa31f40bfd117c2c26b1',
           Network: 'dev369',
           accept: 'application/json'

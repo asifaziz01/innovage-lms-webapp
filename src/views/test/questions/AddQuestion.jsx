@@ -52,10 +52,14 @@ import QuestionSettings from './QuestionSettings'
 import FilterHeader from '@/components/globals/FilterHeader'
 import { alertMessages } from '@/components/globals/AlertMessages'
 import useQuestionApi from '@/api/test/useQuestionApi'
+import useQuestionModuleApi from '@/api/useQuestionModuleApi'
 
+// import { useSearchParams } from 'next/navigation'
 const AddQuestion = () => {
   const searchParams = useSearchParams()
   const guid = searchParams.get('guid')
+  const section_guid = searchParams.get('sectionguid')
+  const test_guid = searchParams.get('testguid')
   const { createQuestion, editQuestion, QId, questionTypeFixed } = useQuestionApi()
   const [openQuestionFeedback, setOpenQuestionFeedback] = useState(false)
   const [questionType, setQuestionType] = useState('mcmc')
@@ -64,6 +68,8 @@ const AddQuestion = () => {
   const [template, setTemplate] = useState('template_1')
   const [unit, setUnit] = useState('second') // Default unit
   const [files, setFiles] = useState([])
+  const { addSectionInTest } = useQuestionModuleApi
+  const tguid = searchParams.get('tguid')
 
   console.info(files)
   const theme = useTheme()
@@ -80,6 +86,7 @@ const AddQuestion = () => {
 
   const router = useRouter()
 
+  // const search = useSearchParams()
   const {
     control,
     reset: resetForm,
@@ -111,6 +118,8 @@ const AddQuestion = () => {
   const [saveAsNew, setSaveAsNew] = useState(false)
 
   // console.info(selectedValue)
+  console.log(selectedValue, 'selectedValue')
+  console.log(fieldValues?.type, 'field value')
 
   const handleUnitChange = event => {
     setUnit(event.target.value)
@@ -164,7 +173,7 @@ const AddQuestion = () => {
       } else {
         response = await createQuestion(
           {
-            guid,
+            // guid,
             ...data,
             ...(selectedValue === 'essays' && {
               answer: fieldValues?.answer
@@ -174,7 +183,9 @@ const AddQuestion = () => {
             }),
             question: fieldValues?.question,
             answer_feedback: fieldValues?.answer_feedback,
-            userfile: files
+            userfile: files,
+            ...(section_guid && { section_guid }),
+            ...(test_guid && { test_guid })
           },
           saveAsNew ? true : false
         )
@@ -189,6 +200,18 @@ const AddQuestion = () => {
       console.error('Error during form submission:', error)
 
       // toast.error('An unexpected error occurred.')
+    }
+
+    if (section_guid) {
+      router.push('/question/allquestion')
+    }
+
+    if (section_guid && tguid) {
+      router.push(`/question/list?testguid=${tguid}`)
+    }
+
+    if (test_guid) {
+      router.push(`/question/list?testguid=${test_guid}`)
     }
   }
 
@@ -224,102 +247,189 @@ const AddQuestion = () => {
             }}
           >
             <QuestionTypeAndTemplate control={control} errors={errors} questionTypeFixed={questionTypeFixed} />
-            <Grid item xs={12} py={4}>
-              <Card>
-                <CardHeader title='Question' />
-                <CardContent>
-                  <Grid container xs={12}>
-                    <Grid item xs={12}>
-                      <Controller
-                        name='question'
-                        control={control}
-                        rules={{ required: true }}
-                        render={({ field }) => (
-                          <TextEditor
-                            {...field}
-                            onChange={content => field.onChange(content)} // update the form state
-                            value={field.value || ''}
-                            setTextValue={setNQuestion}
-                            autoFocus
-                            fullWidth
-                            quilleditor
+            {selectedValue != 'section' && (
+              <Grid item xs={12} py={4}>
+                <Card>
+                  <CardHeader title='Question' />
+                  <CardContent>
+                    <Grid container xs={12}>
+                      <Grid item xs={12}>
+                        <Controller
+                          name='question'
+                          control={control}
+                          rules={{ required: true }}
+                          render={({ field }) => (
+                            <TextEditor
+                              {...field}
+                              onChange={content => field.onChange(content)} // update the form state
+                              value={field.value || ''}
+                              setTextValue={setNQuestion}
+                              autoFocus
+                              fullWidth
+                              quilleditor
 
-                            // simpleeditor
+                              // simpleeditor
 
-                            // mkeditor
-                          />
+                              // mkeditor
+                            />
+                          )}
+                        />
+                        {errors.question && <FormHelperText error>This field is required.</FormHelperText>}
+                      </Grid>
+                      <Grid item xs={12} py={3}>
+                        <Typography
+                          component='a'
+                          target='_blank'
+                          rel='noopener noreferrer'
+                          style={{ textDecoration: 'underline', textUnderlineOffset: 3, cursor: 'pointer' }} // Optional: to style the link
+                          onClick={() => {
+                            setOpenQuestionFeedback(!openQuestionFeedback)
+                          }}
+                        >
+                          Hint
+                        </Typography>
+                        {openQuestionFeedback && (
+                          <Grid item xs={12} py={3}>
+                            <Controller
+                              name='hint'
+                              control={control}
+                              rules={{ required: true }}
+                              render={({ field }) => (
+                                <TextEditor
+                                  {...field}
+                                  onChange={content => field.onChange(content)} // update the form state
+                                  value={field.value || ''}
+                                  autoFocus
+                                  fullWidth
+                                  quilleditor
+                                />
+                              )}
+                            />
+                          </Grid>
                         )}
-                      />
-                      {errors.question && <FormHelperText error>This field is required.</FormHelperText>}
+                      </Grid>
+                      <Grid item xs={12} py={3}>
+                        <QuestionUpload files={files} setFiles={setFiles} />
+                      </Grid>
                     </Grid>
+                  </CardContent>
+                </Card>
+                <Card
+                  sx={{
+                    marginTop: 3
+                  }}
+                >
+                  <CardContent>
                     <Grid item xs={12} py={3}>
-                      <Typography
-                        component='a'
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        style={{ textDecoration: 'underline', textUnderlineOffset: 3, cursor: 'pointer' }} // Optional: to style the link
-                        onClick={() => {
-                          setOpenQuestionFeedback(!openQuestionFeedback)
-                        }}
-                      >
-                        Hint
-                      </Typography>
-                      {openQuestionFeedback && (
-                        <Grid item xs={12} py={3}>
-                          <Controller
-                            name='hint'
-                            control={control}
-                            rules={{ required: true }}
-                            render={({ field }) => (
-                              <TextEditor
-                                {...field}
-                                onChange={content => field.onChange(content)} // update the form state
-                                value={field.value || ''}
-                                autoFocus
-                                fullWidth
-                                quilleditor
-                              />
-                            )}
-                          />
-                        </Grid>
-                      )}
+                      <QuestionSettings control={control} errors={errors} />
                     </Grid>
+                  </CardContent>
+                </Card>
+              </Grid>
+            )}
+            {selectedValue === 'section' && (
+              <Grid item xs={12} py={4}>
+                <Card>
+                  <CardHeader title='Question' />
+                  <CardContent>
+                    <Grid container xs={12}>
+                      <Grid item xs={12}>
+                        <Controller
+                          name='question'
+                          control={control}
+                          rules={{ required: true }}
+                          render={({ field }) => (
+                            <TextEditor
+                              {...field}
+                              onChange={content => field.onChange(content)} // update the form state
+                              value={field.value || ''}
+                              setTextValue={setNQuestion}
+                              autoFocus
+                              fullWidth
+                              quilleditor
+
+                              // simpleeditor
+
+                              // mkeditor
+                            />
+                          )}
+                        />
+                        {errors.question && <FormHelperText error>This field is required.</FormHelperText>}
+                      </Grid>
+                      <Grid item xs={12} py={3}>
+                        <Typography
+                          component='a'
+                          target='_blank'
+                          rel='noopener noreferrer'
+                          style={{ textDecoration: 'underline', textUnderlineOffset: 3, cursor: 'pointer' }} // Optional: to style the link
+                          onClick={() => {
+                            setOpenQuestionFeedback(!openQuestionFeedback)
+                          }}
+                        >
+                          Hint
+                        </Typography>
+                        {openQuestionFeedback && (
+                          <Grid item xs={12} py={3}>
+                            <Controller
+                              name='hint'
+                              control={control}
+                              rules={{ required: true }}
+                              render={({ field }) => (
+                                <TextEditor
+                                  {...field}
+                                  onChange={content => field.onChange(content)} // update the form state
+                                  value={field.value || ''}
+                                  autoFocus
+                                  fullWidth
+                                  quilleditor
+                                />
+                              )}
+                            />
+                          </Grid>
+                        )}
+                      </Grid>
+                      <Grid item xs={12} py={3}>
+                        <QuestionUpload files={files} setFiles={setFiles} />
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </Card>
+                <Card
+                  sx={{
+                    marginTop: 3
+                  }}
+                >
+                  {/* <CardContent>
                     <Grid item xs={12} py={3}>
-                      <QuestionUpload files={files} setFiles={setFiles} />
+                      <QuestionSettings control={control} errors={errors} />
                     </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
-              <Card
-                sx={{
-                  marginTop: 3
-                }}
-              >
-                <CardContent>
-                  <Grid item xs={12} py={3}>
-                    <QuestionSettings control={control} errors={errors} />
-                  </Grid>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12}>
-              {selectedValue === 'mcmc' && (
-                <McqQuestion mcqFields={mcqFields} setMcqFields={setMcqFields} control={control} />
-              )}
-              {selectedValue === 'tf' && (
-                <TrueFalseQuestion choiceFields={choiceFields} setChoiceFields={setChoiceFields} />
-              )}
-              {selectedValue === 'essays' && <EssaysQuestion control={control} errors={errors} />}
-            </Grid>
+                  </CardContent> */}
+                </Card>
+              </Grid>
+            )}
+            {selectedValue !== 'section' && (
+              <Grid item xs={12}>
+                {selectedValue === 'mcmc' && (
+                  <McqQuestion mcqFields={mcqFields} setMcqFields={setMcqFields} control={control} />
+                )}
+                {selectedValue === 'tf' && (
+                  <TrueFalseQuestion choiceFields={choiceFields} setChoiceFields={setChoiceFields} />
+                )}
+                {selectedValue === 'essays' && <EssaysQuestion control={control} errors={errors} />}
+                {/* {selectedValue === 'section' && <SectionQuestion control={control} errors={errors} />} */}
+              </Grid>
+            )}
             <Grid container item xs={12}>
-              <QuestionFeedback
-                control={control}
-                errors={errors}
-                register={register}
-                setValue={setValue}
-                setFeedback={setFeedback}
-                setAnswerFeedback={setAnswerFeedback}
-              />
+              {selectedValue !== 'section' && (
+                <QuestionFeedback
+                  control={control}
+                  errors={errors}
+                  register={register}
+                  setValue={setValue}
+                  setFeedback={setFeedback}
+                  setAnswerFeedback={setAnswerFeedback}
+                />
+              )}
             </Grid>
             <Grid container item xs={12}>
               <SaveQuestion

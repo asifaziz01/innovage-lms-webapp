@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+
 import {
   Dialog,
   DialogActions,
@@ -27,12 +28,15 @@ const QuestionSettings = ({ open, handleClose, handleSave }) => {
   // Handle input change
   const handleChange = event => {
     const { name, value } = event.target
+
     setSettings({
       ...settings,
       [name]: value
     })
   }
+
   console.log(open, 'open')
+
   // Render the popup modal
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth='sm'>

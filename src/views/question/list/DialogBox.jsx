@@ -1,4 +1,5 @@
 import React from 'react'
+
 import {
   Dialog,
   DialogTitle,
@@ -11,6 +12,7 @@ import {
   TextField,
   IconButton
 } from '@mui/material'
+
 // import { Bold, Italic, FormatSize } from '@mui/icons-material'
 import Reactquill from './Reactquill'
 
@@ -34,12 +36,16 @@ const DialogBox = ({
   handleSubmit,
   handleReset,
   description,
-  setDescription
+  setDescription,
+  edit
 }) => {
+  // const handleSubmit = () => {
+  //   console.log('hye')
+  // }
   return (
-    <Dialog open={open} onClose={handleReset} sx={{ '& .MuiDialog-paper': { width: '600px', maxWidth: '600px' } }}>
+    <Dialog open={open} onClose={handleReset} sx={{ '& .MuiDialog-paper': { width: '1000px', maxWidth: '1000px' } }}>
       <form onSubmit={handleSubmit(data => onSubmit(data))} className='flex flex-col gap-5'>
-        <DialogTitle>Add New Section</DialogTitle>
+        <DialogTitle>Update Section</DialogTitle>
         <DialogContent>
           {/* Title Field */}
           {/* <TextField label='Title *' variant='outlined' fullWidth sx={{ marginBottom: '16px' }} /> */}
@@ -56,7 +62,7 @@ const DialogBox = ({
           <Select defaultValue="Normal" sx={{ width: '120px' }}>
             <MenuItem value="Normal">Normal</MenuItem>
             <MenuItem value="Bold">Bold</MenuItem>
-            
+
           </Select> */}
             <Reactquill
               value={description} // Pass description as value
@@ -87,7 +93,7 @@ const DialogBox = ({
             sx={{ height: '38px', width: '94px' }}
             autoFocus
           >
-            Create
+            {edit ? 'Update' : 'Create'}
           </Button>
         </DialogActions>
       </form>

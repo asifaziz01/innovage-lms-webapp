@@ -1,6 +1,9 @@
 'use client'
 import React, { useEffect, useState, useCallback } from 'react'
+
 import '../../style/styles.css'
+import { useSearchParams, useRouter } from 'next/navigation'
+
 import {
   Grid,
   Box,
@@ -13,6 +16,8 @@ import {
   Card
 } from '@mui/material'
 
+import { useForm } from 'react-hook-form'
+
 import useQuestionModuleApi from '@/api/useQuestionModuleApi'
 import useImportanceApi from '@/api/useImportanceApi'
 
@@ -21,14 +26,15 @@ import Sortingquestion from '../list/Sortingquestion'
 
 import Topcard from '../list/Topcard'
 import FilterHeader from '@/Components/globals/FilterHeader'
-import { useSearchParams } from 'next/navigation'
 import QuestionCardBankModule from '../list/QuestionCardBankModule'
 import useCategoryApi from '@/api/useCategoryApi'
-import { useRouter } from 'next/navigation'
+
 import DialogBox from '../list/DialogBox'
-import { useForm } from 'react-hook-form'
+import useDifficultiesApi from '@/api/useDifficultiesApi'
+
 const debounce = (func, delay) => {
   let timeoutId
+
   return (...args) => {
     clearTimeout(timeoutId)
     timeoutId = setTimeout(() => {
@@ -36,6 +42,7 @@ const debounce = (func, delay) => {
     }, delay)
   }
 }
+
 const AllQuestionList = () => {
   const {
     allquestionData,
@@ -50,14 +57,20 @@ const AllQuestionList = () => {
     trashDifficultyData,
     resetQuestionData,
     BulkDeleteQuestion,
-    addSection
+    addSection,
+    updateSection
   } = useQuestionModuleApi()
-  const { fetchImportanceData } = useImportanceApi
+
+  // const { importanceData, fetchImportanceData } = useImportanceApi()
+  const { fetchImportanceData, importanceData } = useImportanceApi()
+  const { fetchData, difficultData } = useDifficultiesApi()
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
+
   // const [selectAll, setSelectAll] = useState('')
   // const [showCorrectAnswer, setShowCorrectAnswer] = useState(false)
   // const [showCategory, setShowCategory] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  const [trashCurrentPage, setTrashCurrentPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [totalPages, setTotalPages] = useState(1)
   const [expandedPanels, setExpandedPanels] = useState([]) // Tracks which panels are expanded
@@ -69,6 +82,7 @@ const AllQuestionList = () => {
   const [order, setOrder] = useState('')
   const [checkStatus, setCheckStatus] = useState('Active')
   const [categoryGuid, setCategoryGuid] = useState('')
+
   // const [debouncedSearchKeyword, setDebouncedSearchKeyword] = useState(searchKeyword)
   const [localSearch, setLocalSearch] = useState('') // local state for search input
   const [isExpandedAll, setIsExpandedAll] = useState(true) // Tracks if all are expanded
@@ -78,18 +92,30 @@ const AllQuestionList = () => {
   const [showAll, setShowAll] = useState(false)
   const [selectAll, setSelectAll] = useState(false)
   const [description, setDescription] = useState('')
+  const [sectionSelected, setsectionSelected] = useState([])
+  const [isEditing, setIsEditing] = useState(false) // New state to track mode
+  const [currentDescription, setCurrentDescription] = useState('') // Holds the description bein
+  const [sectionGuid, setSectionGuid] = useState('')
+  const [difficultSelect, setDifficultSelect] = useState('')
+
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(() => {
     // Initialize state from localStorage or default to false
     const savedValue = localStorage.getItem('showCorrectAnswer')
+
     return savedValue !== null ? JSON.parse(savedValue) : false
   })
+
   console.log(trashData, 'trash')
+
   const [showCategory, setShowCategory] = useState(() => {
     return JSON.parse(localStorage.getItem('showCategory')) || false // Initialize from localStorage
   })
+
   const [showFields, setShowFields] = useState(() => {
     return JSON.parse(localStorage.getItem('showFields')) || false // Initialize from localStorage
   })
+
+  console.log(sectionGuid, 'guissss')
   const [categories, setCategories] = useState([])
   const [selectedCategory, setSelectedCategory] = useState('Categories')
   const { data } = useCategoryApi()
@@ -97,12 +123,15 @@ const AllQuestionList = () => {
   const guid = param.get('guid')
   const router = useRouter()
   const [isTrash, setIsTrash] = useState(false)
+  const [selectedFilters, setSelectedFilters] = useState('')
+
   // Effect to update localStorage whenever showCorrectAnswer changes
   useEffect(() => {
     localStorage.setItem('showCorrectAnswer', JSON.stringify(showCorrectAnswer))
     localStorage.setItem('showCategory', JSON.stringify(showCategory))
     localStorage.setItem('showFields', JSON.stringify(showFields))
   }, [showCorrectAnswer, showCategory, showFields])
+
   // Debounce effect to delay the API call until the user stops typing
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -111,6 +140,7 @@ const AllQuestionList = () => {
 
     return () => clearTimeout(delayDebounceFn) // Cleanup the timeout
   }, [localSearch, setSearchKeyword])
+
   const {
     control,
     reset: resetForm,
@@ -119,15 +149,26 @@ const AllQuestionList = () => {
   } = useForm({
     defaultValues: {
       description: ''
+
       // type: '',
     }
   })
+
   console.log(description, 'description')
-  const onSubmit = data => {
+
+  const handleEdit = (description, guid) => {
+    setIsEditing(true)
+    setAddUserOpen(true)
+    setCurrentDescription(description) // Set the description to edit
+    setSectionGuid(guid)
+  }
+
+  const onSubmit = async data => {
     const newUser = {
       // avatar: `/images/avatars/${Math.floor(Math.random() * 8) + 1}.png`,
       // title: data.title,
       description: description
+
       // type: data.type,
       // parent: selectedCategories[selectedCategories.length - 1],
       // created_on: moment().format('YYYY-MM-DD HH:mm:ss'),
@@ -137,17 +178,44 @@ const AllQuestionList = () => {
       // status: '0'
     }
 
-    addSection(newUser)
+    if (isEditing) {
+      await updateSection(currentDescription, sectionGuid)
+    } else {
+      await addSection(newUser)
+    }
+
+    fetchDataallquestion({
+      page: currentPage,
+      results_per_page: rowsPerPage
+    })
     setAddUserOpen(!addUserOpen)
     setDescription(null)
+    setCurrentDescription(null)
+    setIsEditing(false)
+
     // setFormData(initialData)
-    resetForm({ description: '' })
+    resetForm({ description: '', currentDescription: '' })
     console.log(description, 'setDescriprion')
   }
+
+  console.log(description, 'description1')
+  console.log(currentDescription, 'description12')
+
+  const handleFilterChange = filter => {
+    setSelectedFilters(prev => (prev.includes(filter) ? prev.filter(item => item !== filter) : [...prev, filter]))
+  }
+
+  const handleDifficultchange = filter => {
+    setDifficultSelect(prev => (prev.includes(filter) ? prev.filter(item => item !== filter) : [...prev, filter]))
+  }
+
   const handleReset = () => {
     setAddUserOpen(!addUserOpen)
+    setIsEditing(false)
+
     // setFormData(initialData)
     setDescription('')
+    setCurrentDescription('')
   }
 
   const handleCategoryTitle = category => {
@@ -161,9 +229,11 @@ const AllQuestionList = () => {
 
   const handleCategoryChange = event => {
     const value = event.target.value
+
     setSelectedCategory(value)
     console.log('Selected Category ID:', value)
   }
+
   console.log(categoryGuid, 'selectedcategory')
   useEffect(() => {
     fetchDataallquestion({
@@ -172,37 +242,58 @@ const AllQuestionList = () => {
       results_per_page: rowsPerPage,
       type: selectedType,
       order: order,
-      category: categoryGuid
+      category: categoryGuid,
+      selectedFilters: selectedFilters,
+      difficultSelect: difficultSelect
     })
-  }, [currentPage, rowsPerPage, selectedType, order, searchKeyword, selectedCategory])
+  }, [currentPage, rowsPerPage, selectedType, order, searchKeyword, selectedCategory, selectedFilters, difficultSelect])
   console.log(selectedType, 'typeselectedchecking')
   useEffect(() => {
     const dataSource = isTrash ? trashData : allquestionData
+
     if (dataSource && dataSource.meta) {
       setTotalPages(Math.ceil(dataSource.meta.total_results / rowsPerPage))
     }
   }, [allquestionData, trashData, rowsPerPage, isTrash])
 
   console.log(allquestionData?.meta?.total_results, 'kkkk')
+
   const handlePageChange = page => {
     setCurrentPage(page)
   }
+
+  useEffect(() => {
+    fetchData()
+  }, [])
 
   const handleRowsPerPageChange = rows => {
     setRowsPerPage(rows)
     setCurrentPage(1) // Reset to the first page when changing rows per page
   }
+
   useEffect(() => {
-    trashDifficultyData()
+    trashDifficultyData({
+      searchKeyword: searchKeyword,
+      page: currentPage,
+      results_per_page: rowsPerPage
+    })
+  }, [searchKeyword, currentPage, rowsPerPage])
+  useEffect(() => {
+    fetchImportanceData()
   }, [])
+
   const showAllQuestion = () => {
     // if(allquestionData.length>0){
     const totalresults = allquestionData?.meta?.total_results
+
     fetchDataallquestion({ results_per_page: totalresults })
     setShowAll(true)
+
     // }
   }
+
   console.log(allquestionData, '1234')
+
   // Handle search input
   const handleSearch = debounce(event => {
     setSearchKeyword(event.target.value) // Update the search keyword
@@ -212,7 +303,9 @@ const AllQuestionList = () => {
 
   // Function to collapse all accordions and hide everything
   const handleCollapseAll = () => {}
+
   console.log(order, 'sssssssssssss')
+
   // Function to toggle the answer visibility of a specific question
   const toggleAnswer = questionId => {
     // setShowAnswers(prev => {
@@ -237,6 +330,14 @@ const AllQuestionList = () => {
     }
   }
 
+  const handleCheckboxSectionChange = (questionId, isChecked) => {
+    if (isChecked) {
+      setsectionSelected(prevSelected => [...prevSelected, questionId])
+    } else {
+      setsectionSelected(prevSelected => prevSelected.filter(id => id !== questionId))
+    }
+  }
+
   // To track which questions have correct answers shown
 
   // Function to toggle showing the correct answer
@@ -247,8 +348,10 @@ const AllQuestionList = () => {
       setDeleteOpen(true)
       setTrashOpen(false)
     }
+
     // setDeleteOpen(true)
   }
+
   const handleResetClick = () => {
     if (selectedQuestions.length > 0) {
       setOpenDeleteDialog(true)
@@ -258,6 +361,7 @@ const AllQuestionList = () => {
   }
 
   console.log(categories, 'categorydata')
+
   // Handle category selection
 
   const handleConfirmDelete = async () => {
@@ -266,17 +370,23 @@ const AllQuestionList = () => {
       if (!isTrash) {
         await BulkDelete(selectedQuestions) // Assuming deleteQuestions accepts an array of IDs
       }
+
       if (isTrash) {
         await BulkDeleteQuestion(selectedQuestions)
       }
+
       console.log('Deleted questions:', selectedQuestions)
       setSelectedQuestions([]) // Clear the selected questions
       setOpenDeleteDialog(false) // Close the dialog
-      fetchDataallquestion({ page: currentPage, results_per_page: rowsPerPage }) // Refresh the questions list after deletion
+      fetchDataallquestion({ page: currentPage, results_per_page: rowsPerPage })
+      trashDifficultyData({ page: currentPage, results_per_page: rowsPerPage })
+
+      // Refresh the questions list after deletion
     } catch (error) {
       console.error('Error deleting questions:', error)
     }
   }
+
   const handleResetData = async () => {
     try {
       // Call the delete function from your API hook
@@ -284,48 +394,60 @@ const AllQuestionList = () => {
       console.log('Deleted questions:', selectedQuestions)
       setSelectedQuestions([]) // Clear the selected questions
       setOpenDeleteDialog(false) // Close the dialog
-      fetchDataallquestion({ page: currentPage, results_per_page: rowsPerPage }) // Refresh the questions list after deletion
+      fetchDataallquestion({ page: currentPage, results_per_page: rowsPerPage })
+      trashDifficultyData({ page: currentPage, results_per_page: rowsPerPage })
+
+      // Refresh the questions list after deletion
     } catch (error) {
       console.error('Error deleting questions:', error)
     }
   }
+
   useEffect(() => {
     if (!sortOption) {
       // If no option is selected (unchecking), reset filters
       setSelectedType(null)
       setOrder(null)
     }
+
     if (sortOption === 'multiple_choice_question') {
       setSelectedType('mcmc')
     }
+
     if (sortOption === 'true_false') {
       setSelectedType('tf')
     }
+
     if (sortOption === 'question_asc') setOrder('title_asc')
+
     if (sortOption === 'question_desc') {
       setOrder('title_desc')
     }
+
     if (sortOption === 'creation_date_asc') {
       setOrder('newest_first')
     }
+
     if (sortOption === 'creation_date_desc') {
       setOrder('newest_last')
     }
+
     // else {
     //   setSelectedType(null)
     //   setOrder(null)
     // }
   }, [sortOption, selectedType])
+
   const handleCancelDelete = () => {
     setOpenDeleteDialog(false)
   }
+
   // State for toggling between active and trash data
 
   const questions =
     (isTrash ? trashData : allquestionData) &&
-    (isTrash ? trashData : allquestionData).data
+    (isTrash ? trashData : allquestionData)?.data?.questions
       ?.filter(item => {
-        console.log(item, 'itemcheck')
         return item.question !== null
       }) // Filter based on status if isTrash is true
       .map((item, index) => ({
@@ -338,28 +460,288 @@ const AllQuestionList = () => {
         creationDate: item?.created_on,
         question_type: item?.question_type,
         neg_marks: item?.neg_marks,
-        time: item?.time
+        time: item?.time,
+        difficulty: item?.difficulty?.title,
+        importance: item?.importance?.title
       }))
-  console.log(questions, 'questionsss')
+
+  const sectionsWithQuestions =
+    (isTrash ? trashData : allquestionData)?.sections
+      ?.filter(item => item?.question !== null) // Filter out sections without valid questions
+      .map((section, index) => {
+        // Map through each section
+
+        const sectionQuestions =
+          section?.questions
+            ?.filter(question => question?.question !== null) // Filter out invalid questions
+            .map((item, questionIndex) => ({
+              // sectionGuid:s allquestionData.sections.guid,
+              guid: item?.guid,
+              id: (currentPage - 1) * rowsPerPage + index * section.questions.length + questionIndex + 1, // Unique id for each question
+              text: item?.question,
+              options: Array.isArray(item?.choices) ? item.choices.map(choice => choice.choice) : [],
+              correctanswer: Array.isArray(item?.choices) ? item.choices.map(choice => choice.is_correct_answer) : [],
+              marks: item?.marks,
+              creationDate: item?.created_on,
+              question_type: item?.question_type,
+              neg_marks: item?.neg_marks,
+              time: item?.time
+            })) || [] // Ensure questions array is always defined
+
+        // Return section with questions
+        return {
+          sectionGuid: section?.guid,
+          sectionId: section?.id,
+          sectionTitle: section?.title,
+          questions: sectionQuestions // Add questions to each section
+        }
+      }) || [] // Ensure empty array if no sections exist
+
+  console.log(allquestionData?.data, 'allquestiondata ')
+
+  // const questionss =
+  //   ((isTrash ? trashData : allquestionData.data) &&
+  //     (isTrash ? trashData : allquestionData?.data?.questions)
+  //       ?.filter(item => {
+  //         // return item.question !== null
+  //         console.log(item, 'checking')
+  //       }) // Filter based on status if isTrash is true
+  //       .map((item, index) => ({
+  //         guid: item?.guid,
+  //         id: (currentPage - 1) * rowsPerPage + index + 1,
+  //         text: item?.question, // No need for null check here since it's already filtered
+  //         options: Array.isArray(item?.choices) ? item.choices.map(choice => choice.choice) : [], // Map the options only if choices is an array
+  //         correctanswer: Array.isArray(item?.choices) ? item.choices.map(choice => choice.is_correct_answer) : [], // Map correct answers only if choices are valid
+  //         marks: item?.marks,
+  //         creationDate: item?.created_on,
+  //         question_type: item?.question_type,
+  //         neg_marks: item?.neg_marks,
+  //         difficulty: item?.difficulty?.title,
+  //         importance: item?.importance?.title,
+  //         time: item?.time,
+  //         sectionData: null // Default sectionData for non-sectioned questions
+  //       }))) ||
+  //   []
+
+  // const sectionsWithQuestionss =
+  //   (isTrash ? trashData : allquestionData)?.sections
+  //     ?.filter(item => item) // Filter out sections without valid questions
+  //     .map((section, index) => {
+  //       // Map through each section
+  //       const sectionQuestions =
+  //         section?.questions
+  //           ?.filter(question => question?.question !== null) // Filter out invalid questions
+  //           .map((item, questionIndex) => ({
+  //             guid: item?.guid,
+  //             id: (currentPage - 1) * rowsPerPage + index * section.questions.length + questionIndex + 1, // Unique id for each question
+  //             text: item?.question,
+  //             options: Array.isArray(item?.choices) ? item.choices.map(choice => choice.choice) : [],
+  //             correctanswer: Array.isArray(item?.choices) ? item.choices.map(choice => choice.is_correct_answer) : [],
+  //             marks: item?.marks,
+  //             creationDate: item?.created_on,
+  //             question_type: item?.question_type,
+  //             neg_marks: item?.neg_marks,
+  //             time: item?.time,
+  //             sectionData: {
+  //               sectionId: section?.id,
+  //               sectionTitle: section?.title
+  //             } // Add section data to each question
+  //           })) || [] // Ensure questions array is always defined
+
+  //       // Return section with questions
+  //       return {
+  //         sectionId: section?.id,
+  //         sectionTitle: section?.title,
+  //         questions: sectionQuestions // Add questions to each section
+  //       }
+  //     }) || []
+
+  // Merge all section questions into the questions array
+  // const allQuestionsWithSections = [...sectionsWithQuestionss.flatMap(section => section), ...questionss]
+
+  // const information = {
+  //   questions: questions,
+  //   sections: sectionsWithQuestions
+  // }
+
+  // console.log(allQuestionsWithSections, 'questionsss')
+
   const filteredQuestions = questions?.filter(question =>
     question.text.toLowerCase().includes(searchKeyword.toLowerCase())
   )
+
   const width = 'auto'
   const deleteIconActive = selectedQuestions.length > 0
+
   console.log(filteredQuestions, 'questions')
+  const newsections = (isTrash ? trashData : allquestionData).data?.filter(item => item.type === 'section') || []
+  const newquestions = (isTrash ? trashData : allquestionData)?.data?.filter(item => item.type !== 'section') || []
+  let globalCounter = (currentPage - 1) * rowsPerPage
+
+  const newsectionsWithQuestions = newsections.map((section, index) => {
+    const sectionQuestions =
+      section?.children
+        ?.filter(question => question?.question !== null) // Filter out invalid questions
+        .map((item, questionIndex) => ({
+          guid: item?.guid,
+
+          id: questionIndex + 1,
+          text: item?.question,
+          options: Array.isArray(item?.choices) ? item.choices.map(choice => choice.choice) : [],
+          correctanswer: Array.isArray(item?.choices) ? item.choices.map(choice => choice.is_correct_answer) : [],
+          marks: item?.marks,
+          creationDate: item?.created_on,
+          question_type: item?.question_type,
+          neg_marks: item?.neg_marks,
+          time: item?.time
+        })) || []
+
+    return {
+      sectionGuid: section?.guid,
+      sectionId: ++globalCounter,
+      sectionTitle: section?.question,
+      questions: sectionQuestions // Add questions to each section
+    }
+  })
+
+  const formattedQuestions = newquestions
+    .filter(item => item.question !== null)
+    .map((item, index) => ({
+      guid: item?.guid,
+      id: ++globalCounter,
+      text: item?.question,
+      options: Array.isArray(item?.choices) ? item.choices.map(choice => choice.choice) : [],
+      correctanswer: Array.isArray(item?.choices) ? item.choices.map(choice => choice.is_correct_answer) : [],
+      marks: item?.marks,
+      creationDate: item?.created_on,
+      question_type: item?.question_type,
+      neg_marks: item?.neg_marks,
+      time: item?.time,
+      difficulty: item?.difficulty?.title,
+      importance: item?.importance?.title
+    }))
+
+  // Map through sections and handle their questions
 
   // Function to handle sort change
   const handleSortChange = sortType => {
     setSortOption(sortType)
   }
+
   const handleStatusToggle = status => {
     setIsTrash(status === 'trash')
   }
+
+  const information = {
+    sections: newsectionsWithQuestions,
+    questions: formattedQuestions
+  }
+
+  let globalCounters = 0
+
+  const formattedData = (isTrash ? trashData : allquestionData).data?.map(item => {
+    globalCounters++ // Increment global counter for each item
+
+    if (item.type === 'section') {
+      return {
+        type: 'section',
+        sectionGuid: item?.guid,
+        sectionId: (currentPage - 1) * rowsPerPage + globalCounters,
+        sectionTitle: item?.question,
+        questions:
+          item?.children
+            ?.filter(question => question?.question !== null)
+            ?.map(child => ({
+              guid: child?.guid,
+
+              text: child?.question,
+              options: Array.isArray(child?.choices) ? child.choices.map(choice => choice.choice) : [],
+              correctanswer: Array.isArray(child?.choices) ? child.choices.map(choice => choice.is_correct_answer) : [],
+              marks: child?.marks,
+              creationDate: child?.created_on,
+              question_type: child?.question_type,
+              neg_marks: child?.neg_marks,
+              time: child?.time
+            })) || []
+      }
+    } else {
+      return {
+        type: 'question',
+        id: (currentPage - 1) * rowsPerPage + globalCounters,
+        guid: item?.guid,
+        text: item?.question,
+        options: Array.isArray(item?.choices) ? item.choices.map(choice => choice.choice) : [],
+        correctanswer: Array.isArray(item?.choices) ? item.choices.map(choice => choice.is_correct_answer) : [],
+        marks: item?.marks,
+        creationDate: item?.created_on,
+        question_type: item?.question_type,
+        neg_marks: item?.neg_marks,
+        time: item?.time,
+        difficulty: item?.difficulty?.title,
+        importance: item?.importance?.title
+      }
+    }
+  })
+
+  console.log(formattedData, 'formattedDate')
+
+  const combinedData = [...newsections, ...newquestions]
+    .sort((a, b) => (a.position || 0) - (b.position || 0)) // Ensure correct order based on `position` if provided
+    .map((item, index) => {
+      if (item.type === 'section') {
+        // Format section
+        return {
+          type: 'section',
+          id: (currentPage - 1) * rowsPerPage + index + 1, // Sequential ID
+          sectionGuid: item?.guid,
+          sectionId: index + 1,
+          sectionTitle: item?.title,
+          questions:
+            item?.children
+              ?.filter(child => child.question !== null)
+              ?.map(child => ({
+                guid: child?.guid,
+                text: child?.question,
+                options: Array.isArray(child?.choices) ? child.choices.map(choice => choice.choice) : [],
+                correctanswer: Array.isArray(child?.choices)
+                  ? child.choices.map(choice => choice.is_correct_answer)
+                  : [],
+                marks: child?.marks,
+                creationDate: child?.created_on,
+                question_type: child?.question_type,
+                neg_marks: child?.neg_marks,
+                time: child?.time
+              })) || []
+        }
+      } else {
+        // Format question
+        return {
+          type: 'question',
+          id: (currentPage - 1) * rowsPerPage + index + 1, // Sequential ID
+          guid: item?.guid,
+          text: item?.question,
+          options: Array.isArray(item?.choices) ? item.choices.map(choice => choice.choice) : [],
+          correctanswer: Array.isArray(item?.choices) ? item.choices.map(choice => choice.is_correct_answer) : [],
+          marks: item?.marks,
+          creationDate: item?.created_on,
+          question_type: item?.question_type,
+          neg_marks: item?.neg_marks,
+          time: item?.time,
+          difficulty: item?.difficulty?.title,
+          importance: item?.importance?.title
+        }
+      }
+    })
+
+  console.log({ combinedData }, 'show')
+  console.log(information, 'checkinformation')
+
   // Sorting logic
   const applySort = questions => {
     const stripHtmlTags = text => {
       const parser = new DOMParser()
       const parsedHtml = parser.parseFromString(text, 'text/html')
+
       return parsedHtml.body.textContent || ''
     }
 
@@ -375,23 +757,33 @@ const AllQuestionList = () => {
 
     return questions
   }
+
   const categoryPage = () => {
     router.push('/categories/list')
   }
-  const addQuestion = () => {
-    router.push('/test/questions')
+
+  const addQuestion = guid => {
+    if (guid) {
+      router.push(`/test/questions?sectionguid=${guid}`)
+    } else {
+      router.push('/test/questions')
+    }
   }
+
   const sortedQuestions = applySort(filteredQuestions)
+
   const parseCategories = (categories, level = 0) => {
     return categories.flatMap(category => [
       { id: category.id, title: category.title, level },
       ...parseCategories(category.children || [], level + 1)
     ])
   }
+
   useEffect(() => {
     if (data) {
       console.log(data, 'data12334')
       const parsedCategories = parseCategories(data)
+
       setCategories(parsedCategories)
     }
   }, [data])
@@ -411,22 +803,28 @@ const AllQuestionList = () => {
       }
     })
   }
+
+  console.log(newsectionsWithQuestions, 'newsectionwithquestion')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
   // Handle the toggle of the category dropdown
   const handleDropdownToggle = () => {
     setIsDropdownOpen(!isDropdownOpen)
   }
+
   const handleSelectAllClick = () => {
     if (selectAll) {
       // Deselect all questions on the current page
       const currentPageQuestionIds = questions.map(question => question.guid)
+
       setSelectedQuestions(prevSelected => prevSelected.filter(id => !currentPageQuestionIds.includes(id)))
     } else {
       // Select all questions on the current page
       const currentPageQuestionIds = questions.map(question => question.guid)
+
       setSelectedQuestions(prevSelected => [...new Set([...prevSelected, ...currentPageQuestionIds])])
     }
+
     setSelectAll(!selectAll) // Toggle the select-all state
   }
 
@@ -440,7 +838,8 @@ const AllQuestionList = () => {
       setSelectAll(false)
     }
   }, [])
-  console.log(selectedQuestions, 'selectedQuestion')
+  console.log(isEditing, 'selectedQuestion')
+
   const handleNextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage(prev => prev + 1)
@@ -453,19 +852,86 @@ const AllQuestionList = () => {
       setCurrentPage(prev => prev - 1)
     }
   }
+
   console.log(questions, 'allselected')
+
+  const handleClose = () => {
+    setAddUserOpen(false)
+    setIsEditing(false)
+    setCurrentDescription('') // Reset description after closing
+  }
+
+  console.log(formattedData, 'information')
+
+  const manageCheckboxState = (sectionGuid, questionGuid, isChecked, isSectionAction) => {
+    console.log(questionGuid, 'questionGuid')
+    const updatedSelectedQuestions = new Set(selectedQuestions)
+
+    if (isSectionAction) {
+      // Section checkbox logic
+      const section = formattedData.find(section => section.sectionGuid === sectionGuid)
+
+      if (section) {
+        if (isChecked) {
+          // Add all questions and the section itself
+          section.questions.forEach(question => updatedSelectedQuestions.add(question.guid))
+          updatedSelectedQuestions.add(sectionGuid)
+        } else {
+          // Remove all questions and the section itself
+          section.questions.forEach(question => updatedSelectedQuestions.delete(question.guid))
+          updatedSelectedQuestions.delete(sectionGuid)
+        }
+      }
+    } else {
+      // Question checkbox logic
+      if (isChecked) {
+        updatedSelectedQuestions.add(questionGuid)
+
+        // Check if all questions in the parent section are selected
+        const parentSection = formattedData.find(
+          section => section?.questions?.some(question => question.guid === questionGuid) // Add safe check for questions
+        )
+
+        if (parentSection) {
+          if (
+            parentSection.questions.every(question => updatedSelectedQuestions.has(question.guid)) &&
+            updatedSelectedQuestions.has(parentSection.sectionGuid) // Ensure the section was not previously deselected
+          ) {
+            // Keep the section unchecked if it was manually deselected
+            updatedSelectedQuestions.delete(parentSection.sectionGuid)
+          }
+        }
+      } else {
+        updatedSelectedQuestions.delete(questionGuid)
+
+        // Ensure section is unchecked if any question is unchecked
+        const parentSection = formattedData.find(
+          section => section?.questions?.some(question => question.guid === questionGuid) // Add safe check for questions
+        )
+
+        if (parentSection) {
+          updatedSelectedQuestions.delete(parentSection.sectionGuid)
+        }
+      }
+    }
+
+    setSelectedQuestions([...updatedSelectedQuestions])
+  }
+
+  console.log(selectedQuestions, 'parent')
+
   return (
     <>
       <FilterHeader title='All Questions' subtitle='Orders placed across your store' link='/test/questions'>
-        <Grid
+        {/* <Grid
           item
           xs={6}
-          // gap={2}
+
           md={2}
           display='flex'
           alignItems='end'
           justifyContent='flex-end'
-          /* Aligns the button to the right */ pb={3}
+          pb={3}
         >
           <Button
             fullWidth
@@ -479,13 +945,14 @@ const AllQuestionList = () => {
                   width: 21.6,
                   height: 21.6
                 }}
+
                 // onClick={e => handleDeleteClick(e, 1)}
               />
             }
           >
             Add Section
           </Button>
-        </Grid>
+        </Grid> */}
         <Grid
           item
           xs={6}
@@ -542,6 +1009,7 @@ const AllQuestionList = () => {
       >
         <Topcard
           handleCategoryChange={handleCategoryChange}
+          {...(importanceData?.length > 0 && { importanceData })}
           handleSortChange={handleSortChange}
           onDeleteClick={handleDeleteClick}
           onResetClick={handleResetClick}
@@ -578,6 +1046,17 @@ const AllQuestionList = () => {
           trash={isTrash}
           showAllQuestion={showAllQuestion}
           handleSelectAllClick={handleSelectAllClick}
+          handleCheckboxSectionChange={handleCheckboxSectionChange}
+          setsectionSelected={setsectionSelected}
+          sectionSelected={sectionSelected}
+          selectedFilters={selectedFilters}
+          setSelectedFilters={setSelectedFilters}
+          handleFilterChange={handleFilterChange}
+          setDifficultSelect={setDifficultSelect}
+          difficultSelect={difficultSelect}
+          difficultData={difficultData}
+          handleDifficultchange={handleDifficultchange}
+
           // isDropdownOpen={isDropdownOpen}
           // setIsDropdownOpen={setIsDropdownOpen}
         />
@@ -585,8 +1064,9 @@ const AllQuestionList = () => {
         {/* <Card> */}
         <Grid container spacing={2}>
           <Grid item xs={12} style={{ display: 'flex', justifyContent: 'space-between' }}>
-            {sortedQuestions && sortedQuestions.length > 0 ? (
+            {formattedData && formattedData.length > 0 ? (
               <QuestionCardBankModule
+                addQuestion={addQuestion}
                 handleSearch={handleSearch}
                 searchKeyword={searchKeyword}
                 setSearchKeyword={setSearchKeyword}
@@ -604,7 +1084,7 @@ const AllQuestionList = () => {
                 handleCollapseAll={handleCollapseAll}
                 handleExpandAll={handleExpandAll}
                 toggleAnswer={toggleAnswer}
-                questions={sortedQuestions}
+                questions={formattedData}
                 isExpandedAll={isExpandedAll}
                 setIsExpandedAll={setIsExpandedAll}
                 handleCheckboxChange={handleCheckboxChange}
@@ -616,7 +1096,9 @@ const AllQuestionList = () => {
                 showCategory={showCategory}
                 showFields={showFields}
                 trash={isTrash}
+                manageCheckboxState={manageCheckboxState}
                 deleteSingleQuestion={deleteSingleQuestion}
+                handleEdit={handleEdit}
               />
             ) : (
               <>
@@ -684,15 +1166,14 @@ const AllQuestionList = () => {
       </Dialog>
       <DialogBox
         open={addUserOpen}
-        onClose={() => setAddUserOpen(!addUserOpen)}
+        onClose={handleClose}
         onSubmit={onSubmit}
-        description={description}
-        setDescription={setDescription}
+        description={isEditing ? currentDescription : description} // Show current description when editing
+        setDescription={isEditing ? setCurrentDescription : setDescription} // Update state accordingly
         handleSubmit={handleSubmit}
         handleReset={handleReset}
-        // userData={data}
-        // setData={setData}
-        edit={false}
+        edit={isEditing} // Pass edit state to the DialogBox
+
         // updateUserData={updateUserData}
         // addUserData={addUserData}
       />

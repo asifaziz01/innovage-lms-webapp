@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+
 import {
   Box,
   TextField,
@@ -14,6 +15,7 @@ import {
   InputLabel,
   Typography
 } from '@mui/material'
+
 import Reactquill from '../list/Reactquill'
 import FilterHeader from '@/Components/globals/FilterHeader'
 import QuestionUpload from '@/views/test/questions/QuestionUpload'
@@ -21,7 +23,7 @@ import QuestionUpload from '@/views/test/questions/QuestionUpload'
 const EditImport = ({ question, onSave }) => {
   const [questionData, setQuestionData] = useState({
     question: question.text || '',
-    type: question.question_type || 'mcmc',
+    type: question.type || 'mcmc',
     marksPerQuestion: '',
     negativeMarks: '',
     timeAllowed: '',
@@ -45,6 +47,7 @@ const EditImport = ({ question, onSave }) => {
   // Handle form input changes
   const handleInputChange = e => {
     const { name, value } = e.target
+
     setQuestionData(prevState => ({
       ...prevState,
       [name]: value
@@ -57,6 +60,7 @@ const EditImport = ({ question, onSave }) => {
       ...choice,
       choice: idx === index ? value : choice.choice
     }))
+
     setQuestionData(prevState => ({
       ...prevState,
       choices: updatedChoices
@@ -69,6 +73,7 @@ const EditImport = ({ question, onSave }) => {
       ...choice,
       correct_answer: idx === index ? '1' : '0'
     }))
+
     setQuestionData(prevState => ({
       ...prevState,
       choices: updatedChoices
@@ -87,12 +92,16 @@ const EditImport = ({ question, onSave }) => {
     // Send updated data back to parent component
     onSave(updatedQuestion)
   }
+
   const questionTypeMapping = {
     mcmc: 'Multiple Choice Question',
     fib: 'Fill in the Blanks',
     tf: 'True/False',
     essay: 'Essay'
   }
+
+  console.log(questionData, 'questionData')
+
   return (
     <>
       <FilterHeader title='Edit Question' subtitle='Update question details' link='/test/list' />
