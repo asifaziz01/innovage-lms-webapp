@@ -55,7 +55,7 @@ const AttemptGroupTestList = () => {
     <>
       <FilterHeader title='Attempts' subtitle='Mathematics Test' />
       <AttemptGroupTestListTable
-        tableData={data}
+        tableData={submissionsData}
         addUserData={addTestData}
         deleteUserData={deleteTestData}
         categories={categories}

@@ -120,12 +120,12 @@ const UserListCards = () => {
     {
       icon: '/images/icons/badge.svg',
       title: 'All Enrollments',
-      handleClick: () => {}
+      handleClick: () => router.push(`/enrollments/?guid=${guid}`)
     },
     {
       icon: '/images/icons/add.svg',
       title: 'Enroll Student',
-      handleClick: () => {}
+      handleClick: () => router.push(`/enrollments/users/?guid=${guid}`)
     }
   ]
 
