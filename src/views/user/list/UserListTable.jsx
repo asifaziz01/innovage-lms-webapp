@@ -198,6 +198,8 @@ const UserListTable = ({ tableData }) => {
     setData(tableData)
   }, [tableData])
 
+  console.log(tableData)
+
   const FilterDropdown = () => (
     <div className='filter-dropdown'>
       <div className='filter-field'>
@@ -251,7 +253,7 @@ const UserListTable = ({ tableData }) => {
   const { lang: locale } = useParams()
 
   const handleRowClick = userId => {
-    const userViewUrl = getLocalizedUrl('/apps/user/view', locale)
+    const userViewUrl = '/apps/user/view'
 
     window.location.href = `${userViewUrl}?id=${userId}`
   }
@@ -272,7 +274,7 @@ const UserListTable = ({ tableData }) => {
 
   const handleConfirmDelete = () => {
     if (isAnyRowSelected) {
-      setData(data.filter(product => !rowSelection?.[product?.id])) // Assuming rowSelection holds selected rows
+      setData(data.filter(product => !rowSelection[product.id])) // Assuming rowSelection holds selected rows
       setUserToDelete(null)
       setOpen(false)
     }
@@ -310,17 +312,17 @@ const UserListTable = ({ tableData }) => {
   }
 
   const handleColumnToggle = column => {
-    setVisibleColumns(prev => ({ ...prev, [column]: !prev?.[column] }))
+    setVisibleColumns(prev => ({ ...prev, [column]: !prev[column] }))
     handleClose()
   }
 
   const columns = useMemo(
     () =>
       columnOrder
-        ?.map(columnId => {
+        .map(columnId => {
           switch (columnId) {
             case 'select':
-              return visibleColumns?.user
+              return visibleColumns.user
                 ? {
                     id: 'select',
                     header: ({ table }) => (
@@ -346,7 +348,7 @@ const UserListTable = ({ tableData }) => {
                   }
                 : null
             case 'user':
-              return visibleColumns?.user
+              return visibleColumns.user
                 ? columnHelper.accessor('fullName', {
                     header: 'User',
                     cell: ({ row }) => (
@@ -363,14 +365,14 @@ const UserListTable = ({ tableData }) => {
                   })
                 : null
             case 'email':
-              return visibleColumns?.email
+              return visibleColumns.email
                 ? columnHelper.accessor('email', {
                     header: 'Email',
                     cell: ({ row }) => <Typography>{row.original.email}</Typography>
                   })
                 : null
             case 'role':
-              return visibleColumns?.role
+              return visibleColumns.role
                 ? columnHelper.accessor('role', {
                     header: 'Role',
                     cell: ({ row }) => (
@@ -382,14 +384,14 @@ const UserListTable = ({ tableData }) => {
                   })
                 : null
             case 'status':
-              return visibleColumns?.status
+              return visibleColumns.status
                 ? columnHelper.accessor('status', {
                     header: 'Status',
                     cell: ({ row }) => (
                       <Chip
                         size='small'
                         label={getStatusLabel(row.original.status)}
-                        color={userStatusObj?.[getStatusLabel(row.original.status).toLowerCase()]}
+                        color={userStatusObj[getStatusLabel(row.original.status).toLowerCase()]}
                         variant='outlined'
                         sx={{ textTransform: 'capitalize' }}
                       />
@@ -397,7 +399,7 @@ const UserListTable = ({ tableData }) => {
                   })
                 : null
             case 'phone':
-              return visibleColumns?.phone
+              return visibleColumns.phone
                 ? columnHelper.accessor('phone', {
                     header: 'Phone',
                     cell: ({ row }) => <Typography>{row.original.mobile}</Typography>
@@ -425,7 +427,7 @@ const UserListTable = ({ tableData }) => {
                             text: 'View', // Add the View option
                             onClick: () => {
                               const userId = row.original.id // Assuming `id` is the unique user identifier
-                              const userViewUrl = getLocalizedUrl(`/apps/user/view?id=${userId}`, locale) // Create the URL
+                              const userViewUrl = `/apps/user/view?id=${userId}` // Create the URL
 
                               window.location.href = userViewUrl // Redirect to the user view page
                             }
@@ -489,7 +491,7 @@ const UserListTable = ({ tableData }) => {
     const columnWidth = 100 // Approximate width of each column, adjust as necessary
     const toIndex = Math.floor(xPosition / columnWidth)
 
-    return Math.max(0, Math.min(toIndex, columnOrder?.length - 1))
+    return Math.max(0, Math.min(toIndex, columnOrder.length - 1))
   }
 
   const getStatusLabel = status => {
@@ -638,35 +640,35 @@ const UserListTable = ({ tableData }) => {
                     <MenuItem>
                       <Checkbox
                         checked={visibleColumns.user}
-                        onChange={() => setVisibleColumns(prev => ({ ...prev, user: !prev?.user }))}
+                        onChange={() => setVisibleColumns(prev => ({ ...prev, user: !prev.user }))}
                       />
                       User
                     </MenuItem>
                     <MenuItem>
                       <Checkbox
                         checked={visibleColumns.email}
-                        onChange={() => setVisibleColumns(prev => ({ ...prev, email: !prev?.email }))}
+                        onChange={() => setVisibleColumns(prev => ({ ...prev, email: !prev.email }))}
                       />
                       Email
                     </MenuItem>
                     <MenuItem>
                       <Checkbox
                         checked={visibleColumns.role}
-                        onChange={() => setVisibleColumns(prev => ({ ...prev, role: !prev?.role }))}
+                        onChange={() => setVisibleColumns(prev => ({ ...prev, role: !prev.role }))}
                       />
                       Role
                     </MenuItem>
                     <MenuItem>
                       <Checkbox
                         checked={visibleColumns.status}
-                        onChange={() => setVisibleColumns(prev => ({ ...prev, status: !prev?.status }))}
+                        onChange={() => setVisibleColumns(prev => ({ ...prev, status: !prev.status }))}
                       />
                       Status
                     </MenuItem>
                     <MenuItem>
                       <Checkbox
                         checked={visibleColumns.phone}
-                        onChange={() => setVisibleColumns(prev => ({ ...prev, phone: !prev?.phone }))}
+                        onChange={() => setVisibleColumns(prev => ({ ...prev, phone: !prev.phone }))}
                       />
                       Phone Number
                     </MenuItem>
@@ -701,7 +703,7 @@ const UserListTable = ({ tableData }) => {
       <TablePagination
         component='div'
         rowsPerPageOptions={[10, 25, 50]}
-        count={filteredData?.length} // <-- Ensure this uses filteredData
+        count={filteredData.length} // <-- Ensure this uses filteredData
         rowsPerPage={10}
         page={table.getState().pagination.pageIndex}
         onPageChange={(event, newPage) => table.setPageIndex(newPage)}

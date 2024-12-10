@@ -25,6 +25,7 @@ import {
 } from '@mui/material'
 
 import useUserApi from '@/api/useUserApi' // Adjust the import path based on your structure
+import FilterHeader from '@/Components/globals/FilterHeader'
 
 const EditForm = ({ isAdmin }) => {
   const { fetchUserById, updateUser } = useUserApi()
@@ -55,14 +56,14 @@ const EditForm = ({ isAdmin }) => {
 
           if (userData) {
             setFormData(prevData => {
-              if (prevData?.first_name === '' && prevData?.last_name === '' && prevData?.email === '') {
+              if (prevData.first_name === '' && prevData.last_name === '' && prevData.email === '') {
                 return {
-                  first_name: userData?.first_name || '',
-                  last_name: userData?.last_name || '',
-                  email: userData?.email || '',
-                  mobile: userData?.mobile || '',
-                  status: mapStatusFromPayload(userData?.status), // Map status from payload
-                  role: userData?.role || ''
+                  first_name: userData.first_name || '',
+                  last_name: userData.last_name || '',
+                  email: userData.email || '',
+                  mobile: userData.mobile || '',
+                  status: mapStatusFromPayload(userData.status), // Map status from payload
+                  role: userData.role || ''
                 }
               }
 
@@ -78,7 +79,7 @@ const EditForm = ({ isAdmin }) => {
     }
 
     fetchUserData()
-  }, [guid, fetchUserById])
+  }, [guid])
 
   // Map status from payload values to form values
   const mapStatusFromPayload = status => {
@@ -123,7 +124,7 @@ const EditForm = ({ isAdmin }) => {
     setSuccess(null)
 
     // Basic validation
-    if (!formData?.first_name || !formData?.last_name || !formData?.email) {
+    if (!formData.first_name || !formData.last_name || !formData.email) {
       setError('First Name, Last Name, and Email are required.')
 
       return
@@ -133,12 +134,12 @@ const EditForm = ({ isAdmin }) => {
     const formDataObj = new FormData()
 
     // Append form data values
-    formDataObj.append('first_name', formData?.first_name)
-    formDataObj.append('last_name', formData?.last_name)
-    formDataObj.append('email', formData?.email)
-    formDataObj.append('mobile', formData?.mobile)
-    formDataObj.append('status', mapStatusToPayload(formData?.status)) // Map status to payload format
-    formDataObj.append('role', formData?.role)
+    formDataObj.append('first_name', formData.first_name)
+    formDataObj.append('last_name', formData.last_name)
+    formDataObj.append('email', formData.email)
+    formDataObj.append('mobile', formData.mobile)
+    formDataObj.append('status', mapStatusToPayload(formData.status)) // Map status to payload format
+    formDataObj.append('role', formData.role)
 
     try {
       // Call updateUser with FormData
@@ -204,10 +205,11 @@ const EditForm = ({ isAdmin }) => {
                 <TextField
                   fullWidth
                   label='First Name'
-                  value={formData?.first_name}
+                  value={formData.first_name}
                   placeholder='John'
                   onChange={handleChange}
                   name='first_name'
+                  size='small'
                 />
               </Grid>
               {/* Last Name Field */}
@@ -215,10 +217,11 @@ const EditForm = ({ isAdmin }) => {
                 <TextField
                   fullWidth
                   label='Last Name'
-                  value={formData?.last_name}
+                  value={formData.last_name}
                   placeholder='Doe'
                   onChange={handleChange}
                   name='last_name'
+                  size='small'
                 />
               </Grid>
               {/* Email Field */}
@@ -226,10 +229,11 @@ const EditForm = ({ isAdmin }) => {
                 <TextField
                   fullWidth
                   label='Email'
-                  value={formData?.email}
+                  value={formData.email}
                   placeholder='john.doe@gmail.com'
                   onChange={handleChange}
                   name='email'
+                  size='small'
                 />
               </Grid>
               {/* Phone Number Field */}
@@ -237,17 +241,18 @@ const EditForm = ({ isAdmin }) => {
                 <TextField
                   fullWidth
                   label='Phone Number'
-                  value={formData?.mobile}
+                  value={formData.mobile}
                   placeholder='+1 (234) 567-8901'
                   onChange={handleChange}
                   name='mobile'
+                  size='small'
                 />
               </Grid>
               {/* Role Field */}
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth disabled={isAdmin}>
                   <InputLabel>Role</InputLabel>
-                  <Select label='Role' value={formData?.role} name='role' onChange={handleChange}>
+                  <Select label='Role' value={formData.role} name='role' onChange={handleChange} size='small'>
                     <MenuItem value='student'>Student</MenuItem>
                     <MenuItem value='teacher'>Teacher</MenuItem>
                     <MenuItem value='admin'>Admin</MenuItem>
@@ -258,7 +263,7 @@ const EditForm = ({ isAdmin }) => {
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth disabled={isAdmin}>
                   <InputLabel>Status</InputLabel>
-                  <Select label='Status' value={formData?.status} name='status' onChange={handleChange}>
+                  <Select label='Status' value={formData.status} name='status' onChange={handleChange} size='small'>
                     <MenuItem value='active'>Active</MenuItem>
                     <MenuItem value='inactive'>Inactive</MenuItem>
                     <MenuItem value='pending'>Pending</MenuItem>

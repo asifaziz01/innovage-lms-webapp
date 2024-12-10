@@ -10,9 +10,14 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
-  FormGroup,
   Checkbox
 } from '@mui/material'
+
+const decodeHtmlEntities = text => {
+  const parser = new DOMParser()
+  const parsedString = parser.parseFromString(text, 'text/html').body.textContent
+  return parsedString
+}
 
 const QuestionCard = ({
   questionText,
@@ -22,50 +27,82 @@ const QuestionCard = ({
   onOptionChange,
   onMarkForReviewChange,
   totalQuestions,
-  currentQuestionIndex
+  currentQuestionIndex,
+  isLocked,
+  sectionTitle
 }) => {
   const handleOptionChange = event => {
-    onOptionChange(event.target.value)
+    if (!isLocked) {
+      onOptionChange(event.target.value)
+    }
   }
 
   const handleResetChoices = () => {
-    onOptionChange('reset')
+    if (!isLocked) {
+      onOptionChange('reset') // Allow resetting the selection
+    }
   }
 
   const handleMarkForReviewChange = event => {
-    onMarkForReviewChange(event.target.checked)
+    if (!isLocked) {
+      onMarkForReviewChange(event.target.checked)
+    }
   }
 
   return (
-    <Card sx={{ minHeight: '550px', boxShadow: 'none', border: 'none' }}>
+    <Card sx={{ minHeight: '100vh', boxShadow: 'none', border: 'none' }}>
       <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         <Typography variant='body2'>
           {currentQuestionIndex + 1} of {totalQuestions}
         </Typography>
-        <Typography variant='h6'>{questionText}</Typography>
-        <Typography variant='body1'>{description}</Typography>
+
+        <Typography
+          variant='h6'
+          dangerouslySetInnerHTML={{
+            __html: decodeHtmlEntities(questionText)
+          }}
+        />
+
+        <Typography
+          variant='body1'
+          dangerouslySetInnerHTML={{
+            __html: decodeHtmlEntities(description)
+          }}
+        />
 
         <Divider />
 
         <Box>
           <FormControl>
             <RadioGroup value={selectedOption} onChange={handleOptionChange}>
-              {options?.map((option, index) => (
-                <FormControlLabel key={index} value={option} control={<Radio />} label={option} />
+              {options.map((option, index) => (
+                <FormControlLabel
+                  key={index}
+                  value={option}
+                  control={<Radio disabled={isLocked} />} // Disable option if time is out
+                  label={
+                    <Box
+                      component='span'
+                      dangerouslySetInnerHTML={{
+                        __html: decodeHtmlEntities(option)
+                      }}
+                    />
+                  }
+                />
               ))}
+
               <FormControlLabel
                 value='reset'
-                control={<Radio />}
+                control={<Radio disabled={isLocked} />}
                 label='Leave Unattended'
                 onClick={handleResetChoices}
               />
+              <FormControlLabel
+                control={<Checkbox size='small' onChange={handleMarkForReviewChange} disabled={isLocked} />}
+                sx={{ paddingLeft: 1 }}
+                label='Mark for Review'
+              />
             </RadioGroup>
-
-            <FormControlLabel
-              control={<Checkbox size='small' onChange={handleMarkForReviewChange} />}
-              sx={{ paddingLeft: 1 }}
-              label='Mark for Review'
-            />
           </FormControl>
         </Box>
       </CardContent>

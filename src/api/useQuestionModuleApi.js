@@ -82,59 +82,15 @@ export default function useQuestionModuleApi() {
     }
   }
 
-  const fetchDataallquestion = async ({
-    page,
-    results_per_page,
-    type,
-    order,
-    searchKeyword,
-    category,
-    selectedFilters,
-    difficultSelect
-  }) => {
+  const fetchDataallquestion = async () => {
     try {
-      const endpoint = `${process.env.NEXT_PUBLIC_LMS_API_URL_V2}qb/questions/all` // Construct the full URL
-      const formData = new FormData()
+      const endpoint = `https://dev.lms.developer1.website/qb/questions/all` // Construct the full URL
 
-      // console.log(searchKeyword, 'searchinggg1234')
-      console.log(category, 'checkcategory')
+      // formData.append('search', searchString) // Add the search term to the formData
+      // formData.append('page', page) // Add pagination: current page
+      // formData.append('results_per_page', results_per_page) // Add pagination: results per page
 
-      if (searchKeyword) {
-        formData.append('search', searchKeyword) // Add the search term to the formData
-      }
-
-      if (page) {
-        formData.append('page', page) // Add pagination: current page
-      }
-
-      if (results_per_page) {
-        formData.append('results_per_page', results_per_page) // Add pagination: results per page
-      }
-
-      if (category && category !== 'Categories') {
-        formData.append('category', category)
-      }
-
-      if (selectedFilters) {
-        formData.append('importance[]', selectedFilters)
-      }
-
-      if (difficultSelect) {
-        formData.append('difficulty[]', difficultSelect)
-      }
-
-      // formData.append('category', selectedCategory)
-      // formData.append('type', type)
-
-      if (type) {
-        formData.append('type', type)
-      }
-
-      if (order) {
-        formData.append('order_by', order)
-      }
-
-      const response = await axios.post(endpoint, formData, {
+      const response = await axios.post(endpoint, {
         headers: {
           Authorization: `Bearer ${process.env.NEXT_PUBLIC_LMS_TOKEN}`, // Add Authorization header
           Network: process.env.NEXT_PUBLIC_LMS_TOKEN, // Add Network header

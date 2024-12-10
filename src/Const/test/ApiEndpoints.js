@@ -6,3 +6,4 @@ export const USER_MODULE_NEW_ENDPOINTS = 'https://developer1.website/dev/caapis/
 export const CATEGORY_MODULE_ENDPOINTS_CHILDREN = 'https://developer1.website/dev/caapis/dev/qb/categories'
 export const CATEGORY_DATA = 'https://developer1.website/dev/caapis/dev/qb/category'
 export const CATEGORY_DATA_V2 = 'https://local.lms.developer1.website/qb/category'
+export const TEST_MODULE_ENDPOINTS_V2 = ' https://dev.lms.developer1.website/test'

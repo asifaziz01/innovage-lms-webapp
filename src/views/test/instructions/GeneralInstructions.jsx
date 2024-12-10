@@ -1,20 +1,38 @@
 'use client'
-import { List, ListItem, Card, Typography, Button, Divider } from '@mui/material'
+import { List, ListItem, Card, Typography, Button, Divider, Grid } from '@mui/material'
 import React from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import FilterHeader from '@/Components/globals/FilterHeader'
 
-const GeneralInstructions = () => {
+const GeneralInstructions = ({ instruction, handleTestInstruction, onNext }) => {
+  const searchParams = useSearchParams()
   const router = useRouter()
-
+  const guid = searchParams.get('guid')
   return (
     <div style={{ padding: 30 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 20, padding: 20 }}>
+      <FilterHeader title='General Instructions'>
+        <Grid item xs={6} md={1} display='flex' alignItems='center' pb={3}>
+          <Button
+            variant='contained'
+            color='primary'
+            // onClick={() => router.push(`/instructions/testinstructions?guid=${guid}`)}
+            onClick={onNext}
+          >
+            Next
+          </Button>
+        </Grid>
+      </FilterHeader>
+      {/* <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 20, padding: 20 }}>
         <Typography variant='h4'>General Instructions</Typography>
-        <Button variant='contained' color='primary' onClick={() => router.push('/instructions/testinstructions')}>
+        <Button
+          variant='contained'
+          color='primary'
+          onClick={() => router.push(`/instructions/testinstructions?guid=${guid}`)}
+        >
           Next
         </Button>
       </div>
-      <Divider></Divider>
+      <Divider></Divider> */}
       <Card style={{ padding: 30, marginTop: 20 }}>
         <Typography variant='h6' gutterBottom>
           Exam Instructions

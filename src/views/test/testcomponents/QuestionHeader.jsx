@@ -1,40 +1,29 @@
 'use client'
 
-import { Typography, Box, Divider } from '@mui/material'
+import { Typography, Box, Divider, IconButton, Tooltip } from '@mui/material'
+import useTakeTestApi from '@/api/test/useTakeTestApi'
+import UserDetails from './UserDetails'
 
-const QuestionHeader = ({ timeLeft, currentQuestionNumber, totalQuestions, negativeMarking, questionMarks }) => {
-  // Helper function to format time as mm:ss
+const QuestionHeader = ({
+  timeLeft,
+  currentQuestionNumber,
+  totalQuestions,
+  negativeMarking,
+  questionMarks,
+  test_guid,
+  question_guid,
+  cameraStream,
+  sectionTitle
+}) => {
+  const { bookmarkQuestion } = useTakeTestApi()
+
+  const handleBookmark = () => {
+    bookmarkQuestion(test_guid, question_guid)
+  }
+
   const formatTime = seconds => {
-    if (seconds === null || seconds === undefined || isNaN(seconds)) {
-      return (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box
-            sx={{
-              padding: '8px',
-              height: 32,
-              borderRadius: 1,
-              bgcolor: '#FFDBDB',
-              display: 'flex',
-              alignItems: 'center'
-            }}
-          >
-            {'00'}
-          </Box>
-          :
-          <Box
-            sx={{
-              padding: '8px',
-              height: 32,
-              borderRadius: 1,
-              bgcolor: '#FFDBDB',
-              display: 'flex',
-              alignItems: 'center'
-            }}
-          >
-            {'00'}
-          </Box>
-        </Box>
-      )
+    if (seconds === null || seconds === undefined || isNaN(seconds) || seconds <= 0) {
+      return null
     }
 
     const mins = Math.floor(seconds / 60)
@@ -76,21 +65,54 @@ const QuestionHeader = ({ timeLeft, currentQuestionNumber, totalQuestions, negat
       <Box
         sx={{
           display: 'flex',
-          alignItems: 'center',
-          padding: '30px 30px',
+          justifyContent: 'space-between',
+          alignItems: 'left',
+          flexDirection: 'column',
           backgroundColor: '#fff',
           width: '100%'
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography variant='body1'>Question Timer:</Typography>
-          {formatTime(timeLeft)}
-        </Box>
+        <Box
+          sx={{
+            alignItems: 'center',
+            display: 'flex',
+            justifyContent: 'left',
+            width: '800px',
+            paddingLeft: '30px',
+            paddingY: '10px'
+          }}
+        >
+          {/* Conditionally display the Question Timer */}
+          {timeLeft > 0 ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Typography variant='body1'>Question Timer:</Typography>
+              {formatTime(timeLeft)}
+            </Box>
+          ) : (
+            <a>Time out!!</a>
+          )}
 
-        <Divider orientation='vertical' flexItem sx={{ margin: '0 16px' }} />
+          <Divider orientation='vertical' flexItem sx={{ margin: '0 16px' }} />
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography variant='body1'>Negative Marking</Typography>
+          <Box
+            sx={{
+              padding: '10px',
+              height: 28,
+              borderRadius: 1,
+              bgcolor: '#55A91E',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer'
+            }}
+          >
+            <Tooltip title='Question Marks' arrow>
+              {questionMarks}
+            </Tooltip>
+          </Box>
+
+          <Divider orientation='vertical' flexItem sx={{ margin: '0 16px' }} />
+
           <Box
             sx={{
               padding: '10px',
@@ -100,34 +122,41 @@ const QuestionHeader = ({ timeLeft, currentQuestionNumber, totalQuestions, negat
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#fff'
+              color: '#fff',
+              cursor: 'pointer'
             }}
           >
-            {negativeMarking}
+            <Tooltip title='Negative Marks' arrow>
+              {negativeMarking}
+            </Tooltip>
           </Box>
+          <Divider orientation='vertical' flexItem sx={{ margin: '0 16px' }} />
+          <Tooltip title='Bookmark Question' arrow>
+            <IconButton onClick={handleBookmark}>
+              <i className='ri-bookmark-line' />
+            </IconButton>
+          </Tooltip>
+          <Divider orientation='vertical' flexItem sx={{ margin: '0 16px' }} />
+          <UserDetails cameraStream={cameraStream} />
         </Box>
 
-        <Divider orientation='vertical' flexItem sx={{ margin: '0 16px' }} />
-
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography variant='body1'>Question Marks</Typography>
-          <Box
-            sx={{
-              padding: '10px',
-              height: 28,
-              borderRadius: 1,
-              bgcolor: theme => theme?.palette?.customColors?.darkgreen,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            {questionMarks}
-          </Box>
+        <Divider />
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            padding: '10px 20px',
+            backgroundColor: '#fff',
+            width: '100%'
+          }}
+        >
+          {sectionTitle && (
+            <Typography variant='h6' paddingY={6} textAlign='justify' lineHeight={1.5}>
+              {sectionTitle}
+            </Typography>
+          )}
         </Box>
       </Box>
-
-      <Divider />
     </>
   )
 }

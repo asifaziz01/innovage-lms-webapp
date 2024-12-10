@@ -1,17 +1,41 @@
 'use client'
 import React from 'react'
 
-import { Typography, Divider, Box, Card, CardContent, List, ListItem, Button } from '@mui/material'
-import { useRouter } from 'next/navigation'
+import {
+  Typography,
+  Divider,
+  Box,
+  Card,
+  CardContent,
+  List,
+  ListItem,
+  Button,
+  ListSubheader,
+  FormControlLabel,
+  Checkbox
+} from '@mui/material'
+import { useRouter, useSearchParams } from 'next/navigation'
+import useTakeTestApi from '@/api/test/useTakeTestApi'
+import FilterHeader from '@/Components/globals/FilterHeader'
+import DraggableCamera from '../moniteringtest/DraggableCamera'
 
-const TestInstructions = () => {
+const TestInstructions = ({ captureScreen, captureAudio, captureCamera, handleChange, onAllow, handleBeginTest }) => {
+  const searchParams = useSearchParams()
   const router = useRouter()
+  const guid = searchParams.get('guid')
+  const { createSession } = useTakeTestApi()
+
+  // const handleBeginTest = async () => {
+  //   const sessionId = await createSession(guid) // Create session
+  //   if (sessionId) {
+  //     router.push(`/taketest?guid=${guid}&session=${sessionId}`) // Redirect to the test page with session ID
+  //   }
+  // }
+
   return (
     <div style={{ padding: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 20, padding: 20 }}>
-        <Typography variant='h4'>Test Instructions</Typography>
-      </div>
-      <Divider></Divider>
+      <FilterHeader title='Test Instructions'></FilterHeader>
+
       <Card style={{ padding: 30, marginTop: 20, marginBottom: 30 }}>
         <Box
           sx={{
@@ -29,17 +53,17 @@ const TestInstructions = () => {
           <Divider orientation='vertical' flexItem sx={{ margin: '0 16px' }} />
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant='body1'>Negative Marking : </Typography>
+            <Typography variant='body1'>Test Duration: 1h </Typography>
           </Box>
 
           <Divider orientation='vertical' flexItem sx={{ margin: '0 16px' }} />
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant='body1'>Question Marks</Typography>
+            <Typography variant='body1'>Question Marks: 100 </Typography>
           </Box>
           <Divider orientation='vertical' flexItem sx={{ margin: '0 16px' }} />
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant='body1'>Negative Marking : </Typography>
+            <Typography variant='body1'>Negative Marking: -1 </Typography>
           </Box>
 
           <Divider orientation='vertical' flexItem sx={{ margin: '0 16px' }} />
@@ -64,10 +88,26 @@ const TestInstructions = () => {
           </Typography>
 
           <List>
-            <ListItem>• You have not visited the question yet.</ListItem>
-            <ListItem>• You have not answered the question.</ListItem>
-            <ListItem>• You have answered the question.</ListItem>
-            <ListItem>• You have NOT answered the question, but have marked the question for review.</ListItem>
+            <ListSubheader> This needs to get monitered </ListSubheader>
+            <ListItem>
+              <FormControlLabel
+                control={<Checkbox checked={captureScreen} onChange={handleChange} name='captureScreen' />}
+                label='Allow Screen Access'
+              />
+              <FormControlLabel
+                control={<Checkbox checked={captureCamera} onChange={handleChange} name='captureCamera' />}
+                label='Allow Camera Access'
+              />
+              <FormControlLabel
+                control={<Checkbox checked={captureAudio} onChange={handleChange} name='captureAudio' />}
+                label='Allow Microphone Access'
+              />
+            </ListItem>
+            <ListItem>
+              <Button variant='contained' onClick={onAllow}>
+                Allow Access
+              </Button>
+            </ListItem>
           </List>
 
           <Typography variant='subtitle1' gutterBottom>
@@ -82,7 +122,7 @@ const TestInstructions = () => {
         <Button variant='contained' color='primary'>
           Back
         </Button>
-        <Button variant='outlined' color='primary' onClick={() => router.push('/previewtest')}>
+        <Button variant='outlined' color='primary' onClick={handleBeginTest}>
           Begin Test
         </Button>
       </div>

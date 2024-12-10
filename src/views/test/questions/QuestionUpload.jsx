@@ -100,7 +100,7 @@ const QuestionUpload = ({ files, setFiles }) => {
           </Typography>
         </div>
       </div>
-      <IconButton onClick={() => handleRemoveFile(file)}>
+      <IconButton disableRipple>
         <i className='ri-close-line text-xl' />
       </IconButton>
     </ListItem>
